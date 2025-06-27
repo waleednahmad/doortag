@@ -1,34 +1,34 @@
 <x-app-layout>
     <x-card>
         <x-slot:header>
-            Welcome to the TallStackUI Starter Kit
+            Welcome to Door Tag Shipper
         </x-slot:header>
         <div class="space-y-2">
             <p>
-                👋🏻 This is the TallStackUI starter kit for Laravel 12. With this TallStackUI starter kit you will be able to enjoy a ready-to-use application to initialize your next Laravel 12 project with TallStackUI.
+                �📦 Welcome to Door Tag - your reliable shipping partner for seamless package delivery! Door Tag provides smart shipping solutions with real-time tracking and delivery notifications right to your customer's doorstep.
             </p>
             <div class="mt-4 space-y-2">
                 <i>
-                    "What this starter kit includes out of the box?"
+                    "What Door Tag shipping platform offers:"
                 </i>
                 <ul class="ml-2 mt-2 list-inside list-decimal font-semibold">
-                    <li>Laravel v12</li>
-                    <li>Livewire v3</li>
-                    <li>TallStackUI v2</li>
-                    <li>TailwindCSS v4</li>
+                    <li>Discounted UPS & USPS shipping rates</li>
+                    <li>Real-time package tracking</li>
+                    <li>Smart door tag notifications</li>
+                    <li>Batch shipping & label printing</li>
                 </ul>
-                <p>And also:</p>
+                <p>Built with modern technology:</p>
                 <ul class="ml-2 mt-2 list-inside list-decimal font-semibold">
-                    <li><a href="https://github.com/barryvdh/laravel-debugbar" target="_blank">DebugBar</a></li>
-                    <li><a href="https://github.com/larastan/larastan" target="_blank">LaraStan</a></li>
-                    <li><a href="https://pestphp.com/" target="_blank">Pest</a></li>
-                    <li><a href="https://laravel.com/docs/pint" target="_blank">Pint</a></li>
+                    <li>Laravel v12 - Robust backend framework</li>
+                    <li>Livewire v3 - Dynamic user interactions</li>
+                    <li>TallStackUI v2 - Beautiful interface components</li>
+                    <li>TailwindCSS v4 - Modern responsive design</li>
                 </ul>
             </div>
         </div>
         <x-slot:footer>
             <span class="text-xs">
-                ⚠️ <x-link href="https://tallstackui.com/docs/v2/starter-kit" bold blank sm>Make sure to read the docs about the starter kit!</x-link>
+                🚚 <x-link href="#" bold sm>Start shipping with Door Tag today - Fast, reliable, and cost-effective!</x-link>
             </span>
         </x-slot:footer>
     </x-card>
