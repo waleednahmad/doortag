@@ -1,4 +1,4 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 @import '../../vendor/tallstackui/tallstackui/css/v4.css';
 
 @source '../views';

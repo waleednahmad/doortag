@@ -72,11 +72,11 @@ class Index extends Component
             'pieces.*.declaredValue' => 'required|numeric|min:0',
         ]);
 
-        info('Shipping quote request initiated', [
-            'sender' => $this->sender,
-            'receiver' => $this->receiver,
-            'pieces' => $this->pieces
-        ]);
+        // info('Shipping quote request initiated', [
+        //     'sender' => $this->sender,
+        //     'receiver' => $this->receiver,
+        //     'pieces' => $this->pieces
+        // ]);
 
         try {
             // residential, signatureOptionCode, weightUnit, dimUnit, currency
@@ -113,7 +113,6 @@ class Index extends Component
                     $this->hasResponse = true;
                     $this->errorMessage = '';
 
-                    info($this->quotes);
                     // For debugging, you can still dd the response
                     // dd([
                     //     'status' => 'SUCCESS',
