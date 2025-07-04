@@ -20,4 +20,10 @@ Route::middleware('guest')->group(function () {
     Route::post('login', [AuthenticatedSessionController::class, 'store']);
 });
 
-Route::middleware('auth')->post('logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
+Route::middleware('auth')->group(function () {
+    Route::match(
+        ['get', 'post'],
+        'logout',
+        [AuthenticatedSessionController::class, 'destroy']
+    )->name('logout');
+});
