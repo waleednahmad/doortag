@@ -14,16 +14,16 @@ use Livewire\Attributes\Layout;
 class Index extends Component
 {
     public array $sender = [
-        'country' => 'US',
-        'zip' => '84117'
+        'country' => '',
+        'zip' => ''
     ];
 
     public array $receiver = [
         // ---- Required for api request
-        'city' => 'Toronto',
-        'country' => 'CA',
-        'email' => 'foo@bar.com',
-        'zip' => 'M9C5K5',
+        'city' => '',
+        'country' => '',
+        'email' => '',
+        'zip' => '',
         // ---- Optional for api request
         'phone' => '',
         'name' => '',
@@ -35,10 +35,10 @@ class Index extends Component
 
     public array $pieces = [
         [
-            'weight' => '2.4',
-            'length' => '5.1',
-            'width' => '4',
-            'height' => '2.5',
+            'weight' => '',
+            'length' => '',
+            'width' => '',
+            'height' => '',
             'insuranceAmount' => '12.15',
             'declaredValue' => '100',
             // ---- Optional for api request
