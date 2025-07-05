@@ -11,7 +11,8 @@ Route::get('/', function () {
 })->name('welcome');
 
 Route::middleware(['auth:web,customer'])->group(function () {
-    Route::view('/dashboard', 'dashboard')->name('dashboard');
+    // Route::view('/dashboard', 'dashboard')->name('dashboard');
+    Route::get('/dashboard', ShippingIndex::class)->name('dashboard');
 
     Route::get('/users', Index::class)->name('users.index');
 
