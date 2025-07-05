@@ -35,12 +35,12 @@ class CustomerSeeder extends Seeder
             Customer::create([
                 'name' => 'DoorTag Shipper',
                 'email' => 'info@doortag.net',
-                'phone' => '(813) 903-1774',
-                'address' => '1730 E Fowler Ave',
+                'phone' => '(708) 307-7663',
+                'address' => '1700 Oviedo Mall Blvd',
                 'address2' => '',
-                'city' => 'Tampa',
+                'city' => 'Oviedo',
                 'state' => 'FL',
-                'zipcode' => '33612',
+                'zipcode' => '32765',
                 'margin' => 20.00,
                 'password' => Hash::make('Hello@2025'),
             ]);
