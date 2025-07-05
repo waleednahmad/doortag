@@ -30,20 +30,20 @@ class CustomerSeeder extends Seeder
             ]);
         }
 
-        $customer2 = Customer::where('email', 'info@doortag.net')->first();
-        if (!$customer2) {
-            Customer::create([
-                'name' => 'DoorTag Shipper',
-                'email' => 'info@doortag.net',
-                'phone' => '(708) 307-7663',
-                'address' => '1700 Oviedo Mall Blvd',
-                'address2' => '',
-                'city' => 'Oviedo',
-                'state' => 'FL',
-                'zipcode' => '32765',
-                'margin' => 0,
-                'password' => Hash::make('Hello@2025'),
-            ]);
-        }
+        // $customer2 = Customer::where('email', 'info@doortag.net')->first();
+        // if (!$customer2) {
+        //     Customer::create([
+        //         'name' => 'DoorTag Shipper',
+        //         'email' => 'info@doortag.net',
+        //         'phone' => '(708) 307-7663',
+        //         'address' => '1700 Oviedo Mall Blvd',
+        //         'address2' => '',
+        //         'city' => 'Oviedo',
+        //         'state' => 'FL',
+        //         'zipcode' => '32765',
+        //         'margin' => 0,
+        //         'password' => Hash::make('Hello@2025'),
+        //     ]);
+        // }
     }
 }
