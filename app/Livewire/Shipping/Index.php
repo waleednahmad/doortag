@@ -15,7 +15,7 @@ use Livewire\Attributes\Layout;
 class Index extends Component
 {
     public array $sender = [
-        'country' => '',
+        'country' => 'US',
         'zip' => ''
     ];
 
