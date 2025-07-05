@@ -3,8 +3,10 @@
 namespace App\Livewire\Shipping;
 
 use App\Models\Country;
+use App\Models\Customer;
 use Livewire\Component;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 
@@ -33,12 +35,14 @@ class Index extends Component
 
     public array $pieces = [
         [
-            'weight' => '1.4',
+            'weight' => '2.4',
             'length' => '5.1',
             'width' => '4',
             'height' => '2.5',
             'insuranceAmount' => '12.15',
-            'declaredValue' => '100'
+            'declaredValue' => '100',
+            // ---- Optional for api request
+            'ounces' => '0', // Ounces are not used in the API
         ]
     ];
 
@@ -70,7 +74,9 @@ class Index extends Component
             'width' => '',
             'height' => '',
             'insuranceAmount' => '',
-            'declaredValue' => ''
+            'declaredValue' => '',
+            // ---- Optional for api request
+            'ounces' => '0' // Ounces are not used in the API
         ];
     }
 
@@ -91,29 +97,16 @@ class Index extends Component
             'receiver.country' => 'required|string',
             'receiver.zip' => 'required|string',
             'receiver.email' => 'required|email',
-            'pieces.*.weight' => 'required|numeric|min:0.01',
+            'pieces.*.weight' => 'required|integer|min:0',
             'pieces.*.length' => 'required|numeric|min:0.01',
             'pieces.*.width' => 'required|numeric|min:0.01',
             'pieces.*.height' => 'required|numeric|min:0.01',
             'pieces.*.insuranceAmount' => 'required|numeric|min:0',
             'pieces.*.declaredValue' => 'required|numeric|min:0',
+            'pieces.*.ounces' => 'nullable|integer|min:0|max:15', // Ounces are not used in the API, but we keep it for UI consistency
         ]);
 
-        // info('Shipping quote request initiated', [
-        //     'sender' => $this->sender,
-        //     'receiver' => $this->receiver,
-        //     'pieces' => $this->pieces
-        // ]);
-
         try {
-            // residential, signatureOptionCode, weightUnit, dimUnit, currency
-            //  "residential": true,
-            //   "signatureOptionCode": "DIRECT",
-            //   "contentDescription": "stuff and things",
-            //   "weightUnit": "lb",
-            //   "dimUnit": "in",
-            //   "currency": "USD",
-            //   "customsCurrency": "USD",
             $payload = [
                 'sender' => $this->sender,
                 'receiver' => array_intersect_key($this->receiver, array_flip([
@@ -122,7 +115,19 @@ class Index extends Component
                     'email',
                     'zip',
                 ])),
-                'pieces' => $this->pieces,
+                'pieces' => array_map(function ($piece) {
+                    $weightWithOunces = $piece['weight'] + ($piece['ounces'] / 16);
+                    $finalWeight = (string) ceil($weightWithOunces);
+
+                    return array_intersect_key(array_merge($piece, ['weight' => $finalWeight]), array_flip([
+                        'weight',
+                        'length',
+                        'width',
+                        'height',
+                        'insuranceAmount',
+                        'declaredValue'
+                    ]));
+                }, $this->pieces),
                 'residential' => true,
                 'signatureOptionCode' => 'DIRECT',
                 'contentDescription' => 'stuff and things',
@@ -140,18 +145,29 @@ class Index extends Component
             if ($response->status() == 200) {
                 $responseData = $response->json();
 
-                info($responseData);
                 if (isset($responseData['quotes']) && is_array($responseData['quotes'])) {
-                    $this->quotes = $responseData['quotes'];
+                    $quotes = $responseData['quotes'];
+                    
+                    // Apply customer margin if user is a customer
+                    $authenticatedUser = Auth::user();
+                    if ($authenticatedUser instanceof Customer && $authenticatedUser->margin > 0) {
+                        $quotes = array_map(function ($quote) use ($authenticatedUser) {
+                            $originalTotal = (float) $quote['totalAmount'];
+                            $marginMultiplier = 1 + ($authenticatedUser->margin / 100);
+                            $newTotal = $originalTotal * $marginMultiplier;
+                            $quote['totalAmount'] = number_format($newTotal, 2, '.', '');
+                            return $quote;
+                        }, $quotes);
+                    }
+                    
+                    // Sort quotes by totalAmount from lowest to highest
+                    usort($quotes, function ($a, $b) {
+                        return (float) $a['totalAmount'] <=> (float) $b['totalAmount'];
+                    });
+                    
+                    $this->quotes = $quotes;
                     $this->hasResponse = true;
                     $this->errorMessage = '';
-
-                    // For debugging, you can still dd the response
-                    // dd([
-                    //     'status' => 'SUCCESS',
-                    //     'total_quotes' => count($responseData['quotes']),
-                    //     'quotes' => $responseData['quotes']
-                    // ]);
                 } else {
                     $this->errorMessage = 'No quotes found in response';
                     $this->hasResponse = true;
@@ -177,8 +193,11 @@ class Index extends Component
             ]);
         }
     }
+
+
     #[Computed(persist: true)]
-    public function contentTypes(){
+    public function contentTypes()
+    {
         return [
             [
                 'value' => 'merchandise',
@@ -187,7 +206,7 @@ class Index extends Component
             ],
             [
                 'value' => 'documents',
-                'label' => 'Documents', 
+                'label' => 'Documents',
                 'description' => 'For contracts and other printed documents only.'
             ],
             [

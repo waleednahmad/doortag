@@ -32,19 +32,36 @@ class Login extends Component
 
         $this->ensureIsNotRateLimited();
 
-        if (! Auth::attempt(['email' => $this->email, 'password' => $this->password], $this->remember)) {
-            RateLimiter::hit($this->throttleKey());
+        // Try to authenticate with the default 'web' guard first (User model)
+        if (Auth::guard('web')->attempt(['email' => $this->email, 'password' => $this->password], $this->remember)) {
+            RateLimiter::clear($this->throttleKey());
+            Session::regenerate();
 
-            throw ValidationException::withMessages([
-                'email' => __('auth.failed'),
-            ]);
+            // Log which guard was used for debugging
+            logger('User authenticated with web guard: ' . $this->email);
+
+            $this->redirect(route('shipping.index'));
+            return;
         }
 
-        RateLimiter::clear($this->throttleKey());
-        Session::regenerate();
+        // If web guard fails, try customer guard
+        if (Auth::guard('customer')->attempt(['email' => $this->email, 'password' => $this->password], $this->remember)) {
+            RateLimiter::clear($this->throttleKey());
+            Session::regenerate();
 
-        // $this->redirectIntended(default: route('dashboard', absolute: false));
-        $this->redirectIntended(default: route('shipping.index', absolute: false));
+            // Log which guard was used for debugging
+            logger('Customer authenticated with customer guard: ' . $this->email);
+
+            $this->redirect(route('shipping.index'));
+            return;
+        }
+
+        // If both guards fail, increment rate limiter and throw validation error
+        RateLimiter::hit($this->throttleKey());
+
+        throw ValidationException::withMessages([
+            'email' => __('auth.failed'),
+        ]);
     }
 
     /**

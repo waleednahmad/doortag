@@ -12,12 +12,28 @@
                     <x-input label="{{ __('Email') }} *" value="{{ $user->email }}" disabled />
                 </div>
                 <div>
-                    <x-password :label="__('Password')"
-                                :hint="__('The password will only be updated if you set the value of this field')"
-                                wire:model="password"
-                                rules
-                                generator
-                                x-on:generate="$wire.set('password_confirmation', $event.detail.password)" />
+                    <x-input label="{{ __('Phone') }}" wire:model="user.phone" />
+                </div>
+                <div>
+                    <x-input label="{{ __('Address') }} *" wire:model="user.address" required />
+                </div>
+                <div>
+                    <x-input label="{{ __('Address 2') }}" wire:model="user.address2" />
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <x-input label="{{ __('City') }} *" wire:model="user.city" required />
+                    </div>
+                    <div>
+                        <x-input label="{{ __('State') }} *" wire:model="user.state" required />
+                    </div>
+                    <div>
+                        <x-input label="{{ __('Zip Code') }} *" wire:model="user.zipcode" required />
+                    </div>
+                </div>
+                <div>
+                    <x-password :label="__('Password')" :hint="__('The password will only be updated if you set the value of this field')" wire:model="password" rules generator
+                        x-on:generate="$wire.set('password_confirmation', $event.detail.password)" />
                 </div>
                 <div>
                     <x-password :label="__('Confirm password')" wire:model="password_confirmation" rules />
@@ -25,13 +41,31 @@
             </div>
             <x-slot:footer>
                 <x-button type="submit">
-                    @lang('Save')
+                    <span wire:loading.remove>
+                        Save
+                    </span>
+                    <span wire:loading>
+                        <span
+                            class="animate-spin inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full"
+                            role="status">
+                            <span class="sr-only">Saving...</span>
+                        </span>
+                    </span>
                 </x-button>
             </x-slot:footer>
         </form>
         <x-slot:footer>
             <x-button type="submit" form="update-profile">
-                @lang('Save')
+                <span wire:loading.remove>
+                    Save
+                </span>
+                <span wire:loading>
+                    <span
+                        class="animate-spin inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full"
+                        role="status">
+                        <span class="sr-only">Saving...</span>
+                    </span>
+                </span>
             </x-button>
         </x-slot:footer>
     </x-card>

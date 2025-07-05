@@ -4,7 +4,7 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware('guest')->group(function () {
+Route::middleware(['guest:web,customer'])->group(function () {
     // Route::get('register', [RegisteredUserController::class, 'create'])->name('register');
     Route::get('register', function () {
         // return to login route
@@ -20,7 +20,7 @@ Route::middleware('guest')->group(function () {
     Route::post('login', [AuthenticatedSessionController::class, 'store']);
 });
 
-Route::middleware('auth')->group(function () {
+Route::middleware('auth:web,customer')->group(function () {
     Route::match(
         ['get', 'post'],
         'logout',

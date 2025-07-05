@@ -89,7 +89,7 @@
                             Ship
                             From
                         </h2>
-                        <div class="bg-white dark:bg-gray-700 rounded-lg p-3 sm:p-4 mb-3 sm:mb-4">
+                        {{-- <div class="bg-white dark:bg-gray-700 rounded-lg p-3 sm:p-4 mb-3 sm:mb-4">
                             <div class="flex items-center justify-between mb-3">
                                 <div>
                                     <h5 class="font-medium text-sm sm:text-base text-gray-800 dark:text-gray-200">
@@ -106,6 +106,67 @@
                                     :options="$this->countries" placeholder="Select country" required />
 
                                 <x-input label="ZIP Code" wire:model="sender.zip" placeholder="e.g., 84117" required />
+                            </div>
+                        </div> --}}
+                        <div class="bg-white dark:bg-gray-700 rounded-lg p-3 sm:p-4 mb-3 sm:mb-4">
+                            <div class="flex items-center justify-between mb-3">
+                                <div>
+                                    <h5 class="font-medium text-sm sm:text-base text-gray-800 dark:text-gray-200">
+                                        Sender Information</h5>
+                                    <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 hidden sm:block">
+                                        Origin address details</p>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                                @if(auth()->user()->email)
+                                    <div>
+                                        <label class="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email *</label>
+                                        <p class="text-sm sm:text-base text-gray-900 dark:text-white">{{ auth()->user()->email }}</p>
+                                    </div>
+                                @endif
+                                
+                                @if(auth()->user()->phone)
+                                    <div>
+                                        <label class="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Phone</label>
+                                        <p class="text-sm sm:text-base text-gray-900 dark:text-white">{{ auth()->user()->phone }}</p>
+                                    </div>
+                                @endif
+                                
+                                @if(auth()->user()->address)
+                                    <div>
+                                        <label class="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Address *</label>
+                                        <p class="text-sm sm:text-base text-gray-900 dark:text-white">{{ auth()->user()->address }}</p>
+                                    </div>
+                                @endif
+                                
+                                @if(auth()->user()->address2)
+                                    <div>
+                                        <label class="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Address 2</label>
+                                        <p class="text-sm sm:text-base text-gray-900 dark:text-white">{{ auth()->user()->address2 }}</p>
+                                    </div>
+                                @endif
+                                
+                                @if(auth()->user()->city)
+                                    <div>
+                                        <label class="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">City *</label>
+                                        <p class="text-sm sm:text-base text-gray-900 dark:text-white">{{ auth()->user()->city }}</p>
+                                    </div>
+                                @endif
+                                
+                                @if(auth()->user()->state)
+                                    <div>
+                                        <label class="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">State *</label>
+                                        <p class="text-sm sm:text-base text-gray-900 dark:text-white">{{ auth()->user()->state }}</p>
+                                    </div>
+                                @endif
+                                
+                                @if(auth()->user()->zipcode)
+                                    <div>
+                                        <label class="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Zipcode *</label>
+                                        <p class="text-sm sm:text-base text-gray-900 dark:text-white">{{ auth()->user()->zipcode }}</p>
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     </section>
@@ -292,11 +353,12 @@
 
                                                 <x-input type="number"
                                                     wire:model="pieces.{{ $index }}.weight" label="Pounds"
-                                                    placeholder="1.4" step="0.01" required />
+                                                    placeholder="1.4" step="1" min="0" required />
                                             </div>
                                             <div>
                                                 <x-input type="number" label="Ounces" placeholder="0"
-                                                    step="0.01" disabled />
+                                                    min="0" max="15"
+                                                    wire:model="pieces.{{ $index }}.ounces" />
                                             </div>
                                         </div>
                                     </div>

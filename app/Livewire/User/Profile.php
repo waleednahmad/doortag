@@ -3,18 +3,22 @@
 namespace App\Livewire\User;
 
 use App\Livewire\Traits\Alert;
+use App\Models\Customer;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
+use Livewire\Attributes\Layout;
 use Livewire\Component;
+
+#[Layout('layouts.dashboard')]
 
 class Profile extends Component
 {
     use Alert;
 
-    public User $user;
+    public $user;
 
     public ?string $password = null;
 
@@ -22,13 +26,49 @@ class Profile extends Component
 
     public function mount(): void
     {
-        $this->user = Auth::user();
+        $authenticatedUser = Auth::user();
+
+        if ($authenticatedUser instanceof User) {
+            $this->user = User::find($authenticatedUser->id);
+        } elseif ($authenticatedUser instanceof Customer) {
+            $this->user = Customer::find($authenticatedUser->id);
+        }
     }
 
     public function rules(): array
     {
         return [
             'user.name' => [
+                'required',
+                'string',
+                'max:255'
+            ],
+            'user.phone' => [
+                'nullable',
+                'string',
+                'max:255'
+            ],
+            'user.address' => [
+                'required',
+                'string',
+                'max:255'
+            ],
+            'user.address2' => [
+                'nullable',
+                'string',
+                'max:255'
+            ],
+            'user.city' => [
+                'required',
+                'string',
+                'max:255'
+            ],
+            'user.state' => [
+                'required',
+                'string',
+                'max:255'
+            ],
+            'user.zipcode' => [
                 'required',
                 'string',
                 'max:255'
@@ -58,6 +98,6 @@ class Profile extends Component
 
         $this->resetExcept('user');
 
-        $this->success();
+        $this->success(description: 'Profile updated successfully!');
     }
 }

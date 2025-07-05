@@ -1,24 +1,19 @@
 <form wire:submit.prevent="login" class="space-y-6" id="login-form">
-    <h2 class="text-3xl font-bold text-center mb-8">Ahoy, Captain!</h2>
+    {{-- <h2 class="text-3xl font-bold text-center mb-8">Ahoy, Captain!</h2> --}}
+    <div class="mx-auto mb-4  rounded-lg px-4 flex items-center justify-center">
+        <img src="{{ asset('assets/images/logo.png') }}" alt="" class="h-28 drop-shadow-xl/60">
+    </div>
     <div class="space-y-4">
         <x-input label="Email *" type="email" name="email" :value="old('email', 'test@example.com')" required autofocus wire:model="email"
             autocomplete="username" icon="envelope-open" />
 
         <x-password label="Password *" type="password" name="password" required autocomplete="current-password"
             wire:model.defer="password" icon="lock-closed" />
-
-        {{-- <x-input label="Email *" type="email" name="email" :value="old('email', 'test@example.com')" required autofocus wire:model="email"
-            autocomplete="username" /> --}}
-
-        {{-- <x-password label="Password *" type="password" name="password" required autocomplete="current-password"
-            wire:model.defer="password" /> --}}
-
-
     </div>
-    <x-button type="submit" wire:loading.attr="disabled"
-        class="w-full h-[100px] bg-[#00a9ff] hover:bg-blue-600 text-white py-2 rounded-xl text-[30px] font-bold">
+    <x-button type="submit" wire:loading.attr="disabled" color="slate" size="lg"
+        class="!w-full !h-[100px] !bg-gray-700 hover:!bg-gray-600 !text-white !py-2 !rounded-xl !text-[30px] !font-bold">
         <span wire:loading.remove>
-            Yarrrr, log me in
+            Login
         </span>
         <span wire:loading>
             <span class="animate-spin inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full"
