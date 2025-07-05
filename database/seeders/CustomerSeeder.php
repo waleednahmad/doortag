@@ -41,7 +41,7 @@ class CustomerSeeder extends Seeder
                 'city' => 'Oviedo',
                 'state' => 'FL',
                 'zipcode' => '32765',
-                'margin' => 20.00,
+                'margin' => 0,
                 'password' => Hash::make('Hello@2025'),
             ]);
         }
