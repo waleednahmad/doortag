@@ -4,6 +4,7 @@ namespace App\Livewire\Shipping;
 
 use App\Models\Country;
 use App\Models\Customer;
+use App\Models\User;
 use Livewire\Component;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Auth;
@@ -54,6 +55,17 @@ class Index extends Component
     public $has_rubber_stamps = false;
     public $rubber_stamp_1 = '';
     public $rubber_stamp_2 = '';
+
+    public function mount()
+    {
+        // sender zipcode
+        $authenticatedUser = Auth::user();
+        if ($authenticatedUser instanceof Customer) {
+            $this->sender['zip'] = $authenticatedUser->zipcode;
+        } elseif ($authenticatedUser instanceof User) {
+            $this->sender['zip'] = $authenticatedUser->zipcode;
+        }
+    }
 
     public function updatedHasRubberStamps($value)
     {
@@ -147,7 +159,7 @@ class Index extends Component
 
                 if (isset($responseData['quotes']) && is_array($responseData['quotes'])) {
                     $quotes = $responseData['quotes'];
-                    
+
                     // Apply customer margin if user is a customer
                     $authenticatedUser = Auth::user();
                     if ($authenticatedUser instanceof Customer && $authenticatedUser->margin > 0) {
@@ -159,12 +171,12 @@ class Index extends Component
                             return $quote;
                         }, $quotes);
                     }
-                    
+
                     // Sort quotes by totalAmount from lowest to highest
                     usort($quotes, function ($a, $b) {
                         return (float) $a['totalAmount'] <=> (float) $b['totalAmount'];
                     });
-                    
+
                     $this->quotes = $quotes;
                     $this->hasResponse = true;
                     $this->errorMessage = '';
