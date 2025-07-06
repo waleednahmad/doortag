@@ -411,7 +411,7 @@
 
                                                     <x-input type="number"
                                                         wire:model="pieces.{{ $index }}.weight" label="Pounds"
-                                                        placeholder="1.4" step="1" min="0" required />
+                                                        placeholder="1" step="1" min="0" required />
                                                 </div>
                                                 <div>
                                                     <x-input type="number" label="Ounces" placeholder="0"
