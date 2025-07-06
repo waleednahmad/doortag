@@ -48,9 +48,9 @@
             </x-layout.header>
         </x-slot:header>
         <x-slot:menu>
-            <x-side-bar smart collapsible>
+            <x-side-bar>
                 <div class=" bg-gray-100 dark:bg-gray-800">
-                    <!-- Mobile Top Bar -->
+                    {{-- <!-- Mobile Top Bar -->
                     <div class="md:hidden flex items-center justify-between px-4 py-3 bg-black text-white shadow">
                         <img src="{{ asset('assets/images/logo.png') }}" alt="logo" class="w-[50px] h-[50px]" />
                         <button id="toggleSidebar">
@@ -61,14 +61,15 @@
                                     d="M4 6h16M4 12h16M4 18h16" />
                             </svg>
                         </button>
-                    </div>
+                    </div> --}}
 
                     <!-- Sidebar -->
-                    <aside id="sidebar"
+                    {{-- <aside id="sidebar"
                         class=" text-black dark:text-white flex flex-col justify-between fixed top-[85px] left-0 z-50 w-full md:static md:top-0 md:w-auto md:translate-x-0 transform -translate-x-full transition-transform duration-300 md:block">
-                        <div class="space-y-2 bg-gray-100 dark:bg-gray-800">
+                         --}}
+                        <div class="space-y-2 text-black dark:text-white bg-gray-100 dark:bg-gray-800">
                             <!-- Desktop Logo -->
-                            <div class="hidden md:flex items-center justify-center">
+                            <div class="flex items-center justify-center">
                                 <div
                                     class="bg-gray-500 dark:bg-gray-800 rounded flex items-center justify-center w-full h-[130px]">
                                     <img src="{{ asset('assets/images/logo.png') }}" alt="logo"
@@ -171,7 +172,7 @@
                                 <a href="#" class="underline">Manage your Privacy & Data Settings</a>
                             </p>
                         </div>
-                    </aside>
+                    {{-- </aside> --}}
                 </div>
             </x-side-bar>
         </x-slot:menu>
