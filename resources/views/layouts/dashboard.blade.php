@@ -18,6 +18,39 @@
 
 <body class="font-sans antialiased" x-cloak x-data="{ name: @js(auth()->user()->name) }" x-on:name-updated.window="name = $event.detail.name"
     x-bind:class="{ 'dark bg-gray-800': darkTheme, 'bg-gray-100': !darkTheme }">
+
+    <!-- Global Full Page Loader -->
+    <div id="global-loader"
+        class="fixed inset-0 bg-gradient-to-br from-blue-900/30 via-gray-900/50 to-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] transition-all duration-300"
+        style="display: none;">
+        <div
+            class="bg-white/95 dark:bg-gray-800/95 backdrop-blur-md rounded-2xl p-8 flex flex-col items-center space-y-6 shadow-2xl max-w-md w-full mx-4 border border-white/20 dark:border-gray-700/50">
+            <!-- Modern Spinner -->
+            <div class="relative">
+                <div
+                    class="w-16 h-16 border-4 border-blue-200 dark:border-blue-800 rounded-full animate-spin border-t-blue-600 dark:border-t-blue-400">
+                </div>
+                <div
+                    class="absolute inset-0 w-16 h-16 border-4 border-transparent rounded-full animate-ping border-t-blue-400/30">
+                </div>
+            </div>
+
+            <!-- Content -->
+            <div class="text-center space-y-2">
+                <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">Getting Shipping Quotes
+                </h3>
+                <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">Please wait while we calculate the
+                    best rates for you...</p>
+
+                <!-- Progress indicator -->
+                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 mt-4">
+                    <div class="bg-gradient-to-r from-blue-500 to-blue-600 h-1.5 rounded-full animate-pulse"
+                        style="width: 70%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <x-layout>
         <x-slot:top>
             <x-dialog />
@@ -159,6 +192,91 @@
         {{ $slot }}
     </x-layout>
     @livewireScripts
+
+    <script>
+        // Global loader control functions
+        function showGlobalLoader() {
+            const loader = document.getElementById('global-loader');
+            if (loader) {
+                loader.style.display = 'flex';
+            }
+        }
+
+        function hideGlobalLoader() {
+            const loader = document.getElementById('global-loader');
+            if (loader) {
+                loader.style.display = 'none';
+            }
+        }
+
+        // Make functions globally available
+        window.showGlobalLoader = showGlobalLoader;
+        window.hideGlobalLoader = hideGlobalLoader;
+
+        // Test function - can be called from console
+        window.testLoader = function() {
+            showGlobalLoader();
+            setTimeout(() => {
+                hideGlobalLoader();
+            }, 3000);
+        };
+
+        console.log('Global loader functions loaded. Test with: window.testLoader()');
+
+        // Listen for Livewire events to control the global loader
+        document.addEventListener('livewire:initialized', () => {
+            console.log('Livewire initialized - Global loader listeners added');
+
+            // Listen for specific Livewire method calls
+            Livewire.hook('morph.updating', (el, toEl, childrenOnly, skip) => {
+                // Check if this is a quote request by looking for loading states
+                if (document.querySelector('[wire\\:loading][wire\\:target="getQuote"]')) {
+                    showGlobalLoader();
+                }
+            });
+
+            Livewire.hook('morph.updated', (el, toEl, childrenOnly, skip) => {
+                hideGlobalLoader();
+            });
+
+            // Alternative approach: Listen for specific component events
+            Livewire.on('loading-start', () => {
+                showGlobalLoader();
+            });
+
+            Livewire.on('loading-end', () => {
+                hideGlobalLoader();
+            });
+        });
+
+        // Fallback: Monitor for wire:loading elements
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                    const target = mutation.target;
+                    if (target.hasAttribute('wire:loading') && target.hasAttribute('wire:target')) {
+                        const wireTarget = target.getAttribute('wire:target');
+                        if (wireTarget === 'getQuote') {
+                            if (target.style.display !== 'none' && !target.classList.contains('hidden')) {
+                                showGlobalLoader();
+                            } else {
+                                hideGlobalLoader();
+                            }
+                        }
+                    }
+                }
+            });
+        });
+
+        // Start observing when DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            observer.observe(document.body, {
+                attributes: true,
+                subtree: true,
+                attributeFilter: ['class', 'style']
+            });
+        });
+    </script>
 </body>
 
 </html>
