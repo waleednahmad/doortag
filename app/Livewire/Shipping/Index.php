@@ -128,7 +128,7 @@ class Index extends Component
                     'zip',
                 ])),
                 'pieces' => array_map(function ($piece) {
-                    $weightWithOunces = $piece['weight'] + ($piece['ounces'] / 16);
+                    $weightWithOunces = (float)$piece['weight'] + ((float)$piece['ounces'] / 16);
                     $finalWeight = (string) ceil($weightWithOunces);
 
                     return array_intersect_key(array_merge($piece, ['weight' => $finalWeight]), array_flip([
