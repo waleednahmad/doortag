@@ -1,7 +1,8 @@
 <div x-data="shippingForm()">
     <div>
         @if (!$hasResponse)
-            <form wire:submit="getQuote" @submit="if(window.showGlobalLoader) window.showGlobalLoader()" class="space-y-6 sm:space-y-8">
+            <form wire:submit="getQuote" @submit="if(window.showGlobalLoader) window.showGlobalLoader()"
+                class="space-y-6 sm:space-y-8">
                 <x-card wire:show="!hasResponse">
                     <x-slot:header wire:show="!hasResponse">
                         <h3 class="text-lg md:text-2xl font-semibold">
@@ -14,8 +15,7 @@
 
                         {{-- Ship To Section --}}
                         <section>
-                            <h2
-                                class="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-gray-800 dark:text-gray-200">
+                            <h2 class="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-gray-800 dark:text-gray-200">
                                 Ship To
                                 {{-- <span x-show="!showPasteAddress" @click="showPasteAddress = true"
                                 class="text-[#00a9ff] text-[.824em] cursor-pointer">
@@ -675,596 +675,297 @@
                     <x-alert text="{{ $errorMessage }}" color="red" />
                 @elseif(!empty($quotes))
                     <!-- Collapsible Quotes Section -->
-                    <div x-data="{ quotesOpen: false }"
-                        class="rounded-[5px] border-2 transition-colors duration-200 mx-2 sm:mx-0"
+                    <div class="rounded-[5px] border-2 transition-colors duration-200 mx-2 sm:mx-0"
                         :class="quotesOpen ? 'border-[#00a9ff]' :
                             'border-gray-300 dark:border-gray-600 bg-gradient-to-b from-white to-gray-100 dark:from-gray-700 dark:to-gray-800'">
 
-                        <!-- Toggle Header -->
-                        <div @click="quotesOpen = !quotesOpen"
-                            class="w-full flex items-center justify-between p-2 sm:p-[10px] md:py-4 md:px-[10px] cursor-pointer rounded-[4px] transition-colors"
-                            :class="quotesOpen ? 'hover:bg-blue-50 dark:hover:bg-blue-900/20' :
-                                'hover:bg-gray-50 dark:hover:bg-gray-600'">
-                            <div class="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
-                                <div
-                                    class="w-16 h-16 sm:w-20 sm:h-20 md:w-[130px] md:h-[130px] flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-lg border border-blue-200 dark:border-blue-800 flex-shrink-0">
-                                    <div class="text-center">
-                                        <div class="text-3xl mb-2">�</div>
-                                        <div class="text-xl font-bold text-blue-600 dark:text-blue-400">
-                                            {{ count($quotes) }}</div>
-                                        <div class="text-xs text-gray-600 dark:text-gray-400">
-                                            Option{{ count($quotes) > 1 ? 's' : '' }}</div>
-                                        @if (count($quotes) > 0)
-                                            @php
-                                                $cheapestPrice = collect($quotes)->pluck('totalAmount')->min();
-                                            @endphp
+                        <!-- Selected Quote Preview (Always Visible) -->
+                        @foreach ($quotes as $index => $quote)
+                            @php
+                                $isBest = $index === 0;
+                                $isCheapest =
+                                    collect($quotes)->pluck('totalAmount')->min() == ($quote['totalAmount'] ?? 0);
+                                $baseAmount = $quote['baseAmount'] ?? 0;
+                                $totalAmount = $quote['totalAmount'] ?? 0;
+                                $savingsPercent =
+                                    $baseAmount > 0 ? round((($baseAmount - $totalAmount) / $baseAmount) * 100) : 0;
+                            @endphp
+
+                            <div x-show="selectedQuoteIndex === {{ $index }}"
+                                @click="quotesOpen = !quotesOpen"
+                                class="cursor-pointer px-3 pt-3 pb-2.5 flex justify-between items-center relative hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors border-b border-gray-200 dark:border-gray-600">
+
+                                <!-- Top Arrow Indicator -->
+                                <div class="absolute top-1 left-1/2 transform -translate-x-1/2 transition-all duration-300"
+                                    :class="quotesOpen ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-1'">
+                                    <svg class="w-3 h-3 text-blue-600 dark:text-blue-400" fill="none"
+                                        stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M5 15l7-7 7 7"></path>
+                                    </svg>
+                                </div>
+
+                                <div class="flex-1">
+                                    <div class="flex items-center mb-2">
+                                        <!-- Carrier Logo -->
+                                        @if (strtolower($quote['carrierCode'] ?? '') === 'fedex')
+                                            <img src="{{ asset('assets/images/fedex.svg') }}" class="h-6 mr-1"
+                                                alt="FedEx" />
+                                        @elseif(strtolower($quote['carrierCode'] ?? '') === 'ups')
+                                            <img src="{{ asset('assets/images/ups.svg') }}" class="h-6 mr-1"
+                                                alt="UPS" />
+                                        @elseif(strtolower($quote['carrierCode'] ?? '') === 'usps')
+                                            <img src="{{ asset('assets/images/usps.svg') }}" class="h-6 mr-1"
+                                                alt="USPS" />
+                                        @elseif(strtolower($quote['carrierCode'] ?? '') === 'dhl')
+                                            <img src="{{ asset('assets/images/dhl.svg') }}" class="h-6 mr-1"
+                                                alt="DHL" />
+                                        @else
                                             <div
-                                                class="text-xs font-semibold text-green-600 dark:text-green-400 mt-1 hidden sm:block">
-                                                From ${{ number_format($cheapestPrice, 2) }}
+                                                class="w-6 h-6 bg-gray-500 rounded flex items-center justify-center mr-1">
+                                                <span
+                                                    class="text-white text-xs font-bold">{{ strtoupper(substr($quote['carrierCode'] ?? 'N', 0, 1)) }}</span>
                                             </div>
                                         @endif
+                                        <h1
+                                            class="text-[17px] font-[400] text-black dark:text-white leading-[19px] pl-1 mt-[-1px]">
+                                            {{ $quote['serviceDescription'] ?? 'N/A' }}
+                                        </h1>
                                     </div>
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <h1
-                                        class="text-sm sm:text-base md:text-[1em] font-[400] text-gray-900 dark:text-gray-100 truncate">
-                                        Available Shipping Options
-                                    </h1>
+                                    <div class="mb-2">
+                                        <div
+                                            class="text-[13px] font-[500] text-gray-600 dark:text-gray-300 leading-[14px] line-clamp-1">
+                                            {{ $quote['estimatedDeliveryDate'] ?? 'Delivery date not available' }}
+                                        </div>
+                                    </div>
                                     <p
                                         class="text-xs sm:text-sm md:text-[.824em] font-[400] text-gray-500 dark:text-gray-400 mt-[3px] line-clamp-2">
-                                        Compare {{ count($quotes) }} shipping
-                                        carrier{{ count($quotes) > 1 ? 's' : '' }} • First option selected by default
+                                        Compare rates and delivery times • First option selected by default
                                     </p>
                                     @if (count($quotes) > 1)
                                         <div class="flex flex-wrap items-center gap-1 sm:gap-2 mt-2">
-                                            <span
-                                                class="bg-gray-800 text-white text-xs px-1.5 py-0.5 sm:px-2 sm:py-1 rounded font-medium">BEST</span>
-                                            <span
-                                                class="bg-green-600 text-white text-xs px-1.5 py-0.5 sm:px-2 sm:py-1 rounded font-medium">CHEAPEST</span>
+                                            @if ($isBest)
+                                                <span
+                                                    class="bg-gray-800 text-white text-xs px-1.5 py-0.5 sm:px-2 sm:py-1 rounded font-medium">BEST</span>
+                                            @endif
+                                            @if ($isCheapest)
+                                                <span
+                                                    class="bg-green-600 text-white text-xs px-1.5 py-0.5 sm:px-2 sm:py-1 rounded font-medium">CHEAPEST</span>
+                                            @endif
                                             <span
                                                 class="bg-blue-600 text-white text-xs px-1.5 py-0.5 sm:px-2 sm:py-1 rounded font-medium">SELECTED</span>
                                         </div>
                                     @endif
                                 </div>
-                            </div>
-                            <div class="flex-shrink-0 ml-2">
-                                <i class="fa-solid fa-caret-down text-base sm:text-lg md:text-[1.3em] text-gray-900 dark:text-gray-100"
-                                    :class="quotesOpen ? 'rotate-180' : ''" style="transition: transform 0.2s;"></i>
-                            </div>
-                        </div>
-
-                        <!-- Selected Quote Preview (Always Visible) -->
-                        <div
-                            class="border-t border-gray-200 dark:border-gray-600 p-2 sm:p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30">
-                            @foreach ($quotes as $index => $quote)
-                                @if ($loop->first)
-                                    @php
-                                        $carrierColor = match (strtolower($quote['carrierCode'] ?? '')) {
-                                            'fedex' => 'border-l-purple-500',
-                                            'ups' => 'border-l-yellow-600',
-                                            'usps' => 'border-l-blue-600',
-                                            'dhl' => 'border-l-red-600',
-                                            default => 'border-l-gray-400',
-                                        };
-                                        $isBest = $index === 0;
-                                        $isCheapest =
-                                            collect($quotes)->pluck('totalAmount')->min() ==
-                                            ($quote['totalAmount'] ?? 0);
-                                    @endphp
-
-                                    <div x-show="selectedQuoteIndex === {{ $index }}"
-                                        class="bg-white dark:bg-gray-800 rounded-lg shadow-lg border-2 border-blue-500 dark:border-blue-400 {{ $carrierColor }} border-l-4 overflow-hidden">
+                                <div class="flex flex-col items-end">
+                                    <div class="text-[18px] font-[500] text-black dark:text-white leading-[20px] mb-1">
+                                        ${{ number_format($totalAmount, 2) }}
+                                    </div>
+                                    @if ($savingsPercent > 0)
                                         <div
-                                            class="p-2 sm:p-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
-                                            <div
-                                                class="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
-                                                <div class="flex items-center space-x-2 sm:space-x-3">
-                                                    <div class="bg-white/20 rounded-full p-1.5 sm:p-2">
-                                                        <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor"
-                                                            viewBox="0 0 20 20">
-                                                            <path fill-rule="evenodd"
-                                                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                                                clip-rule="evenodd"></path>
-                                                        </svg>
-                                                    </div>
-                                                    <div>
-                                                        <h3 class="font-bold text-base sm:text-lg">Selected Quote</h3>
-                                                        <p class="text-blue-100 text-xs sm:text-sm">Ready to ship with
-                                                            this option</p>
-                                                    </div>
-                                                </div>
-                                                <div class="text-left sm:text-right">
-                                                    <div class="text-xl sm:text-2xl font-bold">
-                                                        ${{ number_format($quote['totalAmount'] ?? 0, 2) }}</div>
-                                                    <div class="text-blue-100 text-xs sm:text-sm">Total Cost</div>
-                                                </div>
-                                            </div>
+                                            class="text-[11px] font-[400] text-green-600 dark:text-green-400 leading-[12px]">
+                                            Save {{ $savingsPercent }}%
                                         </div>
-
-                                        <div class="p-2 sm:p-4">
-                                            <div
-                                                class="flex flex-col sm:flex-row sm:items-start space-y-3 sm:space-y-0 sm:space-x-4">
-                                                <!-- Carrier Logo -->
-                                                <div class="flex-shrink-0 self-center sm:self-start">
-                                                    @if (strtolower($quote['carrierCode'] ?? '') === 'fedex')
-                                                        <div
-                                                            class="w-10 h-10 sm:w-12 sm:h-12 bg-purple-600 rounded-lg flex items-center justify-center">
-                                                            <x-avatar image="{{ asset('assets/images/fedex.svg') }}"
-                                                                md lg />
-                                                        </div>
-                                                    @elseif(strtolower($quote['carrierCode'] ?? '') === 'ups')
-                                                        <div
-                                                            class="w-10 h-10 sm:w-12 sm:h-12 bg-yellow-600 rounded-lg flex items-center justify-center">
-                                                            <x-avatar image="{{ asset('assets/images/ups.svg') }}" md
-                                                                lg />
-                                                        </div>
-                                                    @elseif(strtolower($quote['carrierCode'] ?? '') === 'usps')
-                                                        <div
-                                                            class="w-10 h-10 sm:w-12 sm:h-12 bg-blue-600 rounded-lg flex items-center justify-center">
-                                                            <x-avatar image="{{ asset('assets/images/usps.svg') }}" md
-                                                                lg />
-                                                        </div>
-                                                    @elseif(strtolower($quote['carrierCode'] ?? '') === 'dhl')
-                                                        <div
-                                                            class="w-10 h-10 sm:w-12 sm:h-12 bg-red-600 rounded-lg flex items-center justify-center">
-                                                            <x-avatar image="{{ asset('assets/images/dhl.svg') }}" md
-                                                                lg />
-                                                        </div>
-                                                    @else
-                                                        <div
-                                                            class="w-10 h-10 sm:w-12 sm:h-12 bg-gray-500 rounded-lg flex items-center justify-center">
-                                                            <span
-                                                                class="text-white text-xs sm:text-sm font-bold">{{ strtoupper(substr($quote['carrierCode'] ?? 'N/A', 0, 2)) }}</span>
-                                                        </div>
-                                                    @endif
-                                                </div>
-
-                                                <div class="flex-1 min-w-0">
-                                                    <div class="flex items-center space-x-2 mb-2">
-                                                        <h4
-                                                            class="font-semibold text-gray-900 dark:text-white text-lg">
-                                                            {{ $quote['serviceDescription'] ?? 'N/A' }}
-                                                        </h4>
-                                                        <div class="flex flex-wrap gap-1">
-                                                            @if ($isBest)
-                                                                <span
-                                                                    class="bg-gray-800 text-white text-xs px-2 py-1 rounded font-medium">BEST</span>
-                                                            @endif
-                                                            @if ($isCheapest)
-                                                                <span
-                                                                    class="bg-green-600 text-white text-xs px-2 py-1 rounded font-medium">CHEAPEST</span>
-                                                            @endif
-                                                            <span
-                                                                class="bg-blue-600 text-white text-xs px-2 py-1 rounded font-medium">SELECTED</span>
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                                                        <div>
-                                                            <div class="text-gray-600 dark:text-gray-400">Carrier
-                                                                Liability</div>
-                                                            <div class="font-medium text-blue-600 dark:text-blue-400">
-                                                                ${{ number_format($quote['insuranceAmount'] ?? 0, 0) }}
-                                                            </div>
-                                                        </div>
-                                                        <div>
-                                                            <div class="text-gray-600 dark:text-gray-400">Estimated
-                                                                Delivery</div>
-                                                            <div class="font-medium text-gray-900 dark:text-white">
-                                                                @if (isset($quote['estimatedDelivery']))
-                                                                    {{ $quote['estimatedDelivery'] }}
-                                                                @else
-                                                                    3-5 business days
-                                                                @endif
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                    @php
-                                                        $totalSurcharges = collect($quote['surcharges'] ?? [])->sum(
-                                                            'amount',
-                                                        );
-                                                        $baseAmount = $quote['baseAmount'] ?? 0;
-                                                        $totalAmount = $quote['totalAmount'] ?? 0;
-                                                        $savingsPercent =
-                                                            $baseAmount > 0
-                                                                ? round(
-                                                                    (($baseAmount + $totalSurcharges - $totalAmount) /
-                                                                        ($baseAmount + $totalSurcharges)) *
-                                                                        100,
-                                                                )
-                                                                : 0;
-                                                    @endphp
-
-                                                    @if ($savingsPercent > 0)
-                                                        <div class="mt-2 text-sm">
-                                                            <span
-                                                                class="text-green-600 dark:text-green-400 font-medium">
-                                                                💰 Save {{ $savingsPercent }}% • Deepest discount
-                                                                available
-                                                            </span>
-                                                        </div>
-                                                    @endif
-                                                </div>
-                                            </div>
-
-                                            <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
-                                                <button @click="quotesOpen = !quotesOpen"
-                                                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2">
-                                                    <span x-show="!quotesOpen">Compare All Options</span>
-                                                    <span x-show="quotesOpen">Hide Other Options</span>
-                                                    <i class="fa-solid fa-chevron-down text-sm"
-                                                        :class="quotesOpen ? 'rotate-180' : ''"
-                                                        style="transition: transform 0.2s;"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endif
-                            @endforeach
-
-                            <!-- Show selected quote from other indices -->
-                            @foreach ($quotes as $index => $quote)
-                                @if (!$loop->first)
-                                    @php
-                                        $carrierColor = match (strtolower($quote['carrierCode'] ?? '')) {
-                                            'fedex' => 'border-l-purple-500',
-                                            'ups' => 'border-l-yellow-600',
-                                            'usps' => 'border-l-blue-600',
-                                            'dhl' => 'border-l-red-600',
-                                            default => 'border-l-gray-400',
-                                        };
-                                        $isBest = $index === 0;
-                                        $isCheapest =
-                                            collect($quotes)->pluck('totalAmount')->min() ==
-                                            ($quote['totalAmount'] ?? 0);
-                                    @endphp
-
-                                    <div x-show="selectedQuoteIndex === {{ $index }}"
-                                        class="bg-white dark:bg-gray-800 rounded-lg shadow-lg border-2 border-blue-500 dark:border-blue-400 {{ $carrierColor }} border-l-4 overflow-hidden">
-                                        <div class="p-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
-                                            <div class="flex items-center justify-between">
-                                                <div class="flex items-center space-x-3">
-                                                    <div class="bg-white/20 rounded-full p-2">
-                                                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                                            <path fill-rule="evenodd"
-                                                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                                                clip-rule="evenodd"></path>
-                                                        </svg>
-                                                    </div>
-                                                    <div>
-                                                        <h3 class="font-bold text-lg">Selected Quote</h3>
-                                                        <p class="text-blue-100 text-sm">Ready to ship with this option
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                <div class="text-right">
-                                                    <div class="text-2xl font-bold">
-                                                        ${{ number_format($quote['totalAmount'] ?? 0, 2) }}</div>
-                                                    <div class="text-blue-100 text-sm">Total Cost</div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div class="p-4">
-                                            <div class="flex items-start space-x-4">
-                                                <!-- Carrier Logo -->
-                                                <div class="flex-shrink-0">
-                                                    @if (strtolower($quote['carrierCode'] ?? '') === 'fedex')
-                                                        <div
-                                                            class="w-12 h-12 bg-purple-600 rounded-lg flex items-center justify-center">
-                                                            <x-avatar image="{{ asset('assets/images/fedex.svg') }}"
-                                                                lg />
-                                                        </div>
-                                                    @elseif(strtolower($quote['carrierCode'] ?? '') === 'ups')
-                                                        <div
-                                                            class="w-12 h-12 bg-yellow-600 rounded-lg flex items-center justify-center">
-                                                            <x-avatar image="{{ asset('assets/images/ups.svg') }}"
-                                                                lg />
-                                                        </div>
-                                                    @elseif(strtolower($quote['carrierCode'] ?? '') === 'usps')
-                                                        <div
-                                                            class="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
-                                                            <x-avatar image="{{ asset('assets/images/usps.svg') }}"
-                                                                lg />
-                                                        </div>
-                                                    @elseif(strtolower($quote['carrierCode'] ?? '') === 'dhl')
-                                                        <div
-                                                            class="w-12 h-12 bg-red-600 rounded-lg flex items-center justify-center">
-                                                            <x-avatar image="{{ asset('assets/images/dhl.svg') }}"
-                                                                lg />
-                                                        </div>
-                                                    @else
-                                                        <div
-                                                            class="w-12 h-12 bg-gray-500 rounded-lg flex items-center justify-center">
-                                                            <span
-                                                                class="text-white text-sm font-bold">{{ strtoupper(substr($quote['carrierCode'] ?? 'N/A', 0, 2)) }}</span>
-                                                        </div>
-                                                    @endif
-                                                </div>
-
-                                                <div class="flex-1 min-w-0">
-                                                    <div class="flex items-center space-x-2 mb-2">
-                                                        <h4
-                                                            class="font-semibold text-gray-900 dark:text-white text-lg">
-                                                            {{ $quote['serviceDescription'] ?? 'N/A' }}
-                                                        </h4>
-                                                        <div class="flex flex-wrap gap-1">
-                                                            @if ($isBest)
-                                                                <span
-                                                                    class="bg-gray-800 text-white text-xs px-2 py-1 rounded font-medium">BEST</span>
-                                                            @endif
-                                                            @if ($isCheapest)
-                                                                <span
-                                                                    class="bg-green-600 text-white text-xs px-2 py-1 rounded font-medium">CHEAPEST</span>
-                                                            @endif
-                                                            <span
-                                                                class="bg-blue-600 text-white text-xs px-2 py-1 rounded font-medium">SELECTED</span>
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                                                        <div>
-                                                            <div class="text-gray-600 dark:text-gray-400">Carrier
-                                                                Liability</div>
-                                                            <div class="font-medium text-blue-600 dark:text-blue-400">
-                                                                ${{ number_format($quote['insuranceAmount'] ?? 0, 0) }}
-                                                            </div>
-                                                        </div>
-                                                        <div>
-                                                            <div class="text-gray-600 dark:text-gray-400">Estimated
-                                                                Delivery</div>
-                                                            <div class="font-medium text-gray-900 dark:text-white">
-                                                                @if (isset($quote['estimatedDelivery']))
-                                                                    {{ $quote['estimatedDelivery'] }}
-                                                                @else
-                                                                    3-5 business days
-                                                                @endif
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                    @php
-                                                        $totalSurcharges = collect($quote['surcharges'] ?? [])->sum(
-                                                            'amount',
-                                                        );
-                                                        $baseAmount = $quote['baseAmount'] ?? 0;
-                                                        $totalAmount = $quote['totalAmount'] ?? 0;
-                                                        $savingsPercent =
-                                                            $baseAmount > 0
-                                                                ? round(
-                                                                    (($baseAmount + $totalSurcharges - $totalAmount) /
-                                                                        ($baseAmount + $totalSurcharges)) *
-                                                                        100,
-                                                                )
-                                                                : 0;
-                                                    @endphp
-
-                                                    @if ($savingsPercent > 0)
-                                                        <div class="mt-2 text-sm">
-                                                            <span
-                                                                class="text-green-600 dark:text-green-400 font-medium">
-                                                                💰 Save {{ $savingsPercent }}% • Deepest discount
-                                                                available
-                                                            </span>
-                                                        </div>
-                                                    @endif
-                                                </div>
-                                            </div>
-
-                                            <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
-                                                <button @click="quotesOpen = !quotesOpen"
-                                                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2">
-                                                    <span x-show="!quotesOpen">Compare All Options</span>
-                                                    <span x-show="quotesOpen">Hide Other Options</span>
-                                                    <i class="fa-solid fa-chevron-down text-sm"
-                                                        :class="quotesOpen ? 'rotate-180' : ''"
-                                                        style="transition: transform 0.2s;"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endif
-                            @endforeach
-                        </div>
-
-                        <!-- Expandable Quotes List -->
-                        <div x-show="quotesOpen" x-transition:enter="transition ease-out duration-300"
-                            x-transition:enter-start="opacity-0 transform -translate-y-2"
-                            x-transition:enter-end="opacity-100 transform translate-y-0">
-                            <div class="space-y-2 p-2 border-t border-gray-200 dark:border-gray-600">
-                                <div class="text-xs text-gray-500 dark:text-gray-400 mb-2 sm:mb-3 px-1 sm:px-2">
-                                    💡 Tip: Compare rates and delivery times to find the best option for your needs
+                                    @endif
                                 </div>
-                                @foreach ($quotes as $index => $quote)
-                                    @php
-                                        $carrierColor = match (strtolower($quote['carrierCode'] ?? '')) {
-                                            'fedex' => 'border-l-purple-500',
-                                            'ups' => 'border-l-yellow-600',
-                                            'usps' => 'border-l-blue-600',
-                                            'dhl' => 'border-l-red-600',
-                                            default => 'border-l-gray-400',
-                                        };
+                                <div class="flex-shrink-0 ml-2 flex flex-col items-center">
+                                    <!-- Main Caret Icon -->
+                                    <svg class="w-5 h-5 sm:w-6 sm:h-6 transition-all duration-300 ease-in-out mb-1"
+                                        :class="quotesOpen ? 'rotate-180 text-blue-600 dark:text-blue-400' :
+                                            'text-gray-600 dark:text-gray-400'"
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M19 9l-7 7-7-7"></path>
+                                    </svg>
 
-                                        $isBest = $index === 0;
-                                        $isCheapest =
-                                            collect($quotes)->pluck('totalAmount')->min() ==
-                                            ($quote['totalAmount'] ?? 0);
-                                    @endphp
+                                    <!-- Click Indicator Text -->
+                                    <span class="text-[10px] text-gray-500 dark:text-gray-400 font-medium"
+                                        x-text="quotesOpen ? 'Close' : 'Open'"></span>
+                                </div>
 
-                                    <div @click="selectQuote({{ json_encode($quote) }}, {{ $index }})"
-                                        class="border rounded-lg hover:shadow-md transition-all duration-300 cursor-pointer {{ $carrierColor }} border-l-4"
-                                        :class="{
-                                            'bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/40 dark:to-indigo-900/40 border-blue-500 dark:border-blue-400 shadow-lg ring-2 ring-blue-200 dark:ring-blue-700 transform scale-[1.02]': selectedQuoteIndex ===
-                                                {{ $index }},
-                                            'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700': selectedQuoteIndex !==
-                                                {{ $index }},
-                                            'border-t-[1px] border-gray-300 dark:border-gray-600': {{ $index }} ===
-                                                0,
-                                            'border-b-[1px] border-gray-300 dark:border-gray-600': {{ $index }} !==
-                                                {{ count($quotes) - 1 }}
-                                        }">
-                                        <div class="p-2 sm:p-3 md:p-4 transition-colors relative"
-                                            :class="selectedQuoteIndex === {{ $index }} ?
-                                                'bg-gradient-to-r from-blue-50/50 to-indigo-50/50 dark:from-blue-900/20 dark:to-indigo-900/20' :
-                                                'hover:bg-blue-50 dark:hover:bg-blue-900/20'">
-                                            <!-- Selected Quote Highlight Badge -->
-                                            <div x-show="selectedQuoteIndex === {{ $index }}" x-transition
-                                                class="absolute -top-2 -right-2 bg-blue-600 text-white rounded-full p-1 shadow-lg z-10">
-                                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fill-rule="evenodd"
-                                                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                                        clip-rule="evenodd"></path>
-                                                </svg>
+                                <!-- Bottom Arrow Indicator -->
+                                <div class="absolute bottom-1 left-1/2 transform -translate-x-1/2 transition-all duration-300"
+                                    :class="!quotesOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-1'">
+                                    <svg class="w-3 h-3 text-blue-600 dark:text-blue-400" fill="none"
+                                        stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M19 9l-7 7-7-7"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+
+                    <!-- Expandable Quotes List -->
+                    <div x-show="quotesOpen" x-transition:enter="transition ease-out duration-300"
+                        x-transition:enter-start="opacity-0 transform -translate-y-2"
+                        x-transition:enter-end="opacity-100 transform translate-y-0">
+                        <div class="space-y-2 p-2 border-t border-gray-200 dark:border-gray-600">
+                            <div class="text-xs text-gray-500 dark:text-gray-400 mb-2 sm:mb-3 px-1 sm:px-2">
+                                💡 Tip: Compare rates and delivery times to find the best option for your needs
+                            </div>
+                            @foreach ($quotes as $index => $quote)
+                                @php
+                                    $isBest = $index === 0;
+                                    $isCheapest =
+                                        collect($quotes)->pluck('totalAmount')->min() == ($quote['totalAmount'] ?? 0);
+                                @endphp
+
+                                <div @click="selectQuote({{ json_encode($quote) }}, {{ $index }})"
+                                    class="border rounded-lg hover:shadow-md transition-all duration-300 cursor-pointer  "
+                                    :class="{
+                                        'bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/40 dark:to-indigo-900/40 border-blue-500 dark:border-blue-400 shadow-lg ring-2 ring-blue-200 dark:ring-blue-700 transform scale-[1.02]': selectedQuoteIndex ===
+                                            {{ $index }}
+                                    }">
+                                    <div class="p-2 sm:p-3 md:p-4 transition-colors relative rounded-lg"
+                                        :class="selectedQuoteIndex === {{ $index }} ?
+                                            'bg-gradient-to-r from-blue-50/50 to-indigo-50/50 dark:from-blue-900/20 dark:to-indigo-900/20' :
+                                            'hover:bg-blue-50 dark:hover:bg-blue-900/20'">
+                                        <!-- Selected Quote Highlight Badge -->
+                                        <div x-show="selectedQuoteIndex === {{ $index }}" x-transition
+                                            class="absolute -top-2 -right-2 bg-blue-600 text-white rounded-full p-1 shadow-lg z-10">
+                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd"
+                                                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                                    clip-rule="evenodd"></path>
+                                            </svg>
+                                        </div>
+
+                                        <div
+                                            class="flex flex-col space-y-3 sm:flex-row sm:justify-between sm:items-start sm:space-y-0">
+                                            <div class="flex items-start space-x-2 sm:space-x-3 flex-1 min-w-0">
+                                                <!-- Carrier Logo/Icon -->
+                                                <div class="flex-shrink-0 mt-0.5 sm:mt-1">
+                                                    @if (strtolower($quote['carrierCode'] ?? '') === 'fedex')
+                                                        <img src="{{ asset('assets/images/fedex.svg') }}"
+                                                            class="w-8 h-8 object-contain"
+                                                            alt="FedEx" />
+                                                    @elseif(strtolower($quote['carrierCode'] ?? '') === 'ups')
+                                                        <img src="{{ asset('assets/images/ups.svg') }}"
+                                                            class="w-8 h-8 object-contain"
+                                                            alt="UPS" />
+                                                    @elseif(strtolower($quote['carrierCode'] ?? '') === 'usps')
+                                                        <img src="{{ asset('assets/images/usps.svg') }}"
+                                                            class="w-8 h-8 object-contain"
+                                                            alt="USPS" />
+                                                    @elseif(strtolower($quote['carrierCode'] ?? '') === 'dhl')
+                                                        <img src="{{ asset('assets/images/dhl.svg') }}"
+                                                            class="w-8 h-8 object-contain"
+                                                            alt="DHL" />
+                                                    @else
+                                                        <div
+                                                            class="w-8 h-8 object-contain bg-gray-500 rounded flex items-center justify-center">
+                                                            <span
+                                                                class="text-white text-xs font-bold">{{ strtoupper(substr($quote['carrierCode'] ?? 'N/A', 0, 2)) }}</span>
+                                                        </div>
+                                                    @endif
+                                                </div>
+
+                                                <div class="flex-1 min-w-0">
+                                                    <div
+                                                        class="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-2 mb-1">
+                                                        <h4 class="font-semibold text-gray-900 dark:text-white text-xs sm:text-sm md:text-base truncate"
+                                                            :class="selectedQuoteIndex === {{ $index }} ?
+                                                                'text-blue-900 dark:text-blue-100' : ''">
+                                                            {{ $quote['serviceDescription'] ?? 'N/A' }}
+                                                        </h4>
+                                                        <div class="flex flex-wrap gap-1">
+                                                            @if ($isBest)
+                                                                <span
+                                                                    class="bg-gray-800 text-white text-xs px-2 py-1 rounded font-medium">BEST</span>
+                                                            @endif
+                                                            @if ($isCheapest)
+                                                                <span
+                                                                    class="bg-green-600 text-white text-xs px-2 py-1 rounded font-medium">CHEAPEST</span>
+                                                            @endif
+                                                            {{-- <span x-show="selectedQuoteIndex === {{ $index }}"
+                                                                x-transition
+                                                                class="bg-blue-600 text-white text-xs px-2 py-1 rounded font-medium">SELECTED</span> --}}
+                                                        </div>
+                                                    </div>
+
+                                                    <div
+                                                        class="text-xs sm:text-sm text-blue-600 dark:text-blue-400 mb-1 sm:mb-2">
+                                                        ${{ number_format($quote['insuranceAmount'] ?? 0, 0) }}
+                                                        carrier
+                                                        liability
+                                                        <span class="block sm:inline">
+                                                            @if (isset($quote['estimatedDelivery']))
+                                                                • {{ $quote['estimatedDelivery'] }}
+                                                            @else
+                                                                • Estimated delivery in 3-5 business days
+                                                            @endif
+                                                        </span>
+                                                    </div>
+
+                                                    @php
+                                                        $totalSurcharges = collect($quote['surcharges'] ?? [])->sum(
+                                                            'amount',
+                                                        );
+                                                        $baseAmount = $quote['baseAmount'] ?? 0;
+                                                        $totalAmount = $quote['totalAmount'] ?? 0;
+                                                        $savingsPercent =
+                                                            $baseAmount > 0
+                                                                ? round(
+                                                                    (($baseAmount + $totalSurcharges - $totalAmount) /
+                                                                        ($baseAmount + $totalSurcharges)) *
+                                                                        100,
+                                                                )
+                                                                : 0;
+                                                    @endphp
+
+                                                    @if ($savingsPercent > 0)
+                                                        <div
+                                                            class="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                                                            Save {{ $savingsPercent }}% • Deepest discount
+                                                            available
+                                                        </div>
+                                                    @endif
+                                                </div>
                                             </div>
 
                                             <div
-                                                class="flex flex-col space-y-3 sm:flex-row sm:justify-between sm:items-start sm:space-y-0">
-                                                <div class="flex items-start space-x-2 sm:space-x-3 flex-1 min-w-0">
-                                                    <!-- Carrier Logo/Icon -->
-                                                    <div class="flex-shrink-0 mt-0.5 sm:mt-1">
-                                                        @if (strtolower($quote['carrierCode'] ?? '') === 'fedex')
-                                                            <div
-                                                                class="w-6 h-6 sm:w-8 sm:h-8 bg-purple-600 rounded flex items-center justify-center">
-                                                                <x-avatar
-                                                                    image="{{ asset('assets/images/fedex.svg') }}" sm
-                                                                    md />
-                                                            </div>
-                                                        @elseif(strtolower($quote['carrierCode'] ?? '') === 'ups')
-                                                            <div
-                                                                class="w-6 h-6 sm:w-8 sm:h-8 bg-yellow-600 rounded flex items-center justify-center">
-                                                                <x-avatar image="{{ asset('assets/images/ups.svg') }}"
-                                                                    sm md />
-                                                            </div>
-                                                        @elseif(strtolower($quote['carrierCode'] ?? '') === 'usps')
-                                                            <div
-                                                                class="w-6 h-6 sm:w-8 sm:h-8 bg-blue-600 rounded flex items-center justify-center">
-                                                                <x-avatar
-                                                                    image="{{ asset('assets/images/usps.svg') }}" sm
-                                                                    md />
-                                                            </div>
-                                                        @elseif(strtolower($quote['carrierCode'] ?? '') === 'dhl')
-                                                            <div
-                                                                class="w-6 h-6 sm:w-8 sm:h-8 bg-red-600 rounded flex items-center justify-center">
-                                                                <x-avatar image="{{ asset('assets/images/dhl.svg') }}"
-                                                                    sm md />
-                                                            </div>
-                                                        @else
-                                                            <div
-                                                                class="w-6 h-6 sm:w-8 sm:h-8 bg-gray-500 rounded flex items-center justify-center">
-                                                                <span
-                                                                    class="text-white text-xs font-bold">{{ strtoupper(substr($quote['carrierCode'] ?? 'N/A', 0, 2)) }}</span>
-                                                            </div>
-                                                        @endif
+                                                class="text-center sm:text-right flex-shrink-0 self-center sm:self-start">
+                                                @if ($baseAmount > $totalAmount)
+                                                    <div class="text-xs sm:text-sm text-gray-500 line-through">
+                                                        ${{ number_format($baseAmount + $totalSurcharges, 2) }}
+                                                        retail
                                                     </div>
-
-                                                    <div class="flex-1 min-w-0">
-                                                        <div
-                                                            class="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-2 mb-1">
-                                                            <h4 class="font-semibold text-gray-900 dark:text-white text-xs sm:text-sm md:text-base truncate"
-                                                                :class="selectedQuoteIndex === {{ $index }} ?
-                                                                    'text-blue-900 dark:text-blue-100' : ''">
-                                                                {{ $quote['serviceDescription'] ?? 'N/A' }}
-                                                            </h4>
-                                                            <div class="flex flex-wrap gap-1">
-                                                                @if ($isBest)
-                                                                    <span
-                                                                        class="bg-gray-800 text-white text-xs px-2 py-1 rounded font-medium">BEST</span>
-                                                                @endif
-                                                                @if ($isCheapest)
-                                                                    <span
-                                                                        class="bg-green-600 text-white text-xs px-2 py-1 rounded font-medium">CHEAPEST</span>
-                                                                @endif
-                                                                <span
-                                                                    x-show="selectedQuoteIndex === {{ $index }}"
-                                                                    x-transition
-                                                                    class="bg-blue-600 text-white text-xs px-2 py-1 rounded font-medium">SELECTED</span>
-                                                            </div>
-                                                        </div>
-
-                                                        <div
-                                                            class="text-xs sm:text-sm text-blue-600 dark:text-blue-400 mb-1 sm:mb-2">
-                                                            ${{ number_format($quote['insuranceAmount'] ?? 0, 0) }}
-                                                            carrier
-                                                            liability
-                                                            <span class="block sm:inline">
-                                                                @if (isset($quote['estimatedDelivery']))
-                                                                    • {{ $quote['estimatedDelivery'] }}
-                                                                @else
-                                                                    • Estimated delivery in 3-5 business days
-                                                                @endif
-                                                            </span>
-                                                        </div>
-
-                                                        @php
-                                                            $totalSurcharges = collect($quote['surcharges'] ?? [])->sum(
-                                                                'amount',
-                                                            );
-                                                            $baseAmount = $quote['baseAmount'] ?? 0;
-                                                            $totalAmount = $quote['totalAmount'] ?? 0;
-                                                            $savingsPercent =
-                                                                $baseAmount > 0
-                                                                    ? round(
-                                                                        (($baseAmount +
-                                                                            $totalSurcharges -
-                                                                            $totalAmount) /
-                                                                            ($baseAmount + $totalSurcharges)) *
-                                                                            100,
-                                                                    )
-                                                                    : 0;
-                                                        @endphp
-
-                                                        @if ($savingsPercent > 0)
-                                                            <div
-                                                                class="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-                                                                Save {{ $savingsPercent }}% • Deepest discount
-                                                                available
-                                                            </div>
-                                                        @endif
-                                                    </div>
+                                                @endif
+                                                <div class="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-gray-900 dark:text-white mb-1 sm:mb-2"
+                                                    :class="selectedQuoteIndex === {{ $index }} ?
+                                                        'text-blue-900 dark:text-blue-100' : ''">
+                                                    ${{ number_format($totalAmount, 2) }}
                                                 </div>
-
-                                                <div
-                                                    class="text-center sm:text-right flex-shrink-0 self-center sm:self-start">
-                                                    @if ($baseAmount > $totalAmount)
-                                                        <div class="text-xs sm:text-sm text-gray-500 line-through">
-                                                            ${{ number_format($baseAmount + $totalSurcharges, 2) }}
-                                                            retail
-                                                        </div>
-                                                    @endif
-                                                    <div class="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-gray-900 dark:text-white mb-1 sm:mb-2"
-                                                        :class="selectedQuoteIndex === {{ $index }} ?
-                                                            'text-blue-900 dark:text-blue-100' : ''">
-                                                        ${{ number_format($totalAmount, 2) }}
-                                                    </div>
-                                                    <button
-                                                        @click.stop="selectQuote({{ json_encode($quote) }}, {{ $index }})"
-                                                        class="px-2 py-1 sm:px-3 sm:py-1 text-xs font-medium rounded transition-all duration-200 transform"
-                                                        :class="selectedQuoteIndex === {{ $index }} ?
-                                                            'bg-green-600 hover:bg-green-700 text-white shadow-lg scale-110' :
-                                                            'bg-blue-600 hover:bg-blue-700 text-white hover:scale-105'">
-                                                        <span x-show="selectedQuoteIndex === {{ $index }}"
-                                                            x-transition>✓ Selected</span>
-                                                        <span x-show="selectedQuoteIndex !== {{ $index }}"
-                                                            x-transition>Select</span>
-                                                    </button>
-                                                </div>
+                                                {{-- <button
+                                                    @click.stop="selectQuote({{ json_encode($quote) }}, {{ $index }})"
+                                                    class="px-2 py-1 sm:px-3 sm:py-1 text-xs font-medium rounded transition-all duration-200 transform"
+                                                    :class="selectedQuoteIndex === {{ $index }} ?
+                                                        'bg-green-600 hover:bg-green-700 text-white shadow-lg scale-110' :
+                                                        'bg-blue-600 hover:bg-blue-700 text-white hover:scale-105'">
+                                                    <span x-show="selectedQuoteIndex === {{ $index }}"
+                                                        x-transition>✓
+                                                        Selected</span>
+                                                    <span x-show="selectedQuoteIndex !== {{ $index }}"
+                                                        x-transition>Select</span>
+                                                </button> --}}
                                             </div>
                                         </div>
                                     </div>
-                                @endforeach
-                            </div>
+                                </div>
+                            @endforeach
                         </div>
-                    @else
-                        <div class="text-center py-8">
-                            <div class="text-gray-500 dark:text-gray-400 mb-2">📦</div>
-                            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-1">
-                                No shipping quotes available
-                            </h3>
-                            <p class="text-sm text-gray-600 dark:text-gray-400">
-                                Please check your shipping details and try again.
-                            </p>
-                        </div>
+                    </div>
+                @else
+                    <div class="text-center py-8">
+                        <div class="text-gray-500 dark:text-gray-400 mb-2">📦</div>
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-1">
+                            No shipping quotes available
+                        </h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">
+                            Please check your shipping details and try again.
+                        </p>
+                    </div>
                 @endif
             </x-card>
         @endif
@@ -1624,7 +1325,14 @@
 
         // Also listen for Livewire request start/end
         document.addEventListener('livewire:init', () => {
-            Livewire.hook('request', ({ uri, options, payload, respond, succeed, fail }) => {
+            Livewire.hook('request', ({
+                uri,
+                options,
+                payload,
+                respond,
+                succeed,
+                fail
+            }) => {
                 // Check if this request is for getQuote method
                 if (payload && payload.calls && payload.calls.some(call => call.method === 'getQuote')) {
                     console.log('getQuote request started - showing global loader');
@@ -1632,15 +1340,22 @@
                         window.showGlobalLoader();
                     }
                 }
-                
-                succeed(({ status, response }) => {
+
+                succeed(({
+                    status,
+                    response
+                }) => {
                     console.log('getQuote request completed - hiding global loader');
                     if (window.hideGlobalLoader) {
                         window.hideGlobalLoader();
                     }
                 });
-                
-                fail(({ status, content, preventDefault }) => {
+
+                fail(({
+                    status,
+                    content,
+                    preventDefault
+                }) => {
                     console.log('getQuote request failed - hiding global loader');
                     if (window.hideGlobalLoader) {
                         window.hideGlobalLoader();
