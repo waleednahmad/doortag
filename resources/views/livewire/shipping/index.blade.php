@@ -838,23 +838,23 @@
                                                 <div class="flex-shrink-0 mt-0.5 sm:mt-1">
                                                     @if (strtolower($quote['carrierCode'] ?? '') === 'fedex')
                                                         <img src="{{ asset('assets/images/fedex.svg') }}"
-                                                            class="w-8 h-8 object-contain"
+                                                            class="w-[55px] h-8 object-contain"
                                                             alt="FedEx" />
                                                     @elseif(strtolower($quote['carrierCode'] ?? '') === 'ups')
                                                         <img src="{{ asset('assets/images/ups.svg') }}"
-                                                            class="w-8 h-8 object-contain"
+                                                            class="w-[55px] h-8 object-contain"
                                                             alt="UPS" />
                                                     @elseif(strtolower($quote['carrierCode'] ?? '') === 'usps')
                                                         <img src="{{ asset('assets/images/usps.svg') }}"
-                                                            class="w-8 h-8 object-contain"
+                                                            class="w-[55px] h-8 object-contain"
                                                             alt="USPS" />
                                                     @elseif(strtolower($quote['carrierCode'] ?? '') === 'dhl')
                                                         <img src="{{ asset('assets/images/dhl.svg') }}"
-                                                            class="w-8 h-8 object-contain"
+                                                            class="w-[55px] h-8 object-contain"
                                                             alt="DHL" />
                                                     @else
                                                         <div
-                                                            class="w-8 h-8 object-contain bg-gray-500 rounded flex items-center justify-center">
+                                                            class="w-[55px] h-8 object-contain bg-gray-500 rounded flex items-center justify-center">
                                                             <span
                                                                 class="text-white text-xs font-bold">{{ strtoupper(substr($quote['carrierCode'] ?? 'N/A', 0, 2)) }}</span>
                                                         </div>
