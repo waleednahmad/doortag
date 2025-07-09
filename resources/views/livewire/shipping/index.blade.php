@@ -645,6 +645,121 @@
         @endif
         <!-- Display Quotes Results -->
         @if ($hasResponse)
+            <!-- Ship To Details Section -->
+            <div class="mt-4 sm:mt-6">
+                <h1 class="text-[30px] font-[700] text-gray-900 dark:text-white leading-[1.1] mb-[12px]">
+                    {{ $receiver['name'] ?: 'Recipient Name' }}
+                </h1>
+                <p class="text-[17px] text-gray-700 dark:text-gray-300 leading-[1.42857143] font-[500]">
+                    {{ $receiver['address'] ?: 'Address not provided' }}
+                </p>
+                <div class="flex items-center gap-2 mb-[48px]">
+                    <p class="text-[17px] text-gray-700 dark:text-gray-300 leading-[1.42857143] font-[500]">
+                        {{ $receiver['city'] }}
+                        {{ $receiver['state'] ? $receiver['state'] . ' ' : '' }}{{ $receiver['zip'] }}
+                    </p>
+                    <i class="fa-solid fa-paste text-[1em] text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition"
+                        onclick="navigator.clipboard.writeText('{{ $receiver['city'] }} {{ $receiver['state'] ? $receiver['state'] . ' ' : '' }}{{ $receiver['zip'] }}')"
+                        title="Copy to clipboard"></i>
+                </div>
+            </div>
+
+            <!-- Shipment Details Section -->
+            <div class="mb-[48px] py-[7px]" x-data="{ shipmentDetailsOpen: false }">
+                <label @click="shipmentDetailsOpen = !shipmentDetailsOpen" class="flex cursor-pointer space-x-[5px]">
+                    <div
+                        class="w-[20px] h-[20px] border-[2px] border-gray-500 dark:border-gray-400 rounded-[50%] flex items-center justify-center cursor-pointer">
+                        <span x-show="!shipmentDetailsOpen" class="text-[12px] text-gray-500 dark:text-gray-400">
+                            +
+                        </span>
+                        <span x-show="shipmentDetailsOpen" class="text-[12px] text-gray-500 dark:text-gray-400">
+                            -
+                        </span>
+                    </div>
+                    <p class="font-[500] text-[15px] text-gray-700 dark:text-gray-300">Shipment Details</p>
+                </label>
+                <div x-show="shipmentDetailsOpen" x-transition:enter="transition ease-out duration-300"
+                    x-transition:enter-start="opacity-0 transform -translate-y-2"
+                    x-transition:enter-end="opacity-100 transform translate-y-0"
+                    class="p-[16px_16px_16px_24px] flex lg:flex-row flex-col justify-between bg-gray-100 dark:bg-gray-800 border-[2px] border-gray-300 dark:border-gray-600 rounded-[5px] mt-[10px] lg:gap-0 gap-[16px]">
+
+                    <!-- Ship From Address -->
+                    <div class="lg:w-[33.3333%] w-full text-[14px]">
+                        <h1 class="font-[500] text-gray-600 dark:text-gray-300 pb-[6px] leading-[1.42857143]">Ship From Address</h1>
+                        @php
+                            $user = Auth::user();
+                            $fromName = '';
+                            $fromAddress = '';
+                            $fromCityState = '';
+
+                            if ($user instanceof \App\Models\Customer) {
+                                $fromName = $user->name;
+                                $fromAddress = $user->address ?? 'Address not provided';
+                                $fromCityState =
+                                    ($user->city ?? '') . ' ' . ($user->state ?? '') . ' ' . ($user->zipcode ?? '');
+                            } elseif ($user instanceof \App\Models\User) {
+                                $fromName = $user->name;
+                                $fromAddress = $user->address ?? 'Address not provided';
+                                $fromCityState =
+                                    ($user->city ?? '') . ' ' . ($user->state ?? '') . ' ' . ($user->zipcode ?? '');
+                            }
+                        @endphp
+                        <p class="text-gray-500 dark:text-gray-400 leading-[1.42857143]">{{ $fromName ?: 'Sender Name' }}</p>
+                        <p class="text-gray-500 dark:text-gray-400 leading-[1.42857143]">{{ $fromAddress }}</p>
+                        <p class="text-gray-500 dark:text-gray-400 leading-[1.42857143]">{{ trim($fromCityState) ?: 'City, State ZIP' }}
+                        </p>
+                    </div>
+
+                    <!-- Package Details -->
+                    <div class="lg:w-[33.3333%] w-full text-[14px] lg:pl-[8px] pl-0">
+                        <h1 class="font-[500] text-gray-600 dark:text-gray-300 pb-[6px] leading-[1.42857143]">Package Details</h1>
+                        @if (!empty($pieces))
+                            @foreach ($pieces as $index => $piece)
+                                @php
+                                    $totalWeight = ($piece['weight'] ?? 0) + ($piece['ounces'] ?? 0) / 16;
+                                    $weightLbs = floor($totalWeight);
+                                    $weightOz = round(($totalWeight - $weightLbs) * 16);
+                                @endphp
+                                <div class="mb-2">
+                                    <p class="text-gray-500 dark:text-gray-400 font-[500] leading-[1.42857143]">
+                                        Package {{ $index + 1 }}:
+                                        <span class="pl-[4px] font-[400]">Box or Rigid Packaging</span>
+                                    </p>
+                                    <p class="text-gray-500 dark:text-gray-400 font-[500] leading-[1.42857143]">
+                                        Dimensions:
+                                        <span class="pl-[4px] font-[400]">
+                                            {{ $piece['length'] ?? 0 }}x{{ $piece['width'] ?? 0 }}x{{ $piece['height'] ?? 0 }}"
+                                        </span>
+                                    </p>
+                                    <p class="text-gray-500 dark:text-gray-400 font-[500] leading-[1.42857143]">
+                                        Weight:
+                                        <span class="pl-[4px] font-[400]">
+                                            {{ $weightLbs }} lbs {{ $weightOz }} oz
+                                        </span>
+                                    </p>
+                                </div>
+                            @endforeach
+                        @endif
+                        <p class="text-gray-500 dark:text-gray-400 font-[500] leading-[1.42857143]">Free Online Delivery Confirmation</p>
+                    </div>
+
+                    <!-- Label Details -->
+                    <div class="lg:w-[33.3333%] w-full text-[14px] lg:pl-[16px] pl-0">
+                        <h1 class="font-[500] text-gray-600 dark:text-gray-300 pb-[6px] leading-[1.42857143]">
+                            Label Details
+                            <i class="fa-solid fa-circle-question text-[1.1em] text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer"
+                                title="Label information"></i>
+                        </h1>
+                        <p class="text-gray-500 dark:text-gray-400 font-[500] leading-[1.42857143]">
+                            Label Size: <span class="pl-[4px] font-[400]">4x6"</span>
+                        </p>
+                        <p class="text-gray-500 dark:text-gray-400 font-[500] leading-[1.42857143]">
+                            Label Filetype: <span class="pl-[4px] font-[400]">PDF</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
             <x-card class="mt-4 sm:mt-6">
                 <x-slot:header>
                     <div class="flex flex-col space-y-3 lg:flex-row lg:justify-between lg:items-center lg:space-y-0">
@@ -838,20 +953,16 @@
                                                 <div class="flex-shrink-0 mt-0.5 sm:mt-1">
                                                     @if (strtolower($quote['carrierCode'] ?? '') === 'fedex')
                                                         <img src="{{ asset('assets/images/fedex.svg') }}"
-                                                            class="w-[55px] h-8 object-contain"
-                                                            alt="FedEx" />
+                                                            class="w-[55px] h-8 object-contain" alt="FedEx" />
                                                     @elseif(strtolower($quote['carrierCode'] ?? '') === 'ups')
                                                         <img src="{{ asset('assets/images/ups.svg') }}"
-                                                            class="w-[55px] h-8 object-contain"
-                                                            alt="UPS" />
+                                                            class="w-[55px] h-8 object-contain" alt="UPS" />
                                                     @elseif(strtolower($quote['carrierCode'] ?? '') === 'usps')
                                                         <img src="{{ asset('assets/images/usps.svg') }}"
-                                                            class="w-[55px] h-8 object-contain"
-                                                            alt="USPS" />
+                                                            class="w-[55px] h-8 object-contain" alt="USPS" />
                                                     @elseif(strtolower($quote['carrierCode'] ?? '') === 'dhl')
                                                         <img src="{{ asset('assets/images/dhl.svg') }}"
-                                                            class="w-[55px] h-8 object-contain"
-                                                            alt="DHL" />
+                                                            class="w-[55px] h-8 object-contain" alt="DHL" />
                                                     @else
                                                         <div
                                                             class="w-[55px] h-8 object-contain bg-gray-500 rounded flex items-center justify-center">
@@ -1256,6 +1367,7 @@
             selectQuote(quote, index) {
                 console.log('Quote selected:', quote);
                 this.selectedQuoteIndex = index;
+                this.quotesOpen = false; // Close quotes list after selection
                 // You can emit events to Livewire here or handle quote selection
                 $wire.dispatch('quote-selected', {
                     quote: quote,
