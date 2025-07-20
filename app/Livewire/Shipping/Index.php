@@ -115,7 +115,7 @@ class Index extends Component
             'pieces.*.height' => 'required|numeric|min:0.01',
             'pieces.*.insuranceAmount' => 'required|numeric|min:0',
             'pieces.*.declaredValue' => 'required|numeric|min:0',
-            'pieces.*.ounces' => 'required|integer|min:0|max:15', // Ounces are not used in the API, but we keep it for UI consistency
+            'pieces.*.ounces' => 'nullable|integer|min:0|max:15', // Ounces are not used in the API, but we keep it for UI consistency
         ]);
 
         try {
