@@ -312,8 +312,8 @@
                                             <div class="hidden lg:grid lg:grid-cols-5 gap-4 items-end">
                                                 <div>
                                                     <x-input type="number"
-                                                        wire:model="pieces.{{ $index }}.length" label="Length"
-                                                        placeholder="5.1" step="0.01" min="0" required
+                                                        wire:model="pieces.{{ $index }}.length"
+                                                        label="Length *" step="0.01" min="0" required
                                                         id="pieces_{{ $index }}_length_desktop" />
                                                 </div>
                                                 <div
@@ -323,8 +323,8 @@
                                                 <div>
 
                                                     <x-input type="number"
-                                                        wire:model="pieces.{{ $index }}.width" label="Width"
-                                                        placeholder="4" step="0.01" min="0" required
+                                                        wire:model="pieces.{{ $index }}.width" label="Width *"
+                                                        step="0.01" min="0" required
                                                         id="pieces_{{ $index }}_width_desktop" />
                                                 </div>
                                                 <div
@@ -333,8 +333,8 @@
                                                 </div>
                                                 <div>
                                                     <x-input type="number"
-                                                        wire:model="pieces.{{ $index }}.height" label="Height"
-                                                        placeholder="2.5" step="0.01" min="0" required
+                                                        wire:model="pieces.{{ $index }}.height"
+                                                        label="Height *" step="0.01" min="0" required
                                                         id="pieces_{{ $index }}_height_desktop" />
                                                 </div>
                                             </div>
@@ -344,20 +344,20 @@
                                                 <div>
 
                                                     <x-input type="number"
-                                                        wire:model="pieces.{{ $index }}.length" label="Length"
-                                                        placeholder="5.1" step="0.01" min="0" required
+                                                        wire:model="pieces.{{ $index }}.length"
+                                                        label="Length *" step="0.01" min="0" required
                                                         id="pieces_{{ $index }}_length_tablet" />
                                                 </div>
                                                 <div>
                                                     <x-input type="number"
-                                                        wire:model="pieces.{{ $index }}.width" label="Width"
-                                                        placeholder="4" step="0.01" min="0" required
+                                                        wire:model="pieces.{{ $index }}.width" label="Width *"
+                                                        step="0.01" min="0" required
                                                         id="pieces_{{ $index }}_width_tablet" />
                                                 </div>
                                                 <div>
                                                     <x-input type="number"
-                                                        wire:model="pieces.{{ $index }}.height" label="Height"
-                                                        placeholder="2.5" step="0.01" min="0" required
+                                                        wire:model="pieces.{{ $index }}.height"
+                                                        label="Height *" step="0.01" min="0" required
                                                         id="pieces_{{ $index }}_height_tablet" />
                                                 </div>
                                             </div>
@@ -366,24 +366,22 @@
                                             <div class="md:hidden space-y-3 ">
                                                 <div class="grid grid-cols-1 gap-3">
                                                     <div>
-                                                        <x-input type="number" label="Length"
+                                                        <x-input type="number" label="Length *"
                                                             wire:model="pieces.{{ $index }}.length"
-                                                            placeholder="5.1" min="0" step="0.01" required
+                                                            min="0" step="0.01" required
                                                             id="pieces_{{ $index }}_length_mobile" />
                                                     </div>
                                                     <div>
 
                                                         <x-input type="number"
                                                             wire:model="pieces.{{ $index }}.width"
-                                                            label="Width" placeholder="4" min="0"
-                                                            step="0.01" required
+                                                            label="Width *" min="0" step="0.01" required
                                                             id="pieces_{{ $index }}_width_mobile" />
                                                     </div>
                                                     <div>
                                                         <x-input type="number"
                                                             wire:model="pieces.{{ $index }}.height"
-                                                            label="Height" placeholder="2.5" step="0.01"
-                                                            min="0" required
+                                                            label="Height *" step="0.01" min="0" required
                                                             id="pieces_{{ $index }}_height_mobile" />
                                                     </div>
                                                 </div>
@@ -400,14 +398,13 @@
                                                 <div>
 
                                                     <x-input type="number"
-                                                        wire:model="pieces.{{ $index }}.weight" label="Pounds"
-                                                        placeholder="1" step="1" min="0" required
+                                                        wire:model="pieces.{{ $index }}.weight"
+                                                        label="Pounds *" step="1" min="0" required
                                                         id="pieces_{{ $index }}_weight" />
                                                 </div>
                                                 <div>
-                                                    <x-input type="number" label="Ounces" placeholder="0"
-                                                        min="0" max="15"
-                                                        wire:model="pieces.{{ $index }}.ounces"
+                                                    <x-input type="number" label="Ounces" min="0"
+                                                        max="15" wire:model="pieces.{{ $index }}.ounces"
                                                         id="pieces_{{ $index }}_ounces" />
                                                 </div>
                                             </div>
@@ -685,7 +682,8 @@
 
                     <!-- Ship From Address -->
                     <div class="lg:w-[33.3333%] w-full text-[14px]">
-                        <h1 class="font-[500] text-gray-600 dark:text-gray-300 pb-[6px] leading-[1.42857143]">Ship From Address</h1>
+                        <h1 class="font-[500] text-gray-600 dark:text-gray-300 pb-[6px] leading-[1.42857143]">Ship From
+                            Address</h1>
                         @php
                             $user = Auth::user();
                             $fromName = '';
@@ -704,15 +702,18 @@
                                     ($user->city ?? '') . ' ' . ($user->state ?? '') . ' ' . ($user->zipcode ?? '');
                             }
                         @endphp
-                        <p class="text-gray-500 dark:text-gray-400 leading-[1.42857143]">{{ $fromName ?: 'Sender Name' }}</p>
+                        <p class="text-gray-500 dark:text-gray-400 leading-[1.42857143]">
+                            {{ $fromName ?: 'Sender Name' }}</p>
                         <p class="text-gray-500 dark:text-gray-400 leading-[1.42857143]">{{ $fromAddress }}</p>
-                        <p class="text-gray-500 dark:text-gray-400 leading-[1.42857143]">{{ trim($fromCityState) ?: 'City, State ZIP' }}
+                        <p class="text-gray-500 dark:text-gray-400 leading-[1.42857143]">
+                            {{ trim($fromCityState) ?: 'City, State ZIP' }}
                         </p>
                     </div>
 
                     <!-- Package Details -->
                     <div class="lg:w-[33.3333%] w-full text-[14px] lg:pl-[8px] pl-0">
-                        <h1 class="font-[500] text-gray-600 dark:text-gray-300 pb-[6px] leading-[1.42857143]">Package Details</h1>
+                        <h1 class="font-[500] text-gray-600 dark:text-gray-300 pb-[6px] leading-[1.42857143]">Package
+                            Details</h1>
                         @if (!empty($pieces))
                             @foreach ($pieces as $index => $piece)
                                 @php
@@ -740,7 +741,8 @@
                                 </div>
                             @endforeach
                         @endif
-                        <p class="text-gray-500 dark:text-gray-400 font-[500] leading-[1.42857143]">Free Online Delivery Confirmation</p>
+                        <p class="text-gray-500 dark:text-gray-400 font-[500] leading-[1.42857143]">Free Online
+                            Delivery Confirmation</p>
                     </div>
 
                     <!-- Label Details -->

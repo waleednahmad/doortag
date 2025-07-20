@@ -43,7 +43,7 @@ class Index extends Component
             'insuranceAmount' => '12.15',
             'declaredValue' => '100',
             // ---- Optional for api request
-            'ounces' => 0, // Ounces are not used in the API
+            'ounces' => '', // Ounces are not used in the API
         ]
     ];
 
