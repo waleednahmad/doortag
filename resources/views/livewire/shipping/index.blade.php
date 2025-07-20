@@ -717,7 +717,7 @@
                         @if (!empty($pieces))
                             @foreach ($pieces as $index => $piece)
                                 @php
-                                    $totalWeight = ($piece['weight'] ?? 0) + ($piece['ounces'] ?? 0) / 16;
+                                    $totalWeight = ($piece['weight'] ?? 0) + ((float)$piece['ounces'] ?? 0) / 16;
                                     $weightLbs = floor($totalWeight);
                                     $weightOz = round(($totalWeight - $weightLbs) * 16);
                                 @endphp
