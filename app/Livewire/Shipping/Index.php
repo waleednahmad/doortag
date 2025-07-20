@@ -129,7 +129,7 @@ class Index extends Component
                 ])),
                 'pieces' => array_map(function ($piece) {
                     $ounces = isset($piece['ounces']) && $piece['ounces'] !== '' && $piece['ounces'] !== null ? (float)$piece['ounces'] : 0;
-                    $weightWithOunces = (float)$piece['weight'] + ($ounces / 16);
+                    $weightWithOunces = (float)$piece['weight'] + ((float)$ounces / 16);
                     $finalWeight = (string) ceil($weightWithOunces);
 
                     return array_intersect_key(array_merge($piece, ['weight' => $finalWeight]), array_flip([
