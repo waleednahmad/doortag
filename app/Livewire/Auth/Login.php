@@ -40,7 +40,7 @@ class Login extends Component
             // Log which guard was used for debugging
             logger('User authenticated with web guard: ' . $this->email);
 
-            $this->redirect(route('shipping.index'));
+            $this->redirect(route('shipping.fedex.index'));
             return;
         }
 
@@ -52,7 +52,7 @@ class Login extends Component
             // Log which guard was used for debugging
             logger('Customer authenticated with customer guard: ' . $this->email);
 
-            $this->redirect(route('shipping.index'));
+            $this->redirect(route('shipping.fedex.index'));
             return;
         }
 

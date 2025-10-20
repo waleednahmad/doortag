@@ -94,7 +94,17 @@
                     <!-- Menu Items -->
                     <nav class="w-full">
                         <!-- Repeat this block for each menu item -->
-                        <a href="{{ route('shipping.index') }}" @class([
+                        <a href="{{ route('shipping.fedex.index') }}" @class([
+                            'group h-[70px] flex items-center gap-4 px-4 rounded-md cursor-pointer transition hover:bg-white dark:hover:bg-gray-700 bg-transparent relative',
+                            'bg-white dark:bg-gray-700' => request()->routeIs('shipping.fedex.index'),
+                        ])>
+                            <div class="w-[70px] h-[70px]">
+                                <img src="{{ asset('assets/icons/menu-ship.png') }}" alt="Ship"
+                                    class="w-full h-full object-contain" />
+                            </div>
+                            <span class="text-lg font-bold">Ship</span>
+                        </a>
+                        {{-- <a href="{{ route('shipping.index') }}" @class([
                             'group h-[70px] flex items-center gap-4 px-4 rounded-md cursor-pointer transition hover:bg-white dark:hover:bg-gray-700 bg-transparent relative',
                             'bg-white dark:bg-gray-700' => request()->routeIs('shipping.index'),
                         ])>
@@ -103,7 +113,7 @@
                                     class="w-full h-full object-contain" />
                             </div>
                             <span class="text-lg font-bold">Ship</span>
-                        </a>
+                        </a> --}}
 
                         <a href="#" @class([
                             'group h-[70px] flex items-center gap-4 px-4 rounded-md cursor-pointer transition hover:bg-white dark:hover:bg-gray-700 bg-transparent relative',
