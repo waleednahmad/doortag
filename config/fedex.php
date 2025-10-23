@@ -11,9 +11,9 @@ return [
     |
     */
 
-    'client_id' => env('FEDEX_CLIENT_ID', 'l7f6de69eda6c243fa95e9f43a444e5ad3'),
-    'client_secret' => env('FEDEX_CLIENT_SECRET', '7db8633fbb044c98b890d6e08341893c'),
-    'account_number' => env('FEDEX_ACCOUNT_NUMBER', '510087020'),
+    'client_id' => env('FEDEX_CLIENT_ID', 'l7c7d11e8a03a84bfcb1cd5c60ff30f528'),
+    'client_secret' => env('FEDEX_CLIENT_SECRET', 'b94c2d74b7344b1dabf426739e1366c9'),
+    'account_number' => env('FEDEX_ACCOUNT_NUMBER', '943314292'),
     
     /*
     |--------------------------------------------------------------------------
@@ -21,7 +21,7 @@ return [
     |--------------------------------------------------------------------------
     */
     
-    'sandbox_mode' => env('FEDEX_SANDBOX_MODE', true),
+    'sandbox_mode' => env('FEDEX_SANDBOX_MODE', false),
     
     'urls' => [
         'sandbox' => [

@@ -213,12 +213,12 @@
 
                                     <!-- Package Dimensions -->
                                     <div class="mb-6 sm:mb-8">
-                                        {{-- <h6 class="text-sm sm:text-base font-medium text-gray-800 dark:text-gray-200 mb-3 sm:mb-4">
+                                        <h6 class="text-sm sm:text-base font-medium text-gray-800 dark:text-gray-200 mb-3 sm:mb-4">
                                             Package Dimensions (Inches)
-                                        </h6> --}}
+                                        </h6>
 
                                         <!-- Desktop Layout (Large screens) -->
-                                        {{-- <div class="hidden lg:grid lg:grid-cols-5 gap-4 items-end">
+                                        <div class="hidden lg:grid lg:grid-cols-5 gap-4 items-end">
                                             <div>
                                                 <x-input type="number"
                                                     wire:model="requestedPackageLineItems.{{ $index }}.dimensions.length"
@@ -240,10 +240,10 @@
                                                     wire:model="requestedPackageLineItems.{{ $index }}.dimensions.height"
                                                     label="Height *" step="1" min="1" max="999" required />
                                             </div>
-                                        </div> --}}
+                                        </div>
 
                                         <!-- Tablet Layout (Medium screens) -->
-                                        {{-- <div class="hidden md:grid lg:hidden md:grid-cols-3 gap-4">
+                                        <div class="hidden md:grid lg:hidden md:grid-cols-3 gap-4">
                                             <div>
                                                 <x-input type="number"
                                                     wire:model="requestedPackageLineItems.{{ $index }}.dimensions.length"
@@ -259,10 +259,10 @@
                                                     wire:model="requestedPackageLineItems.{{ $index }}.dimensions.height"
                                                     label="Height *" step="1" min="1" max="999" required />
                                             </div>
-                                        </div> --}}
+                                        </div>
 
                                         <!-- Mobile Layout (Small screens) -->
-                                        {{-- <div class="md:hidden space-y-3">
+                                        <div class="md:hidden space-y-3">
                                             <div class="grid grid-cols-1 gap-3">
                                                 <div>
                                                     <x-input type="number" label="Length *"
@@ -280,7 +280,7 @@
                                                         label="Height *" step="1" min="1" max="999" required />
                                                 </div>
                                             </div>
-                                        </div> --}}
+                                        </div>
                                     </div>
                                 </div>
                             @endforeach

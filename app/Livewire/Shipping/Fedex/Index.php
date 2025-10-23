@@ -60,12 +60,12 @@ class Index extends Component
                 'units' => 'LB',
                 'value' => 1
             ],
-            // 'dimensions' => [
-            //     'length' => null,
-            //     'width' => null,
-            //     'height' => null,
-            //     'units' => 'IN'
-            // ]
+            'dimensions' => [
+                'length' => null,
+                'width' => null,
+                'height' => null,
+                'units' => 'IN'
+            ]
         ]
     ];
 
@@ -197,9 +197,9 @@ class Index extends Component
             'recipient.postalCode' => 'required',
             'recipient.country' => 'required|string',
             'requestedPackageLineItems.*.weight.value' => 'required|numeric|min:0.1',
-            // 'requestedPackageLineItems.*.dimensions.length' => 'required|integer|min:1|max:999',
-            // 'requestedPackageLineItems.*.dimensions.width' => 'required|integer|min:1|max:999',
-            // 'requestedPackageLineItems.*.dimensions.height' => 'required|integer|min:1|max:999',
+            'requestedPackageLineItems.*.dimensions.length' => 'required|integer|min:1|max:999',
+            'requestedPackageLineItems.*.dimensions.width' => 'required|integer|min:1|max:999',
+            'requestedPackageLineItems.*.dimensions.height' => 'required|integer|min:1|max:999',
         ]);
 
         // Sync form fields with API fields
@@ -209,6 +209,7 @@ class Index extends Component
             // Get access token
             $accessToken = $this->getFedExAccessToken();
 
+            info('Access Token:', ['access_token' => $accessToken]);
             // Prepare payload - enhanced with all required fields
             $payload = [
                 'accountNumber' => [
@@ -244,12 +245,12 @@ class Index extends Component
                                 'units' => $package['weight']['units'],
                                 'value' => floatval($package['weight']['value'])
                             ],
-                            // 'dimensions' => [
-                            //     'length' => (int)$package['dimensions']['length'],
-                            //     'width' => (int)$package['dimensions']['width'],
-                            //     'height' => (int)$package['dimensions']['height'],
-                            //     'units' => 'IN'
-                            // ]
+                            'dimensions' => [
+                                'length' => (int)$package['dimensions']['length'],
+                                'width' => (int)$package['dimensions']['width'],
+                                'height' => (int)$package['dimensions']['height'],
+                                'units' => 'IN'
+                            ]
                         ];
                     }, $this->requestedPackageLineItems)
                 ]
@@ -265,6 +266,7 @@ class Index extends Component
                 config('fedex.urls.production.rates');
 
             // Log the payload for debugging
+            info('Rates URL:', ['url' => $ratesUrl]);
             info('FedEx API Request Payload:', $payload);
 
             // Make API request with retry for SYSTEM.UNAVAILABLE.EXCEPTION
