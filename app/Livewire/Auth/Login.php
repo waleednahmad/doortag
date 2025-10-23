@@ -36,10 +36,7 @@ class Login extends Component
         if (Auth::guard('web')->attempt(['email' => $this->email, 'password' => $this->password], $this->remember)) {
             RateLimiter::clear($this->throttleKey());
             Session::regenerate();
-
-            // Log which guard was used for debugging
-            logger('User authenticated with web guard: ' . $this->email);
-
+            
             $this->redirect(route('shipping.fedex.index'));
             return;
         }
@@ -48,9 +45,6 @@ class Login extends Component
         if (Auth::guard('customer')->attempt(['email' => $this->email, 'password' => $this->password], $this->remember)) {
             RateLimiter::clear($this->throttleKey());
             Session::regenerate();
-
-            // Log which guard was used for debugging
-            logger('Customer authenticated with customer guard: ' . $this->email);
 
             $this->redirect(route('shipping.fedex.index'));
             return;

@@ -22,20 +22,31 @@ class Index extends Component
 
     // Form data matching FedEx API structure
     public array $shipper = [
-        'postalCode' => '65247',
+        'postalCode' => 65247, // Memphis, TN - FedEx headquarters area
         'countryCode' => 'US',
-        'stateOrProvinceCode' => '',
-        'city' => '',
-        'streetLines' => ['']
+        'stateOrProvinceCode' => 'TN',
+        'city' => 'Collierville',
+        'streetLines' => ['1000 FedEx Dr']
     ];
 
     public array $recipient = [
-        'postalCode' => '75063',
+        // FedEx API required fields
+        'postalCode' => 75063, // Beverly Hills, CA - well-known valid postal code
         'countryCode' => 'US',
-        'stateOrProvinceCode' => '',
-        'city' => '',
-        'streetLines' => [''],
-        'residential' => false
+        'stateOrProvinceCode' => 'CA',
+        'city' => 'Beverly Hills',
+        'streetLines' => ['123 Main St'],
+        'residential' => false,
+
+        // Additional form fields matching shipping/index
+        'email' => '',
+        'phone' => '',
+        'name' => '',
+        'company' => '',
+        'address' => '',
+        'apt' => '',
+        'state' => 'CA',
+        'country' => 'US'
     ];
 
     public string $pickupType = 'DROPOFF_AT_FEDEX_LOCATION';
@@ -49,12 +60,12 @@ class Index extends Component
                 'units' => 'LB',
                 'value' => 1
             ],
-            'dimensions' => [
-                'length' => 10,
-                'width' => 10,
-                'height' => 10,
-                'units' => 'IN'
-            ]
+            // 'dimensions' => [
+            //     'length' => null,
+            //     'width' => null,
+            //     'height' => null,
+            //     'units' => 'IN'
+            // ]
         ]
     ];
 
@@ -80,12 +91,12 @@ class Index extends Component
         // Set shipper zipcode from authenticated user
         $authenticatedUser = Auth::user();
         if ($authenticatedUser instanceof Customer) {
-            $this->shipper['postalCode'] = $authenticatedUser->zipcode ?? '';
+            // $this->shipper['postalCode'] = $authenticatedUser->zipcode ?? '';
             $this->shipper['city'] = $authenticatedUser->city ?? '';
             $this->shipper['stateOrProvinceCode'] = $authenticatedUser->state ?? '';
             $this->shipper['streetLines'] = [$authenticatedUser->address ?? ''];
         } elseif ($authenticatedUser instanceof User) {
-            $this->shipper['postalCode'] = $authenticatedUser->zipcode ?? '';
+            // $this->shipper['postalCode'] = $authenticatedUser->zipcode ?? '';
             $this->shipper['city'] = $authenticatedUser->city ?? '';
             $this->shipper['stateOrProvinceCode'] = $authenticatedUser->state ?? '';
             $this->shipper['streetLines'] = [$authenticatedUser->address ?? ''];
@@ -154,20 +165,51 @@ class Index extends Component
         }
     }
 
+    /**
+     * Sync form fields with API fields before making request
+     */
+    private function syncRecipientFields()
+    {
+        // Sync country code for API
+        $this->recipient['countryCode'] = $this->recipient['country'] ?: $this->recipient['countryCode'];
+
+        // Sync other address fields
+        $this->recipient['city'] = $this->recipient['city'];
+        $this->recipient['stateOrProvinceCode'] = $this->recipient['state'];
+
+        // Combine address and apt into streetLines
+        $streetLines = array_filter([
+            $this->recipient['address'],
+            $this->recipient['apt']
+        ]);
+        $this->recipient['streetLines'] = $streetLines ?: [''];
+    }
+
     public function getFedExQuote()
     {
         $this->validate([
-            'shipper.postalCode' => 'required|string',
-            'shipper.countryCode' => 'required|string',
-            'recipient.postalCode' => 'required|string',
-            'recipient.countryCode' => 'required|string',
+            'shipper.postalCode' => 'required',
+            'recipient.email' => 'required|email',
+            'recipient.name' => 'required|string',
+            'recipient.address' => 'required|string',
+            'recipient.city' => 'required|string',
+            'recipient.state' => 'required|string',
+            'recipient.postalCode' => 'required',
+            'recipient.country' => 'required|string',
             'requestedPackageLineItems.*.weight.value' => 'required|numeric|min:0.1',
+            // 'requestedPackageLineItems.*.dimensions.length' => 'required|integer|min:1|max:999',
+            // 'requestedPackageLineItems.*.dimensions.width' => 'required|integer|min:1|max:999',
+            // 'requestedPackageLineItems.*.dimensions.height' => 'required|integer|min:1|max:999',
         ]);
+
+        // Sync form fields with API fields
+        $this->syncRecipientFields();
+
         try {
             // Get access token
             $accessToken = $this->getFedExAccessToken();
 
-            // Prepare payload - simplified to match required structure only
+            // Prepare payload - enhanced with all required fields
             $payload = [
                 'accountNumber' => [
                     'value' => $this->accountNumber
@@ -176,13 +218,20 @@ class Index extends Component
                     'shipper' => [
                         'address' => [
                             'postalCode' => $this->shipper['postalCode'],
-                            'countryCode' => $this->shipper['countryCode']
+                            'countryCode' => $this->shipper['countryCode'],
+                            // 'stateOrProvinceCode' => $this->shipper['stateOrProvinceCode'] ?: null,
+                            // 'city' => $this->shipper['city'] ?: null,
+                            // 'streetLines' => array_filter($this->shipper['streetLines'])
                         ]
                     ],
                     'recipient' => [
                         'address' => [
                             'postalCode' => $this->recipient['postalCode'],
-                            'countryCode' => $this->recipient['countryCode']
+                            'countryCode' => $this->recipient['countryCode'],
+                            // 'stateOrProvinceCode' => $this->recipient['stateOrProvinceCode'] ?: null,
+                            // 'city' => $this->recipient['city'] ?: null,
+                            // 'streetLines' => array_filter($this->recipient['streetLines']),
+                            // 'residential' => $this->recipient['residential']
                         ]
                     ],
                     'pickupType' => $this->pickupType,
@@ -193,26 +242,62 @@ class Index extends Component
                         return [
                             'weight' => [
                                 'units' => $package['weight']['units'],
-                                'value' => $package['weight']['value']
-                            ]
+                                'value' => floatval($package['weight']['value'])
+                            ],
+                            // 'dimensions' => [
+                            //     'length' => (int)$package['dimensions']['length'],
+                            //     'width' => (int)$package['dimensions']['width'],
+                            //     'height' => (int)$package['dimensions']['height'],
+                            //     'units' => 'IN'
+                            // ]
                         ];
                     }, $this->requestedPackageLineItems)
                 ]
             ];
+
+            // Remove null values to clean up the payload
+            $payload = $this->removeNullValues($payload);
+
 
             // Make API request
             $ratesUrl = config('fedex.sandbox_mode') ?
                 config('fedex.urls.sandbox.rates') :
                 config('fedex.urls.production.rates');
 
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $accessToken,
-                'Content-Type' => 'application/json',
-                'X-locale' => 'en_US'
-            ])->post($ratesUrl, $payload);
+            // Log the payload for debugging
+            info('FedEx API Request Payload:', $payload);
 
+            // Make API request with retry for SYSTEM.UNAVAILABLE.EXCEPTION
+            $maxRetries = 3;
+            $retryCount = 0;
+            $response = null;
 
-            info($response->json());
+            do {
+                $response = Http::timeout(30)->withHeaders([
+                    'Authorization' => 'Bearer ' . $accessToken,
+                    'Content-Type' => 'application/json',
+                    'X-locale' => 'en_US'
+                ])->post($ratesUrl, $payload);
+
+                // Check for system unavailable and retry
+                if (
+                    $response->status() === 503 ||
+                    (isset($response->json()['errors'][0]['code']) &&
+                        $response->json()['errors'][0]['code'] === 'SYSTEM.UNAVAILABLE.EXCEPTION')
+                ) {
+                    $retryCount++;
+                    if ($retryCount < $maxRetries) {
+                        info("FedEx API returned SYSTEM.UNAVAILABLE.EXCEPTION, retrying ({$retryCount}/{$maxRetries})...");
+                        sleep(2); // Wait 2 seconds before retry
+                        continue;
+                    }
+                }
+                break;
+            } while ($retryCount < $maxRetries);
+
+            // Log response for debugging
+            info('FedEx API Response Status:', ['status' => $response->status(), 'retries' => $retryCount]);
+            info('FedEx API Response Body:', $response->json());
 
             if ($response->successful()) {
                 $responseData = $response->json();
@@ -227,6 +312,10 @@ class Index extends Component
                 }
             } else {
                 $errorData = $response->json();
+
+                // Log full error response for debugging
+                info('FedEx API Error Response:', $errorData);
+
                 $errorMessage = 'FedEx API Error: ';
 
                 if (isset($errorData['errors'][0])) {
@@ -234,8 +323,10 @@ class Index extends Component
                     $code = $error['code'] ?? '';
                     $message = $error['message'] ?? 'Unknown error';
 
-                    // Provide helpful messages for common errors
-                    if ($code === 'SHIPPER.POSTALSTATE.MISMATCH') {
+                    // Handle SYSTEM.UNAVAILABLE.EXCEPTION specifically
+                    if ($code === 'SYSTEM.UNAVAILABLE.EXCEPTION') {
+                        $errorMessage = 'FedEx service is temporarily unavailable. This is usually a temporary issue with the FedEx sandbox/test environment. Please try again in a few moments, or contact support if the issue persists.';
+                    } elseif ($code === 'SHIPPER.POSTALSTATE.MISMATCH') {
                         $errorMessage = 'Shipper postal code and state do not match. Please verify your address details.';
                     } elseif ($code === 'RECIPIENT.POSTALSTATE.MISMATCH') {
                         $errorMessage = 'Recipient postal code and state do not match. Please verify the recipient address.';
@@ -252,6 +343,13 @@ class Index extends Component
                 $this->hasResponse = true;
             }
         } catch (\Exception $e) {
+            // Log the exception details
+            info('FedEx Exception:', [
+                'message' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile()
+            ]);
+
             $this->errorMessage = 'Error: ' . $e->getMessage();
             $this->hasResponse = true;
         }
@@ -293,6 +391,18 @@ class Index extends Component
             ['value' => 'EUR', 'label' => 'Euro'],
             ['value' => 'GBP', 'label' => 'British Pound']
         ];
+    }
+
+    /**
+     * Remove null values from array recursively
+     */
+    private function removeNullValues($array)
+    {
+        return array_filter(array_map(function ($value) {
+            return is_array($value) ? $this->removeNullValues($value) : $value;
+        }, $array), function ($value) {
+            return !is_null($value) && $value !== '';
+        });
     }
 
     private function validateUSPostalCode($postalCode, $state, $addressType = 'address')

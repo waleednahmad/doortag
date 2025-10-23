@@ -13,100 +13,279 @@
                         </p>
                     </x-slot:header>
 
-                    <!-- Ship From Section -->
-                    <section class="mb-6">
-                        <h2 class="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-gray-800 dark:text-gray-200">
-                            Ship From (Shipper)
-                        </h2>
-                        <div class="bg-white dark:bg-gray-700 rounded-lg p-3 sm:p-4 mb-3 sm:mb-4">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-                                <x-input label="Postal Code *" wire:model="shipper.postalCode" required />
-                                {{-- <x-select.styled label="Country *" wire:model="shipper.countryCode" 
-                                    :options="[
-                                        ['value' => 'US', 'label' => 'United States'],
-                                        ['value' => 'CA', 'label' => 'Canada'],
-                                        ['value' => 'MX', 'label' => 'Mexico']
-                                    ]" select="value:value|label:label" required /> --}}
-                            </div>
-                        </div>
-                    </section>
+                    <!-- Main Form Section -->
+                    <section class="mb-[1.489em] bg-gray-50 dark:bg-gray-800 rounded-lg p-4 sm:p-6">
 
-                    <!-- Ship To Section -->
-                    <section class="mb-6">
-                        <h2 class="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-gray-800 dark:text-gray-200">
-                            Ship To (Recipient)
-                        </h2>
-                        <div class="bg-white dark:bg-gray-700 rounded-lg p-3 sm:p-4 mb-3 sm:mb-4">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-                                <x-input label="Postal Code *" wire:model="recipient.postalCode" required />
-                                {{-- <x-select.styled label="Country *" wire:model="recipient.countryCode" 
-                                    :options="[
-                                        ['value' => 'US', 'label' => 'United States'],
-                                        ['value' => 'CA', 'label' => 'Canada'],
-                                        ['value' => 'MX', 'label' => 'Mexico']
-                                    ]" select="value:value|label:label" required /> --}}
-                            </div>
-                        </div>
-                    </section>
-
-                    <!-- Shipment Options Section -->
-                    <section class="mb-6">
-                        <h2 class="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-gray-800 dark:text-gray-200">
-                            Shipment Options
-                        </h2>
-                        <div class="bg-white dark:bg-gray-700 rounded-lg p-3 sm:p-4 mb-3 sm:mb-4">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-                                <x-select.styled label="Pickup Type" wire:model="pickupType" 
-                                    :options="$this->pickupTypes" select="value:value|label:label" />
-                                <x-select.styled label="Service Type" wire:model="serviceType" 
-                                    :options="$this->serviceTypes" select="value:value|label:label" />
-                                <x-select.styled label="Preferred Currency" wire:model="preferredCurrency" 
-                                    :options="$this->currencies" select="value:value|label:label" />
-                                <x-input label="Account Number" wire:model="accountNumber" />
-                            </div>
-                        </div>
-                    </section>
-
-                    <!-- Package Details Section -->
-                    <section class="mb-6">
-                        <div class="flex items-center justify-between mb-3 sm:mb-4">
-                            <h2 class="text-base sm:text-lg font-semibold text-gray-800 dark:text-gray-200">
-                                Package Details
+                        <!-- Ship To Section -->
+                        <section>
+                            <h2 class="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-gray-800 dark:text-gray-200">
+                                Ship To (Recipient)
                             </h2>
-                            <x-button wire:click="addPackage" size="sm" color="primary" outline>
-                                Add Package
-                            </x-button>
-                        </div>
+                            <div class="bg-white dark:bg-gray-700 rounded-lg p-3 sm:p-4 mb-3 sm:mb-4">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                                    {{-- Email --}}
+                                    <x-input label="Email *" required wire:model="recipient.email" type="email" />
+                                    {{-- Phone --}}
+                                    <x-input label="Phone (optional)" wire:model="recipient.phone" />
+                                    {{-- Name --}}
+                                    <x-input label="Name *" wire:model="recipient.name" required />
+                                    {{-- Company --}}
+                                    <x-input label="Company (optional)" wire:model="recipient.company" />
+                                    {{-- Address --}}
+                                    <x-input label="Address *" wire:model="recipient.address" required />
+                                    {{-- Apt / Unit / Suite / etc. --}}
+                                    <x-input label="Apt / Unit / Suite / etc. (optional)" wire:model="recipient.apt" />
 
-                        @foreach ($requestedPackageLineItems as $index => $package)
-                            <div class="bg-white dark:bg-gray-700 rounded-lg p-3 sm:p-4 mb-3 sm:mb-4 border border-gray-200 dark:border-gray-600">
-                                <div class="flex items-center justify-between mb-4">
-                                    <h5 class="font-medium text-sm sm:text-base text-gray-800 dark:text-gray-200">
-                                        Package {{ $index + 1 }}
-                                    </h5>
-                                    @if (count($requestedPackageLineItems) > 1)
-                                        <x-button wire:click="removePackage({{ $index }})" size="sm" color="red" outline>
-                                            Remove
-                                        </x-button>
-                                    @endif
+                                    <div class="col-span-full md:col-span-1">
+                                        {{-- City, State, Zipcode --}}
+                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
+                                            {{-- City --}}
+                                            <x-input label="City *" wire:model="recipient.city" required />
+                                            {{-- State --}}
+                                            <x-input label="State *" wire:model="recipient.state" required />
+                                            {{-- Zipcode --}}
+                                            <x-input label="Zipcode *" wire:model="recipient.postalCode" required />
+                                        </div>
+                                    </div>
+                                    {{-- Country --}}
+                                    <x-select.styled label="Country *" searchable wire:model="recipient.country"
+                                        :options="$this->countries" placeholder="Select country" required />
                                 </div>
+                            </div>
+                        </section>
 
-                                <!-- Weight -->
-                                <div class="mb-4">
-                                    <h6 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Weight</h6>
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 max-w-md">
-                                        <x-input label="Weight Value" type="number" step="0.1" min="0.1"
-                                            wire:model="requestedPackageLineItems.{{ $index }}.weight.value" required />
-                                        <x-select.styled label="Weight Unit" 
-                                            wire:model="requestedPackageLineItems.{{ $index }}.weight.units"
-                                            :options="[
-                                                ['value' => 'LB', 'label' => 'Pounds (LB)'],
-                                                ['value' => 'KG', 'label' => 'Kilograms (KG)']
-                                            ]" select="value:value|label:label" />
+                        <!-- Ship From Section (Preview Only) -->
+                        <section>
+                            <h2 class="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-gray-800 dark:text-gray-200">
+                                Ship From (Shipper)
+                            </h2>
+                            <div class="bg-white dark:bg-gray-700 rounded-lg p-3 sm:p-4 mb-3 sm:mb-4">
+                                <div class="flex items-center justify-between mb-3">
+                                    <div>
+                                        <h5 class="font-medium text-sm sm:text-base text-gray-800 dark:text-gray-200">
+                                            Sender Information</h5>
+                                        <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 hidden sm:block">
+                                            Origin address details</p>
                                     </div>
                                 </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                                    @if (auth()->user()->email)
+                                        <div>
+                                            <label
+                                                class="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email
+                                                *</label>
+                                            <p class="text-sm sm:text-base text-gray-900 dark:text-white">
+                                                {{ auth()->user()->email }}</p>
+                                        </div>
+                                    @endif
+
+                                    @if (auth()->user()->phone)
+                                        <div>
+                                            <label
+                                                class="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Phone</label>
+                                            <p class="text-sm sm:text-base text-gray-900 dark:text-white">
+                                                {{ auth()->user()->phone }}</p>
+                                        </div>
+                                    @endif
+
+                                    @if (auth()->user()->name)
+                                        <div>
+                                            <label
+                                                class="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Name
+                                                *</label>
+                                            <p class="text-sm sm:text-base text-gray-900 dark:text-white">
+                                                {{ auth()->user()->name }}</p>
+                                        </div>
+                                    @endif
+
+                                    @if (auth()->user()->address)
+                                        <div>
+                                            <label
+                                                class="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Address
+                                                *</label>
+                                            <p class="text-sm sm:text-base text-gray-900 dark:text-white">
+                                                {{ auth()->user()->address }}</p>
+                                        </div>
+                                    @endif
+
+                                    @if (auth()->user()->address2)
+                                        <div>
+                                            <label
+                                                class="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Address
+                                                2</label>
+                                            <p class="text-sm sm:text-base text-gray-900 dark:text-white">
+                                                {{ auth()->user()->address2 }}</p>
+                                        </div>
+                                    @endif
+
+                                    @if (auth()->user()->city)
+                                        <div>
+                                            <label
+                                                class="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">City
+                                                *</label>
+                                            <p class="text-sm sm:text-base text-gray-900 dark:text-white">
+                                                {{ auth()->user()->city }}</p>
+                                        </div>
+                                    @endif
+
+                                    @if (auth()->user()->state)
+                                        <div>
+                                            <label
+                                                class="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">State
+                                                *</label>
+                                            <p class="text-sm sm:text-base text-gray-900 dark:text-white">
+                                                {{ auth()->user()->state }}</p>
+                                        </div>
+                                    @endif
+
+                                    @if (auth()->user()->zipcode)
+                                        <div>
+                                            <label
+                                                class="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Zipcode
+                                                *</label>
+                                            <p class="text-sm sm:text-base text-gray-900 dark:text-white">
+                                                {{ auth()->user()->zipcode }}</p>
+                                        </div>
+                                    @endif
+
+                                    <!-- Postal Code for FedEx API (hidden input for data binding) -->
+                                    <input type="hidden" wire:model="shipper.postalCode" value="{{ auth()->user()->zipcode }}" />
+                                </div>
                             </div>
-                        @endforeach
+                        </section>
+
+                        <!-- Shipment Options Section -->
+                        <section class="mt-3">
+                            <h2 class="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-gray-800 dark:text-gray-200">
+                                Shipment Options
+                            </h2>
+                            <div class="bg-white dark:bg-gray-700 rounded-lg p-3 sm:p-4 mb-3 sm:mb-4">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                                    <x-select.styled label="Pickup Type" wire:model="pickupType" 
+                                        :options="$this->pickupTypes" select="value:value|label:label" />
+                                    <x-select.styled label="Service Type" wire:model="serviceType" 
+                                        :options="$this->serviceTypes" select="value:value|label:label" />
+                                </div>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-3">
+                                    * All FedEx rates are displayed in US Dollars (USD)
+                                </p>
+                            </div>
+                        </section>
+
+                        <!-- Package Details Section -->
+                        <section class="mt-3">
+                            <div class="flex items-center justify-between mb-3 sm:mb-4">
+                                <h2 class="text-base sm:text-lg font-semibold text-gray-800 dark:text-gray-200">
+                                    Package Details
+                                </h2>
+                                <x-button wire:click="addPackage" size="sm" color="primary" outline>
+                                    Add Package
+                                </x-button>
+                            </div>
+
+                            @foreach ($requestedPackageLineItems as $index => $package)
+                                <div class="bg-white dark:bg-gray-700 rounded-lg p-3 sm:p-4 lg:p-6 mb-3 sm:mb-4 border border-gray-200 dark:border-gray-600">
+                                    <div class="flex items-center justify-between mb-4">
+                                        <h5 class="font-medium text-sm sm:text-base text-gray-800 dark:text-gray-200">
+                                            Package {{ $index + 1 }}
+                                        </h5>
+                                        @if (count($requestedPackageLineItems) > 1)
+                                            <x-button wire:click="removePackage({{ $index }})" size="sm" color="red" outline>
+                                                Remove
+                                            </x-button>
+                                        @endif
+                                    </div>
+
+                                    <!-- Weight -->
+                                    <div class="mb-6 sm:mb-8">
+                                        <h6 class="text-sm sm:text-base font-medium text-gray-700 dark:text-gray-300 mb-3 sm:mb-4">
+                                            Package Weight
+                                        </h6>
+                                        <div class="max-w-md">
+                                            <x-input label="Weight (Pounds) *" type="number" step="0.1" min="0.1"
+                                                wire:model="requestedPackageLineItems.{{ $index }}.weight.value" required />
+                                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                                * Weight is always calculated in pounds (LB) for FedEx shipments
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <!-- Package Dimensions -->
+                                    <div class="mb-6 sm:mb-8">
+                                        {{-- <h6 class="text-sm sm:text-base font-medium text-gray-800 dark:text-gray-200 mb-3 sm:mb-4">
+                                            Package Dimensions (Inches)
+                                        </h6> --}}
+
+                                        <!-- Desktop Layout (Large screens) -->
+                                        {{-- <div class="hidden lg:grid lg:grid-cols-5 gap-4 items-end">
+                                            <div>
+                                                <x-input type="number"
+                                                    wire:model="requestedPackageLineItems.{{ $index }}.dimensions.length"
+                                                    label="Length *" step="1" min="1" max="999" required />
+                                            </div>
+                                            <div class="flex items-center justify-center text-gray-500 dark:text-gray-400 pb-3">
+                                                <span class="text-lg sm:text-xl">×</span>
+                                            </div>
+                                            <div>
+                                                <x-input type="number"
+                                                    wire:model="requestedPackageLineItems.{{ $index }}.dimensions.width"
+                                                    label="Width *" step="1" min="1" max="999" required />
+                                            </div>
+                                            <div class="flex items-center justify-center text-gray-500 dark:text-gray-400 pb-3">
+                                                <span class="text-lg sm:text-xl">×</span>
+                                            </div>
+                                            <div>
+                                                <x-input type="number"
+                                                    wire:model="requestedPackageLineItems.{{ $index }}.dimensions.height"
+                                                    label="Height *" step="1" min="1" max="999" required />
+                                            </div>
+                                        </div> --}}
+
+                                        <!-- Tablet Layout (Medium screens) -->
+                                        {{-- <div class="hidden md:grid lg:hidden md:grid-cols-3 gap-4">
+                                            <div>
+                                                <x-input type="number"
+                                                    wire:model="requestedPackageLineItems.{{ $index }}.dimensions.length"
+                                                    label="Length *" step="1" min="1" max="999" required />
+                                            </div>
+                                            <div>
+                                                <x-input type="number"
+                                                    wire:model="requestedPackageLineItems.{{ $index }}.dimensions.width"
+                                                    label="Width *" step="1" min="1" max="999" required />
+                                            </div>
+                                            <div>
+                                                <x-input type="number"
+                                                    wire:model="requestedPackageLineItems.{{ $index }}.dimensions.height"
+                                                    label="Height *" step="1" min="1" max="999" required />
+                                            </div>
+                                        </div> --}}
+
+                                        <!-- Mobile Layout (Small screens) -->
+                                        {{-- <div class="md:hidden space-y-3">
+                                            <div class="grid grid-cols-1 gap-3">
+                                                <div>
+                                                    <x-input type="number" label="Length *"
+                                                        wire:model="requestedPackageLineItems.{{ $index }}.dimensions.length"
+                                                        min="1" max="999" step="1" required />
+                                                </div>
+                                                <div>
+                                                    <x-input type="number"
+                                                        wire:model="requestedPackageLineItems.{{ $index }}.dimensions.width"
+                                                        label="Width *" min="1" max="999" step="1" required />
+                                                </div>
+                                                <div>
+                                                    <x-input type="number"
+                                                        wire:model="requestedPackageLineItems.{{ $index }}.dimensions.height"
+                                                        label="Height *" step="1" min="1" max="999" required />
+                                                </div>
+                                            </div>
+                                        </div> --}}
+                                    </div>
+                                </div>
+                            @endforeach
+                        </section>
+
                     </section>
 
                     <!-- Submit Button -->
