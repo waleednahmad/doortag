@@ -189,7 +189,7 @@ class Index extends Component
     {
         $this->validate([
             'shipper.postalCode' => 'required',
-            'recipient.email' => 'required|email',
+            'recipient.email' => 'nullable|email',
             'recipient.name' => 'required|string',
             'recipient.address' => 'required|string',
             'recipient.city' => 'required|string',
@@ -250,6 +250,10 @@ class Index extends Component
                                 'width' => (int)$package['dimensions']['width'],
                                 'height' => (int)$package['dimensions']['height'],
                                 'units' => 'IN'
+                            ],
+                            'declaredValue' => [
+                                'currency' => $this->preferredCurrency,
+                                'amount' => 100
                             ]
                         ];
                     }, $this->requestedPackageLineItems)
@@ -264,10 +268,6 @@ class Index extends Component
             $ratesUrl = config('fedex.sandbox_mode') ?
                 config('fedex.urls.sandbox.rates') :
                 config('fedex.urls.production.rates');
-
-            // Log the payload for debugging
-            info('Rates URL:', ['url' => $ratesUrl]);
-            info('FedEx API Request Payload:', $payload);
 
             // Make API request with retry for SYSTEM.UNAVAILABLE.EXCEPTION
             $maxRetries = 3;
@@ -289,7 +289,6 @@ class Index extends Component
                 ) {
                     $retryCount++;
                     if ($retryCount < $maxRetries) {
-                        info("FedEx API returned SYSTEM.UNAVAILABLE.EXCEPTION, retrying ({$retryCount}/{$maxRetries})...");
                         sleep(2); // Wait 2 seconds before retry
                         continue;
                     }
@@ -298,14 +297,34 @@ class Index extends Component
             } while ($retryCount < $maxRetries);
 
             // Log response for debugging
-            info('FedEx API Response Status:', ['status' => $response->status(), 'retries' => $retryCount]);
-            info('FedEx API Response Body:', $response->json());
-
+   
             if ($response->successful()) {
                 $responseData = $response->json();
 
                 if (isset($responseData['output']['rateReplyDetails'])) {
-                    $this->quotes = $responseData['output']['rateReplyDetails'];
+                    $quotes = $responseData['output']['rateReplyDetails'];
+
+                    $authenticatedUser = Auth::user();
+                    if ($authenticatedUser instanceof Customer && $authenticatedUser->margin > 0) {
+                        $quotes = array_map(function ($quote) use ($authenticatedUser) {
+                            info("========================= Single Quotes =====================");
+                            info($quote);
+                            info("========================= Single Quotes =====================");
+                            $originalTotal = (float) $quote['ratedShipmentDetails'][0]['totalNetCharge'];
+                            $marginMultiplier = 1 + ($authenticatedUser->margin / 100);
+                            $newTotal = $originalTotal * $marginMultiplier;
+                            $quote['ratedShipmentDetails'][0]['totalNetCharge'] = number_format($newTotal, 2, '.', '');
+                            return $quote;
+                        }, $quotes);
+                    }
+
+                    // Sort quotes by totalAmount from lowest to highest
+                    usort($quotes, function ($a, $b) {
+                        return (float) $a['ratedShipmentDetails'][0]['totalNetCharge'] <=> (float) $b['ratedShipmentDetails'][0]['totalNetCharge'];
+                    });
+
+                    $this->quotes = $quotes;
+
                     $this->hasResponse = true;
                     $this->errorMessage = '';
                 } else {

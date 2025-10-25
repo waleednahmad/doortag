@@ -24,7 +24,7 @@
                             <div class="bg-white dark:bg-gray-700 rounded-lg p-3 sm:p-4 mb-3 sm:mb-4">
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                                     {{-- Email --}}
-                                    <x-input label="Email *" required wire:model="recipient.email" type="email" />
+                                    <x-input label="Email"  wire:model="recipient.email" type="email" />
                                     {{-- Phone --}}
                                     <x-input label="Phone (optional)" wire:model="recipient.phone" />
                                     {{-- Name --}}
@@ -55,7 +55,7 @@
                         </section>
 
                         <!-- Ship From Section (Preview Only) -->
-                        <section>
+                        <section class="hidden">
                             <h2 class="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-gray-800 dark:text-gray-200">
                                 Ship From (Shipper)
                             </h2>
@@ -164,8 +164,8 @@
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                                     <x-select.styled label="Pickup Type" wire:model="pickupType" 
                                         :options="$this->pickupTypes" select="value:value|label:label" />
-                                    <x-select.styled label="Service Type" wire:model="serviceType" 
-                                        :options="$this->serviceTypes" select="value:value|label:label" />
+                                    {{-- <x-select.styled label="Service Type" wire:model="serviceType" 
+                                        :options="$this->serviceTypes" select="value:value|label:label" /> --}}
                                 </div>
                                 <p class="text-xs text-gray-500 dark:text-gray-400 mt-3">
                                     * All FedEx rates are displayed in US Dollars (USD)
@@ -422,7 +422,7 @@
                                                 @endif
                                                 
                                                 <!-- Click to expand indicator -->
-                                                <div class="flex items-center gap-2 mt-2 text-xs text-gray-500 dark:text-gray-400">
+                                                {{-- <div class="flex items-center gap-2 mt-2 text-xs text-gray-500 dark:text-gray-400">
                                                     <svg x-show="!rateBreakdownOpen" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                                                     </svg>
@@ -430,7 +430,7 @@
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
                                                     </svg>
                                                     <span x-text="rateBreakdownOpen ? 'Hide details' : 'View rate breakdown'"></span>
-                                                </div>
+                                                </div> --}}
                                             </div>
                                         </div>
 
@@ -440,17 +440,17 @@
                                                 @foreach ($quote['ratedShipmentDetails'] as $rateIndex => $rateDetail)
                                                     <div class="border rounded p-2 {{ $rateIndex === 0 ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700' : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600' }}">
                                                         <div class="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase mb-1">
-                                                            {{ $rateDetail['rateType'] === 'ACCOUNT' ? 'Account Rate' : 'Preferred Currency' }}
+                                                            {{ $rateDetail['rateType'] === 'ACCOUNT' ? 'Rate' : 'Preferred Currency' }}
                                                         </div>
                                                         @if (isset($rateDetail['totalNetCharge']))
                                                             <div class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
                                                                 {{ $rateDetail['currency'] ?? 'USD' }} ${{ number_format($rateDetail['totalNetCharge'] ?? 0, 2) }}
                                                             </div>
-                                                            @if (isset($rateDetail['totalBaseCharge']) && $rateDetail['totalBaseCharge'] != $rateDetail['totalNetCharge'])
+                                                            {{-- @if (isset($rateDetail['totalBaseCharge']) && $rateDetail['totalBaseCharge'] != $rateDetail['totalNetCharge'])
                                                                 <div class="text-sm text-gray-500 dark:text-gray-400 line-through">
                                                                     Base: ${{ number_format($rateDetail['totalBaseCharge'] ?? 0, 2) }}
                                                                 </div>
-                                                            @endif
+                                                            @endif --}}
                                                             @if (isset($rateDetail['totalDiscounts']) && $rateDetail['totalDiscounts'] > 0)
                                                                 <div class="text-sm text-green-600 dark:text-green-400">
                                                                     Discount: ${{ number_format($rateDetail['totalDiscounts'], 2) }}
@@ -465,7 +465,7 @@
                                 </div>
 
                                 <!-- Enhanced Rate Breakdown Section (Toggleable) -->
-                                @if (isset($quote['ratedShipmentDetails'][0]['shipmentRateDetail']['surCharges']))
+                                {{-- @if (isset($quote['ratedShipmentDetails'][0]['shipmentRateDetail']['surCharges']))
                                     <div x-show="rateBreakdownOpen" 
                                          x-transition:enter="transition ease-out duration-300"
                                          x-transition:enter-start="opacity-0 transform -translate-y-4"
@@ -591,10 +591,10 @@
                                         </div>
                                         </div>
                                     </div>
-                                @endif
+                                @endif --}}
 
                                 <!-- Service Details -->
-                                @if (isset($quote['serviceDescription']['description']))
+                                {{-- @if (isset($quote['serviceDescription']['description']))
                                     <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
                                         <div class="flex flex-wrap items-center gap-2 text-xs ps-4 pb-4">
                                             <span class="bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 px-2 py-1 rounded">
@@ -610,7 +610,7 @@
                                             @endif
                                         </div>
                                     </div>
-                                @endif
+                                @endif --}}
                             </div>
                         @endforeach
                     </div>
