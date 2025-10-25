@@ -65,6 +65,10 @@ class Index extends Component
                 'width' => null,
                 'height' => null,
                 'units' => 'IN'
+            ],
+            'declaredValue' => [
+                'currency' => 'USD',
+                'amount' => 100
             ]
         ]
     ];
@@ -111,10 +115,14 @@ class Index extends Component
                 'value' => 1
             ],
             'dimensions' => [
-                'length' => 10,
-                'width' => 10,
-                'height' => 10,
+                'length' => null,
+                'width' => null,
+                'height' => null,
                 'units' => 'IN'
+            ],
+            'declaredValue' => [
+                'currency' => 'USD',
+                'amount' => 100
             ]
         ];
     }
@@ -200,6 +208,7 @@ class Index extends Component
             'requestedPackageLineItems.*.dimensions.length' => 'required|integer|min:1|max:999',
             'requestedPackageLineItems.*.dimensions.width' => 'required|integer|min:1|max:999',
             'requestedPackageLineItems.*.dimensions.height' => 'required|integer|min:1|max:999',
+            'requestedPackageLineItems.*.declaredValue.amount' => 'required|numeric|min:100',
         ]);
 
         // Sync form fields with API fields
@@ -209,7 +218,6 @@ class Index extends Component
             // Get access token
             $accessToken = $this->getFedExAccessToken();
 
-            info('Access Token:', ['access_token' => $accessToken]);
             // Prepare payload - enhanced with all required fields
             $payload = [
                 'accountNumber' => [
@@ -253,7 +261,7 @@ class Index extends Component
                             ],
                             'declaredValue' => [
                                 'currency' => $this->preferredCurrency,
-                                'amount' => 100
+                                'amount' => floatval($package['declaredValue']['amount'])
                             ]
                         ];
                     }, $this->requestedPackageLineItems)
@@ -262,8 +270,7 @@ class Index extends Component
 
             // Remove null values to clean up the payload
             $payload = $this->removeNullValues($payload);
-
-
+       
             // Make API request
             $ratesUrl = config('fedex.sandbox_mode') ?
                 config('fedex.urls.sandbox.rates') :
@@ -297,7 +304,7 @@ class Index extends Component
             } while ($retryCount < $maxRetries);
 
             // Log response for debugging
-   
+
             if ($response->successful()) {
                 $responseData = $response->json();
 
@@ -307,12 +314,10 @@ class Index extends Component
                     $authenticatedUser = Auth::user();
                     if ($authenticatedUser instanceof Customer && $authenticatedUser->margin > 0) {
                         $quotes = array_map(function ($quote) use ($authenticatedUser) {
-                            info("========================= Single Quotes =====================");
-                            info($quote);
-                            info("========================= Single Quotes =====================");
                             $originalTotal = (float) $quote['ratedShipmentDetails'][0]['totalNetCharge'];
                             $marginMultiplier = 1 + ($authenticatedUser->margin / 100);
-                            $newTotal = $originalTotal * $marginMultiplier;
+                            $custmoerMargin = 1 + ($authenticatedUser->customer_margin / 100);
+                            $newTotal = $originalTotal * $marginMultiplier * $custmoerMargin;
                             $quote['ratedShipmentDetails'][0]['totalNetCharge'] = number_format($newTotal, 2, '.', '');
                             return $quote;
                         }, $quotes);
@@ -333,9 +338,6 @@ class Index extends Component
                 }
             } else {
                 $errorData = $response->json();
-
-                // Log full error response for debugging
-                info('FedEx API Error Response:', $errorData);
 
                 $errorMessage = 'FedEx API Error: ';
 

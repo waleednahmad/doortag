@@ -25,6 +25,7 @@ class Customer extends Authenticatable
         'state',
         'zipcode',
         'margin',
+        'customer_margin',
         'password',
     ];
 

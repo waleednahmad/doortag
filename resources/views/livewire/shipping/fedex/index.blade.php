@@ -24,7 +24,7 @@
                             <div class="bg-white dark:bg-gray-700 rounded-lg p-3 sm:p-4 mb-3 sm:mb-4">
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                                     {{-- Email --}}
-                                    <x-input label="Email"  wire:model="recipient.email" type="email" />
+                                    <x-input label="Email" wire:model="recipient.email" type="email" />
                                     {{-- Phone --}}
                                     <x-input label="Phone (optional)" wire:model="recipient.phone" />
                                     {{-- Name --}}
@@ -56,7 +56,8 @@
 
                         <!-- Ship From Section (Preview Only) -->
                         <section class="hidden">
-                            <h2 class="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-gray-800 dark:text-gray-200">
+                            <h2
+                                class="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-gray-800 dark:text-gray-200">
                                 Ship From (Shipper)
                             </h2>
                             <div class="bg-white dark:bg-gray-700 rounded-lg p-3 sm:p-4 mb-3 sm:mb-4">
@@ -150,20 +151,22 @@
                                     @endif
 
                                     <!-- Postal Code for FedEx API (hidden input for data binding) -->
-                                    <input type="hidden" wire:model="shipper.postalCode" value="{{ auth()->user()->zipcode }}" />
+                                    <input type="hidden" wire:model="shipper.postalCode"
+                                        value="{{ auth()->user()->zipcode }}" />
                                 </div>
                             </div>
                         </section>
 
                         <!-- Shipment Options Section -->
                         <section class="mt-3">
-                            <h2 class="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-gray-800 dark:text-gray-200">
+                            <h2
+                                class="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-gray-800 dark:text-gray-200">
                                 Shipment Options
                             </h2>
                             <div class="bg-white dark:bg-gray-700 rounded-lg p-3 sm:p-4 mb-3 sm:mb-4">
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-                                    <x-select.styled label="Pickup Type" wire:model="pickupType" 
-                                        :options="$this->pickupTypes" select="value:value|label:label" />
+                                    <x-select.styled label="Pickup Type" wire:model="pickupType" :options="$this->pickupTypes"
+                                        select="value:value|label:label" />
                                     {{-- <x-select.styled label="Service Type" wire:model="serviceType" 
                                         :options="$this->serviceTypes" select="value:value|label:label" /> --}}
                                 </div>
@@ -185,35 +188,24 @@
                             </div>
 
                             @foreach ($requestedPackageLineItems as $index => $package)
-                                <div class="bg-white dark:bg-gray-700 rounded-lg p-3 sm:p-4 lg:p-6 mb-3 sm:mb-4 border border-gray-200 dark:border-gray-600">
+                                <div
+                                    class="bg-white dark:bg-gray-700 rounded-lg p-3 sm:p-4 lg:p-6 mb-3 sm:mb-4 border border-gray-200 dark:border-gray-600">
                                     <div class="flex items-center justify-between mb-4">
                                         <h5 class="font-medium text-sm sm:text-base text-gray-800 dark:text-gray-200">
                                             Package {{ $index + 1 }}
                                         </h5>
                                         @if (count($requestedPackageLineItems) > 1)
-                                            <x-button wire:click="removePackage({{ $index }})" size="sm" color="red" outline>
+                                            <x-button wire:click="removePackage({{ $index }})" size="sm"
+                                                color="red" outline>
                                                 Remove
                                             </x-button>
                                         @endif
                                     </div>
 
-                                    <!-- Weight -->
-                                    <div class="mb-6 sm:mb-8">
-                                        <h6 class="text-sm sm:text-base font-medium text-gray-700 dark:text-gray-300 mb-3 sm:mb-4">
-                                            Package Weight
-                                        </h6>
-                                        <div class="max-w-md">
-                                            <x-input label="Weight (Pounds) *" type="number" step="0.1" min="0.1"
-                                                wire:model="requestedPackageLineItems.{{ $index }}.weight.value" required />
-                                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                                * Weight is always calculated in pounds (LB) for FedEx shipments
-                                            </p>
-                                        </div>
-                                    </div>
-
                                     <!-- Package Dimensions -->
                                     <div class="mb-6 sm:mb-8">
-                                        <h6 class="text-sm sm:text-base font-medium text-gray-800 dark:text-gray-200 mb-3 sm:mb-4">
+                                        <h6
+                                            class="text-sm sm:text-base font-medium text-gray-800 dark:text-gray-200 mb-3 sm:mb-4">
                                             Package Dimensions (Inches)
                                         </h6>
 
@@ -222,23 +214,28 @@
                                             <div>
                                                 <x-input type="number"
                                                     wire:model="requestedPackageLineItems.{{ $index }}.dimensions.length"
-                                                    label="Length *" step="1" min="1" max="999" required />
+                                                    label="Length *" step="1" min="1" max="999"
+                                                    required />
                                             </div>
-                                            <div class="flex items-center justify-center text-gray-500 dark:text-gray-400 pb-3">
+                                            <div
+                                                class="flex items-center justify-center text-gray-500 dark:text-gray-400 pb-3">
                                                 <span class="text-lg sm:text-xl">×</span>
                                             </div>
                                             <div>
                                                 <x-input type="number"
                                                     wire:model="requestedPackageLineItems.{{ $index }}.dimensions.width"
-                                                    label="Width *" step="1" min="1" max="999" required />
+                                                    label="Width *" step="1" min="1" max="999"
+                                                    required />
                                             </div>
-                                            <div class="flex items-center justify-center text-gray-500 dark:text-gray-400 pb-3">
+                                            <div
+                                                class="flex items-center justify-center text-gray-500 dark:text-gray-400 pb-3">
                                                 <span class="text-lg sm:text-xl">×</span>
                                             </div>
                                             <div>
                                                 <x-input type="number"
                                                     wire:model="requestedPackageLineItems.{{ $index }}.dimensions.height"
-                                                    label="Height *" step="1" min="1" max="999" required />
+                                                    label="Height *" step="1" min="1" max="999"
+                                                    required />
                                             </div>
                                         </div>
 
@@ -247,17 +244,20 @@
                                             <div>
                                                 <x-input type="number"
                                                     wire:model="requestedPackageLineItems.{{ $index }}.dimensions.length"
-                                                    label="Length *" step="1" min="1" max="999" required />
+                                                    label="Length *" step="1" min="1" max="999"
+                                                    required />
                                             </div>
                                             <div>
                                                 <x-input type="number"
                                                     wire:model="requestedPackageLineItems.{{ $index }}.dimensions.width"
-                                                    label="Width *" step="1" min="1" max="999" required />
+                                                    label="Width *" step="1" min="1" max="999"
+                                                    required />
                                             </div>
                                             <div>
                                                 <x-input type="number"
                                                     wire:model="requestedPackageLineItems.{{ $index }}.dimensions.height"
-                                                    label="Height *" step="1" min="1" max="999" required />
+                                                    label="Height *" step="1" min="1" max="999"
+                                                    required />
                                             </div>
                                         </div>
 
@@ -272,14 +272,51 @@
                                                 <div>
                                                     <x-input type="number"
                                                         wire:model="requestedPackageLineItems.{{ $index }}.dimensions.width"
-                                                        label="Width *" min="1" max="999" step="1" required />
+                                                        label="Width *" min="1" max="999" step="1"
+                                                        required />
                                                 </div>
                                                 <div>
                                                     <x-input type="number"
                                                         wire:model="requestedPackageLineItems.{{ $index }}.dimensions.height"
-                                                        label="Height *" step="1" min="1" max="999" required />
+                                                        label="Height *" step="1" min="1"
+                                                        max="999" required />
                                                 </div>
                                             </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Weight -->
+                                    <div class="mb-6 sm:mb-8">
+                                        <h6
+                                            class="text-sm sm:text-base font-medium text-gray-700 dark:text-gray-300 mb-3 sm:mb-4">
+                                            Package Weight
+                                        </h6>
+                                        <div class="max-w-md">
+                                            <x-input label="Weight (Pounds) *" type="number" step="0.1"
+                                                min="0.1"
+                                                wire:model="requestedPackageLineItems.{{ $index }}.weight.value"
+                                                required />
+                                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                                * Weight is always calculated in pounds (LB) for FedEx shipments
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <!-- Insurance Section -->
+                                    <div class="my-4">
+                                        <x-checkbox x-model="insuranceChecked" label="Insurance"
+                                            hint="Enter the total value of your shipment to add coverage by InsureShield"
+                                            class="text-sm" />
+                                        <div class="mt-2">
+                                            <x-link href="#" color="primary" class="text-sm">
+                                                View Pricing, Excluded Items, and Terms
+                                            </x-link>
+                                        </div>
+
+                                        <div x-show="insuranceChecked" x-transition class="mt-3">
+                                            <x-input label="Declared Package Value ($)"
+                                                wire:model="requestedPackageLineItems.{{ $index }}.declaredValue.amount"
+                                                placeholder="Enter package value" type="number" step="0.01" />
                                         </div>
                                     </div>
                                 </div>
@@ -320,9 +357,12 @@
             <!-- Shipment Details Section -->
             <div class="mb-[48px] py-[7px]" x-data="{ shipmentDetailsOpen: false }">
                 <label @click="shipmentDetailsOpen = !shipmentDetailsOpen" class="flex cursor-pointer space-x-[5px]">
-                    <div class="w-[20px] h-[20px] border-[2px] border-gray-500 dark:border-gray-400 rounded-[50%] flex items-center justify-center cursor-pointer">
-                        <span x-show="!shipmentDetailsOpen" class="text-[12px] text-gray-500 dark:text-gray-400">+</span>
-                        <span x-show="shipmentDetailsOpen" class="text-[12px] text-gray-500 dark:text-gray-400">-</span>
+                    <div
+                        class="w-[20px] h-[20px] border-[2px] border-gray-500 dark:border-gray-400 rounded-[50%] flex items-center justify-center cursor-pointer">
+                        <span x-show="!shipmentDetailsOpen"
+                            class="text-[12px] text-gray-500 dark:text-gray-400">+</span>
+                        <span x-show="shipmentDetailsOpen"
+                            class="text-[12px] text-gray-500 dark:text-gray-400">-</span>
                     </div>
                     <p class="font-[500] text-[15px] text-gray-700 dark:text-gray-300">Shipment Details</p>
                 </label>
@@ -333,14 +373,18 @@
 
                     <!-- Ship From Address -->
                     <div class="lg:w-[33.3333%] w-full text-[14px]">
-                        <h1 class="font-[500] text-gray-600 dark:text-gray-300 pb-[6px] leading-[1.42857143]">Ship From Address</h1>
-                        <p class="text-gray-500 dark:text-gray-400 leading-[1.42857143]">{{ $shipper['postalCode'] }}</p>
-                        <p class="text-gray-500 dark:text-gray-400 leading-[1.42857143]">{{ $shipper['countryCode'] }}</p>
+                        <h1 class="font-[500] text-gray-600 dark:text-gray-300 pb-[6px] leading-[1.42857143]">Ship From
+                            Address</h1>
+                        <p class="text-gray-500 dark:text-gray-400 leading-[1.42857143]">{{ $shipper['postalCode'] }}
+                        </p>
+                        <p class="text-gray-500 dark:text-gray-400 leading-[1.42857143]">{{ $shipper['countryCode'] }}
+                        </p>
                     </div>
 
                     <!-- Package Details -->
                     <div class="lg:w-[33.3333%] w-full text-[14px] lg:pl-[8px] pl-0">
-                        <h1 class="font-[500] text-gray-600 dark:text-gray-300 pb-[6px] leading-[1.42857143]">Package Details</h1>
+                        <h1 class="font-[500] text-gray-600 dark:text-gray-300 pb-[6px] leading-[1.42857143]">Package
+                            Details</h1>
                         @foreach ($requestedPackageLineItems as $index => $package)
                             <div class="mb-2">
                                 <p class="text-gray-500 dark:text-gray-400 font-[500] leading-[1.42857143]">
@@ -355,14 +399,17 @@
                                 </p>
                             </div>
                         @endforeach
-                        <p class="text-gray-500 dark:text-gray-400 font-[500] leading-[1.42857143]">Pickup Type: {{ str_replace('_', ' ', $pickupType) }}</p>
+                        <p class="text-gray-500 dark:text-gray-400 font-[500] leading-[1.42857143]">Pickup Type:
+                            {{ str_replace('_', ' ', $pickupType) }}</p>
                     </div>
 
                     <!-- Service Details -->
                     <div class="lg:w-[33.3333%] w-full text-[14px] lg:pl-[16px] pl-0">
-                        <h1 class="font-[500] text-gray-600 dark:text-gray-300 pb-[6px] leading-[1.42857143]">Service Details</h1>
+                        <h1 class="font-[500] text-gray-600 dark:text-gray-300 pb-[6px] leading-[1.42857143]">Service
+                            Details</h1>
                         <p class="text-gray-500 dark:text-gray-400 font-[500] leading-[1.42857143]">
-                            Service: <span class="pl-[4px] font-[400]">{{ str_replace('_', ' ', $serviceType) }}</span>
+                            Service: <span
+                                class="pl-[4px] font-[400]">{{ str_replace('_', ' ', $serviceType) }}</span>
                         </p>
                         <p class="text-gray-500 dark:text-gray-400 font-[500] leading-[1.42857143]">
                             Currency: <span class="pl-[4px] font-[400]">{{ $preferredCurrency }}</span>
@@ -393,22 +440,28 @@
                 @elseif(!empty($quotes))
                     <div class="space-y-4">
                         @foreach ($quotes as $index => $quote)
-                            <div x-data="{ rateBreakdownOpen: false }" class="border rounded-lg overflow-hidden hover:shadow-md transition-all duration-300 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600">
+                            <div x-data="{ rateBreakdownOpen: false }"
+                                class="border rounded-lg overflow-hidden hover:shadow-md transition-all duration-300 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600">
                                 <!-- Main Quote Content - Clickable -->
-                                <div @click="rateBreakdownOpen = !rateBreakdownOpen" class="p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-200">
-                                    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start space-y-3 sm:space-y-0">
+                                <div @click="rateBreakdownOpen = !rateBreakdownOpen"
+                                    class="p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-200">
+                                    <div
+                                        class="flex flex-col sm:flex-row sm:justify-between sm:items-start space-y-3 sm:space-y-0">
                                         <div class="flex items-start space-x-3 flex-1">
                                             <!-- FedEx Logo -->
                                             <div class="flex-shrink-0 mt-1">
-                                                <img src="{{ asset('assets/images/fedex.svg') }}" class="w-[55px] h-8 object-contain" alt="FedEx" />
+                                                <img src="{{ asset('assets/images/fedex.svg') }}"
+                                                    class="w-[55px] h-8 object-contain" alt="FedEx" />
                                             </div>
 
                                             <div class="flex-1">
-                                                <h4 class="font-semibold text-gray-900 dark:text-white text-sm sm:text-base">
-                                                    {{ $quote['serviceName'] ?? $quote['serviceType'] ?? 'FedEx Service' }}
+                                                <h4
+                                                    class="font-semibold text-gray-900 dark:text-white text-sm sm:text-base">
+                                                    {{ $quote['serviceName'] ?? ($quote['serviceType'] ?? 'FedEx Service') }}
                                                 </h4>
                                                 <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                                    Service Type: {{ str_replace('_', ' ', $quote['serviceType'] ?? 'Standard Service') }}
+                                                    Service Type:
+                                                    {{ str_replace('_', ' ', $quote['serviceType'] ?? 'Standard Service') }}
                                                 </p>
                                                 @if (isset($quote['packagingType']))
                                                     <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
@@ -420,7 +473,7 @@
                                                         Service Code: {{ $quote['operationalDetail']['serviceCode'] }}
                                                     </p>
                                                 @endif
-                                                
+
                                                 <!-- Click to expand indicator -->
                                                 {{-- <div class="flex items-center gap-2 mt-2 text-xs text-gray-500 dark:text-gray-400">
                                                     <svg x-show="!rateBreakdownOpen" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -438,13 +491,17 @@
                                         <div class="text-center sm:text-right space-y-2">
                                             @if (isset($quote['ratedShipmentDetails']))
                                                 @foreach ($quote['ratedShipmentDetails'] as $rateIndex => $rateDetail)
-                                                    <div class="border rounded p-2 {{ $rateIndex === 0 ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700' : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600' }}">
-                                                        <div class="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase mb-1">
+                                                    <div
+                                                        class="border rounded p-2 {{ $rateIndex === 0 ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700' : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600' }}">
+                                                        <div
+                                                            class="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase mb-1">
                                                             {{ $rateDetail['rateType'] === 'ACCOUNT' ? 'Rate' : 'Preferred Currency' }}
                                                         </div>
                                                         @if (isset($rateDetail['totalNetCharge']))
-                                                            <div class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
-                                                                {{ $rateDetail['currency'] ?? 'USD' }} ${{ number_format($rateDetail['totalNetCharge'] ?? 0, 2) }}
+                                                            <div
+                                                                class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
+                                                                {{ $rateDetail['currency'] ?? 'USD' }}
+                                                                ${{ number_format($rateDetail['totalNetCharge'] ?? 0, 2) }}
                                                             </div>
                                                             {{-- @if (isset($rateDetail['totalBaseCharge']) && $rateDetail['totalBaseCharge'] != $rateDetail['totalNetCharge'])
                                                                 <div class="text-sm text-gray-500 dark:text-gray-400 line-through">
@@ -452,8 +509,10 @@
                                                                 </div>
                                                             @endif --}}
                                                             @if (isset($rateDetail['totalDiscounts']) && $rateDetail['totalDiscounts'] > 0)
-                                                                <div class="text-sm text-green-600 dark:text-green-400">
-                                                                    Discount: ${{ number_format($rateDetail['totalDiscounts'], 2) }}
+                                                                <div
+                                                                    class="text-sm text-green-600 dark:text-green-400">
+                                                                    Discount:
+                                                                    ${{ number_format($rateDetail['totalDiscounts'], 2) }}
                                                                 </div>
                                                             @endif
                                                         @endif
@@ -632,7 +691,7 @@
     <script>
         function fedexShippingForm() {
             return {
-                // Add any custom Alpine.js logic here if needed
+                insuranceChecked: false,
             }
         }
     </script>
