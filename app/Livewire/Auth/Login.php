@@ -37,7 +37,7 @@ class Login extends Component
             RateLimiter::clear($this->throttleKey());
             Session::regenerate();
             
-            $this->redirect(route('shipping.fedex.index'));
+            $this->redirect(route('shipping.shipengine.index'));
             return;
         }
 
@@ -46,7 +46,7 @@ class Login extends Component
             RateLimiter::clear($this->throttleKey());
             Session::regenerate();
 
-            $this->redirect(route('shipping.fedex.index'));
+            $this->redirect(route('shipping.shipengine.index'));
             return;
         }
 
