@@ -328,12 +328,25 @@ class Index extends Component
                     $rate['calculated_amount'] = $newTotal;
                     return $rate;
                 }, $responseRates->toArray());
-                $this->rates = $formatedRates;
             } else { // WEB Guard
-                $this->rates = $responseRates->toArray();
+                 $formatedRates = array_map(function ($rate) use ($authenticatedUser) {
+                    $shippingAmount = (float) $rate['shipping_amount']['amount'];
+                    $insuranceAmount = (float) ($rate['insurance_amount']['amount'] ?? 0);
+                    $confirmationAmount = (float) ($rate['confirmation_amount']['amount'] ?? 0);
+                    $otherAmount = (float) ($rate['other_amount']['amount'] ?? 0);
+                    $requestedComparisonAmount = (float) ($rate['requested_comparison_amount']['amount'] ?? 0);
+                    $originalTotal = $shippingAmount + $insuranceAmount + $confirmationAmount + $otherAmount + $requestedComparisonAmount;
+             
+
+                    // New data 
+                    $rate['original_total'] = $originalTotal;
+                    $rate['calculated_amount'] = $originalTotal;
+                    return $rate;
+                }, $responseRates->toArray());
             }
-
-
+            
+            
+            $this->rates = $formatedRates;
             $this->toast()->success('Rates retrieved successfully!')->send();
         } catch (\Exception $e) {
             $this->toast()->error('Failed to get rates: ' . $e->getMessage())->send();
