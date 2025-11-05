@@ -665,6 +665,10 @@
                                                     ${{ $rate['requested_comparison_amount']['amount'] ?? 'N/A' }}
                                                 </li>
                                                 <li>
+                                                    Other amout :
+                                                    ${{ $rate['other_amount']['amount'] ?? '0.00' }}
+                                                </li>
+                                                <li>
                                                     Total Amount :
                                                     ${{ $rate['original_total'] ?? 'N/A' }}
                                                 </li>
@@ -676,10 +680,12 @@
                                                     Customer Margin :
                                                     {{ $rate['customer_margin'] ?? 'N/A' }}%
                                                 </li>
-                                                <li>
-                                                    Caluclulated Amount :
-                                                    ${{ $rate['calculated_amount'] ?? 'N/A' }}
-                                                </li>
+                                                @if (isset($rate['calculated_amount']) && $rate['calculated_amount'])
+                                                    <li>
+                                                        Caluclulated Amount :
+                                                        ${{ $rate['calculated_amount'] ?? 'N/A' }}
+                                                    </li>
+                                                @endif
                                             </ul>
                                         </div>
 
