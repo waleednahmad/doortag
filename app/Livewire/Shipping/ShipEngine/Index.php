@@ -136,15 +136,15 @@ class Index extends Component
 
         // Set default ship to address
         $this->shipToAddress = [
-            'name' => 'Waleed',
-            'company_name' => 'Customer Company',
-            'phone' => '555-987-6543',
+            'name' => '',
+            'company_name' => '',
+            'phone' => '',
             'email' => '',
-            'address_line1' => '1600 Pennsylvania Ave NW',
+            'address_line1' => '',
             'address_line2' => '',
-            'city_locality' => 'Washington',
-            'state_province' => 'DC',
-            'postal_code' => '20500',
+            'city_locality' => '',
+            'state_province' => '',
+            'postal_code' => '',
             'country_code' => 'US',
             'address_residential_indicator' => true
         ];
