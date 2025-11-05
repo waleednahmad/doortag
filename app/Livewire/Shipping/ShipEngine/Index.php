@@ -118,14 +118,14 @@ class Index extends Component
     {
         // Set default ship from address
         $this->shipFromAddress = [
-            'name' => auth('customer')->user()->name,
+            'name' => Auth::user()->name,
             'company_name' => 'Test Company',
-            'phone' => auth('customer')->user()->phone,
-            'address_line1' => auth('customer')->user()->address,
-            'address_line2' => auth('customer')->user()->address2,
-            'city_locality' => auth('customer')->user()->city,
+            'phone' =>  Auth::user()->phone,
+            'address_line1' =>  Auth::user()->address,
+            'address_line2' =>  Auth::user()->address2,
+            'city_locality' =>  Auth::user()->city,
             'state_province' => 'FL',
-            'postal_code' => auth('customer')->user()->zipcode,
+            'postal_code' =>  Auth::user()->zipcode,
             'country_code' => 'US',
         ];
 
@@ -328,10 +328,12 @@ class Index extends Component
                     $rate['calculated_amount'] = $newTotal;
                     return $rate;
                 }, $responseRates->toArray());
+                $this->rates = $formatedRates;
+            } else { // WEB Guard
+                $this->rates = $responseRates->toArray();
             }
 
 
-            $this->rates = $formatedRates;
             $this->toast()->success('Rates retrieved successfully!')->send();
         } catch (\Exception $e) {
             $this->toast()->error('Failed to get rates: ' . $e->getMessage())->send();

@@ -79,73 +79,73 @@
                                 </div>
 
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-                                    @if (auth('customer')->user()->email)
+                                    @if (auth()->user()->email)
                                         <div>
                                             <label
                                                 class="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email
                                                 *</label>
                                             <p class="text-sm sm:text-base text-gray-900 dark:text-white">
-                                                {{ auth('customer')->user()->email }}</p>
+                                                {{ auth()->user()->email }}</p>
                                         </div>
                                     @endif
 
-                                    @if (auth('customer')->user()->phone)
+                                    @if (auth()->user()->phone)
                                         <div>
                                             <label
                                                 class="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Phone</label>
                                             <p class="text-sm sm:text-base text-gray-900 dark:text-white">
-                                                {{ auth('customer')->user()->phone }}</p>
+                                                {{ auth()->user()->phone }}</p>
                                         </div>
                                     @endif
 
-                                    @if (auth('customer')->user()->address)
+                                    @if (auth()->user()->address)
                                         <div>
                                             <label
                                                 class="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Address
                                                 *</label>
                                             <p class="text-sm sm:text-base text-gray-900 dark:text-white">
-                                                {{ auth('customer')->user()->address }}</p>
+                                                {{ auth()->user()->address }}</p>
                                         </div>
                                     @endif
 
-                                    @if (auth('customer')->user()->address2)
+                                    @if (auth()->user()->address2)
                                         <div>
                                             <label
                                                 class="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                                 Address 2
                                             </label>
                                             <p class="text-sm sm:text-base text-gray-900 dark:text-white">
-                                                {{ auth('customer')->user()->address2 }}</p>
+                                                {{ auth()->user()->address2 }}</p>
                                         </div>
                                     @endif
 
-                                    @if (auth('customer')->user()->city)
+                                    @if (auth()->user()->city)
                                         <div>
                                             <label
                                                 class="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">City
                                                 *</label>
                                             <p class="text-sm sm:text-base text-gray-900 dark:text-white">
-                                                {{ auth('customer')->user()->city }}</p>
+                                                {{ auth()->user()->city }}</p>
                                         </div>
                                     @endif
 
-                                    @if (auth('customer')->user()->state)
+                                    @if (auth()->user()->state)
                                         <div>
                                             <label
                                                 class="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">State
                                                 *</label>
                                             <p class="text-sm sm:text-base text-gray-900 dark:text-white">
-                                                {{ auth('customer')->user()->state }}</p>
+                                                {{ auth()->user()->state }}</p>
                                         </div>
                                     @endif
 
-                                    @if (auth('customer')->user()->zipcode)
+                                    @if (auth()->user()->zipcode)
                                         <div>
                                             <label
                                                 class="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Zipcode
                                                 *</label>
                                             <p class="text-sm sm:text-base text-gray-900 dark:text-white">
-                                                {{ auth('customer')->user()->zipcode }}</p>
+                                                {{ auth()->user()->zipcode }}</p>
                                         </div>
                                     @endif
                                 </div>
