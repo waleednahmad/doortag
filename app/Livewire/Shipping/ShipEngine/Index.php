@@ -3,6 +3,7 @@
 namespace App\Livewire\Shipping\ShipEngine;
 
 use App\Models\Customer;
+use App\Models\Shipment;
 use App\Services\ShipEngineService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -44,9 +45,9 @@ class Index extends Component
     public $package = [
         'weight' => 1,
         'weight_unit' => 'pound',
-        'length' => '12',
-        'width' => '12',
-        'height' => '12',
+        'length' => '',
+        'width' => '',
+        'height' => '',
         'dimension_unit' => 'inch',
         'insured_value' => 1,
         "insurance_provider" => "shipsurance",
@@ -65,7 +66,7 @@ class Index extends Component
     public $selectedPackaging = 'custom';
     public $selectedPackage = null;
     public $isInsuranceChecked = false;
-    
+
     // Sorting properties
     public $sortBy = 'price'; // 'price' or 'delivery'
     public $sortDirection = 'asc'; // 'asc' or 'desc'
@@ -242,7 +243,6 @@ class Index extends Component
         // handle the address_residential_indicator
         $this->shipToAddress['address_residential_indicator'] = $this->shipToAddress['address_residential_indicator'] == true ? 'yes' : 'no';
 
-
         $isValidated = $this->validateAddresses();
         if (! $isValidated) {
             return;
@@ -380,7 +380,7 @@ class Index extends Component
             return;
         }
         $this->selectedRate = collect($this->rates)->firstWhere('rate_id', $rateId);
-
+        info($this->selectedRate);
         $this->toast()->info('Selected rate: ' . ($this->selectedRate['service_type'] ?? 'N/A'))->send();
     }
 
@@ -394,9 +394,9 @@ class Index extends Component
             $this->sortBy = 'price';
             $this->sortDirection = 'asc';
         }
-        
+
         $this->sortRates();
-        
+
         $direction = $this->sortDirection === 'asc' ? 'lowest to highest' : 'highest to lowest';
         $this->toast()->info("Sorted by price: {$direction}")->send();
     }
@@ -411,9 +411,9 @@ class Index extends Component
             $this->sortBy = 'delivery';
             $this->sortDirection = 'asc';
         }
-        
+
         $this->sortRates();
-        
+
         $direction = $this->sortDirection === 'asc' ? 'earliest to latest' : 'latest to earliest';
         $this->toast()->info("Sorted by delivery: {$direction}")->send();
     }
@@ -437,7 +437,7 @@ class Index extends Component
                 if (!isset($rate['estimated_delivery_date'])) {
                     return PHP_INT_MAX; // Put rates without delivery date at the end
                 }
-                
+
                 try {
                     $deliveryDate = Carbon::parse($rate['estimated_delivery_date']);
                     return $deliveryDate->timestamp;
@@ -466,14 +466,24 @@ class Index extends Component
             $this->loading = true;
             $shipEngine = new ShipEngineService();
 
-            $labelData = [
-                'rate_id' => $this->selectedRate['rate_id'],
-                'label_format' => 'pdf',
-                'label_layout' => '4x6',
-            ];
+            // $labelData = [
+            //     'rate_id' => ,
+            //     'label_format' => 'pdf',
+            //     'label_layout' => '4x6',
+            // ];
 
-            $response = $shipEngine->createLabel($labelData);
+            $response = $shipEngine->createLabel($this->selectedRate['rate_id']);
 
+            if ($response['status'] == 'completed') {
+                Shipment::create([
+                    'user_id' => auth('web')->check() ? auth('web')->id() : null,
+                    'customer_id' => auth('customer')->check() ? auth('customer')->id() : null,
+                    'shipment_data' => json_encode($response),
+                ]);
+
+                $this->resetData();
+                $this->toast()->success('Label created successfully! Tracking number: ' . ($response['tracking_number'] ?? 'N/A'))->send();
+            }
             $this->toast()->success('Label created successfully! Tracking number: ' . ($response['tracking_number'] ?? 'N/A'))->send();
 
             // You could download or display the label here
@@ -590,6 +600,36 @@ class Index extends Component
         }
     }
 
+
+    public function resetData()
+    {
+        $this->rates = [];
+        $this->selectedRate = null;
+        $this->trackingResults = [];
+        $this->shipToAddress = [
+            'name' => '',
+            'company_name' => '',
+            'phone' => '',
+            'address_line1' => '',
+            'address_line2' => '',
+            'city_locality' => '',
+            'state_province' => '',
+            'postal_code' => '',
+            'country_code' => 'US',
+            'address_residential_indicator' => true
+        ];
+
+        $this->package = [
+            'weight' => 1,
+            'weight_unit' => 'pound',
+            'length' => '',
+            'width' => '',
+            'height' => '',
+            'dimension_unit' => 'inch',
+            'insured_value' => 1,
+            "insurance_provider" => "shipsurance",
+        ];
+    }
 
     public function render()
     {

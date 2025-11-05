@@ -81,12 +81,10 @@ class ShipEngineService
     /**
      * Create a shipping label
      */
-    public function createLabel(array $labelData): array
+    public function createLabel(string $rateId): array
     {
         try {
-            $response = $this->client->post('labels', [
-                'json' => $labelData
-            ]);
+            $response = $this->client->post('labels/rates/' . $rateId);
 
             $data = json_decode($response->getBody()->getContents(), true);
 
@@ -295,7 +293,7 @@ class ShipEngineService
             'state_province' => $address['state'] ?? $address['state_province'] ?? '',
             'postal_code' => $address['postal_code'] ?? $address['zip'] ?? '',
             'country_code' => $address['country_code'] ?? 'US',
-            'address_residential_indicator' => $address['residential'] ?? 'unknown'
+            'address_residential_indicator' => $address['address_residential_indicator'] ?? 'unknown'
         ];
     }
 

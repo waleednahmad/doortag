@@ -757,6 +757,15 @@
                                                 </div>
                                             </div>
                                         @endif
+                                        @if (isset($rate['error_messages']) && count($rate['error_messages']) > 0)
+                                            <div
+                                                class="mt-3 p-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded">
+                                                <div class="text-xs text-red-600 dark:text-red-400">
+                                                    <strong>Warning:</strong>
+                                                    {{ implode(', ', $rate['error_messages']) }}
+                                                </div>
+                                            </div>
+                                        @endif
 
                                         <div>
                                             {{-- $rate['original_total'] = $originalTotal;
