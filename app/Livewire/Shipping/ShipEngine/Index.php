@@ -482,14 +482,14 @@ class Index extends Component
                 ]);
 
                 $this->resetData();
-                $this->toast()->success('Label created successfully! Tracking number: ' . ($response['tracking_number'] ?? 'N/A'))->send();
+                $this->dialog()->success('Label created successfully! Tracking number: ' . ($response['tracking_number'] ?? 'N/A'))->send();
             }
-            $this->toast()->success('Label created successfully! Tracking number: ' . ($response['tracking_number'] ?? 'N/A'))->send();
+            // $this->toast()->success('Label created successfully! Tracking number: ' . ($response['tracking_number'] ?? 'N/A'))->send();
 
             // You could download or display the label here
-            if (!empty($response['label_download']['pdf'])) {
-                $this->dispatch('download-label', $response['label_download']['pdf']);
-            }
+            // if (!empty($response['label_download']['pdf'])) {
+            //     $this->dispatch('download-label', $response['label_download']['pdf']);
+            // }
         } catch (\Exception $e) {
             $this->toast()->error('Failed to create label: ' . $e->getMessage())->send();
             Log::error('Failed to create ShipEngine label', ['error' => $e->getMessage()]);

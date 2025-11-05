@@ -968,12 +968,8 @@
         // Listen for label download event
         window.addEventListener('download-label', event => {
             const url = event.detail;
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = 'shipping-label.pdf';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            // Open PDF in new tab instead of downloading
+            window.open(url, '_blank');
         });
     </script>
 </div>
