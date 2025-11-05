@@ -189,8 +189,13 @@
                                                 required />
                                         </div>
                                     </div>
+
+                                    {{-- Ressidental address (checkbox) --}}
+                                    <div class="col-span-full md:col-span-2">
+                                        <x-checkbox label="Residential Address"
+                                            wire:model.live="shipToAddress.address_residential_indicator" />
+                                    </div>
                                 </div>
-                            </div>
                         </section>
 
                         <!-- Ship From Section -->
@@ -246,9 +251,6 @@
                                             'package_code',
                                             $selectedPackaging,
                                         );
-
-                                        info('selecte package is : ');
-                                        info($selectedPackage);
                                     @endphp
                                     <div class="flex items-center">
                                         {{-- img container --}}
@@ -272,7 +274,7 @@
                                             </p>
                                         </div>
                                     </div>
-                                    <i class="fa-solid fa-caret-down text-[1.3em] text-gray-900 dark:text-gray-100"
+                                    <i class="fas fa-caret-down text-[1.3em] text-gray-900 dark:text-gray-100"
                                         :class="packagingOpen ? 'rotate-180' : ''"
                                         style="transition: transform 0.2s;"></i>
                                 </div>
@@ -303,7 +305,7 @@
                                             </div>
                                             @if ($selectedPackaging === $package['package_code'])
                                                 <i
-                                                    class="fa-solid fa-check text-[1.2em] text-blue-600 dark:text-blue-400"></i>
+                                                    class="fas fa-check text-[1.2em] text-blue-600 dark:text-blue-400"></i>
                                             @endif
                                         </div>
                                     @empty
@@ -485,7 +487,7 @@
                         <p class="text-[17px] text-gray-700 dark:text-gray-300 leading-[1.42857143] font-[500]">
                             {{ $shipToAddress['postal_code'] }} {{ $shipToAddress['country_code'] ?? 'US' }}
                         </p>
-                        <i class="fa-solid fa-paste text-[1em] text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition"
+                        <i class="fas fa-paste text-[1em] text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition"
                             onclick="navigator.clipboard.writeText('{{ $shipToAddress['postal_code'] }} {{ $shipToAddress['country_code'] ?? 'US' }}')"
                             title="Copy to clipboard"></i>
                     </div>
@@ -551,11 +553,13 @@
                 </div>
 
                 <x-card class="mt-4 sm:mt-6">
-                    <x-slot:header>
-                        <div
-                            class="flex flex-col space-y-3 lg:flex-row lg:justify-between lg:items-center lg:space-y-0">
+                    {{-- <x-slot:header> --}}
+                    <div class="space-y-4 flex flex-col sm:flex-row sm:items-center sm:justify-between pb-5 sm:pb-2">
+                        <!-- Title and Count -->
+                        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start">
                             <div>
-                                <h3 class="text-lg sm:text-xl font-semibold">ShipEngine Rate Quotes</h3>
+                                <h3 class="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">ShipEngine
+                                    Rate Quotes</h3>
                                 @if (!empty($rates))
                                     <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">
                                         Found {{ count($rates) }} shipping option(s)
@@ -563,7 +567,120 @@
                                 @endif
                             </div>
                         </div>
-                    </x-slot:header>
+
+                        @if (!empty($rates))
+                            <!-- Enhanced Sorting Section -->
+                            <div
+                                class="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                                    <!-- Sort Label -->
+                                    <div class="flex items-center">
+                                        <div class="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                                            <i class="fas fa-sort mr-2 text-gray-500 dark:text-gray-400"></i>
+                                            <span class="font-medium">Sort by:</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Sort Buttons -->
+                                    <div
+                                        class="flex items-center justify-between gap-1 bg-white dark:bg-gray-700 rounded-lg p-1 shadow-sm border border-gray-200 dark:border-gray-600">
+                                        <button wire:click="sortByPrice"
+                                            class="group relative inline-flex items-center px-4 py-2.5 rounded-md text-sm font-medium transition-all duration-200 ease-in-out
+                                                {{ $sortBy === 'price'
+                                                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md shadow-blue-500/25'
+                                                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600' }}">
+                                            <div class="flex items-center">
+                                                <div class="flex items-center justify-center w-5 h-5 mr-2">
+                                                    <i class="fas fa-dollar-sign text-sm"></i>
+                                                </div>
+                                                <span>Price</span>
+                                                <!-- Always show both arrows, highlight the active one -->
+                                                <div class="ml-3 flex flex-col items-center justify-center">
+                                                    <i
+                                                        class="fas fa-caret-up text-xs transition-all duration-200
+                                                            {{ $sortBy === 'price' && $sortDirection === 'asc'
+                                                                ? 'opacity-100 text-white'
+                                                                : ($sortBy === 'price'
+                                                                    ? 'opacity-50 text-white'
+                                                                    : 'opacity-40 text-gray-400') }}"></i>
+                                                    <i
+                                                        class="fas fa-caret-down text-xs transition-all duration-200 -mt-1
+                                                            {{ $sortBy === 'price' && $sortDirection === 'desc'
+                                                                ? 'opacity-100 text-white'
+                                                                : ($sortBy === 'price'
+                                                                    ? 'opacity-50 text-white'
+                                                                    : 'opacity-40 text-gray-400') }}"></i>
+                                                </div>
+                                            </div>
+                                            @if ($sortBy !== 'price')
+                                                <div
+                                                    class="absolute inset-0 rounded-md bg-gradient-to-r from-blue-500/10 to-blue-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                                </div>
+                                            @endif
+                                        </button>
+
+                                        <button wire:click="sortByDelivery"
+                                            class="group relative inline-flex items-center px-4 py-2.5 rounded-md text-sm font-medium transition-all duration-200 ease-in-out
+                                                {{ $sortBy === 'delivery'
+                                                    ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-md shadow-emerald-500/25'
+                                                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600' }}">
+                                            <div class="flex items-center">
+                                                <div class="flex items-center justify-center w-5 h-5 mr-2">
+                                                    <i class="fas fa-clock text-sm"></i>
+                                                </div>
+                                                <span>Delivery</span>
+                                                <!-- Always show both arrows, highlight the active one -->
+                                                <div class="ml-3 flex flex-col items-center justify-center">
+                                                    <i
+                                                        class="fas fa-caret-up text-xs transition-all duration-200
+                                                            {{ $sortBy === 'delivery' && $sortDirection === 'asc'
+                                                                ? 'opacity-100 text-white'
+                                                                : ($sortBy === 'delivery'
+                                                                    ? 'opacity-50 text-white'
+                                                                    : 'opacity-40 text-gray-400') }}"></i>
+                                                    <i
+                                                        class="fas fa-caret-down text-xs transition-all duration-200 -mt-1
+                                                            {{ $sortBy === 'delivery' && $sortDirection === 'desc'
+                                                                ? 'opacity-100 text-white'
+                                                                : ($sortBy === 'delivery'
+                                                                    ? 'opacity-50 text-white'
+                                                                    : 'opacity-40 text-gray-400') }}"></i>
+                                                </div>
+                                            </div>
+                                            @if ($sortBy !== 'delivery')
+                                                <div
+                                                    class="absolute inset-0 rounded-md bg-gradient-to-r from-emerald-500/10 to-emerald-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                                </div>
+                                            @endif
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Enhanced Sort Status -->
+                                <div class="mt-3 flex items-center justify-center sm:justify-start">
+                                    <div
+                                        class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium
+                                            {{ $sortBy === 'price'
+                                                ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700'
+                                                : 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700' }}">
+                                        <div class="flex items-center">
+                                            <i
+                                                class="fas fa-{{ $sortBy === 'price' ? 'dollar-sign' : 'clock' }} mr-2 text-xs"></i>
+                                            <span>
+                                                {{ $sortBy === 'price' ? 'Price' : 'Delivery Time' }} -
+                                                {{ $sortDirection === 'asc' ? ($sortBy === 'price' ? 'Low to High' : 'Earliest First') : ($sortBy === 'price' ? 'High to Low' : 'Latest First') }}
+                                            </span>
+                                            <div class="ml-2 flex items-center">
+                                                <i
+                                                    class="fas fa-chevron-{{ $sortDirection === 'asc' ? 'up' : 'down' }} text-xs font-bold"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+                    {{-- </x-slot:header> --}}
 
                     @if (!empty($rates))
                         <div class="space-y-4">
@@ -605,7 +722,6 @@
                                                                 ({{ $rate['delivery_days'] }}
                                                                 {{ Str::plural('day', $rate['delivery_days']) }})
                                                             @endif
-
                                                         </p>
                                                     @endif
                                                     {{-- @if (isset($rate['zone']))

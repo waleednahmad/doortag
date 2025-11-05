@@ -27,6 +27,7 @@ class Customer extends Authenticatable
         'margin',
         'customer_margin',
         'password',
+        'address_residential_indicator',
     ];
 
     /**
@@ -49,6 +50,7 @@ class Customer extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'address_residential_indicator' => 'boolean',
         ];
     }
 }

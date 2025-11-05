@@ -31,6 +31,7 @@ class User extends Authenticatable
         'state',
         'zipcode',
         'password',
+        'address_residential_indicator',
     ];
 
     protected $hidden = [
@@ -43,6 +44,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'address_residential_indicator' => 'boolean',
         ];
     }
 }

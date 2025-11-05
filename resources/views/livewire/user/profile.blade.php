@@ -38,6 +38,11 @@
                 <div>
                     <x-password :label="__('Confirm password')" wire:model="password_confirmation" rules />
                 </div>
+                {{-- address_residential_indicator --}}
+                <div>
+                    <x-checkbox label="{{ __('Residential Address') }}" wire:model="addressResidentialIndicator" />
+                </div>
+
             </div>
             <x-slot:footer>
                 <x-button type="submit">

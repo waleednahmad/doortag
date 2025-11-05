@@ -14,13 +14,22 @@ Route::get('/', function () {
 
 Route::middleware(['auth:web,customer'])->group(function () {
     // Route::view('/dashboard', 'dashboard')->name('dashboard');
-    Route::get('/dashboard', ShippingIndex::class)->name('dashboard');
+    // Route::get('/dashboard', ShippingIndex::class)->name('dashboard');
+    // Route::get('/shipping/fedex', FedexShippingIndex::class)->name('shipping.fedex.index');
+    Route::get(
+        '/dashboard',
+        function () {
+            return redirect()->route('shipping.shipengine.index');
+        }
+    )->name('dashboard');
 
     Route::get('/users', Index::class)->name('users.index');
 
     Route::get('/user/profile', Profile::class)->name('user.profile');
     Route::get('/shipping/test', ShippingIndex::class)->name('shipping.index');
-    Route::get('/shipping/fedex', FedexShippingIndex::class)->name('shipping.fedex.index');
+    Route::get('/shipping/fedex', function () {
+        return redirect()->route('shipping.shipengine.index');
+    })->name('shipping.fedex.index');
     Route::get('/shipping', ShipEngineShippingIndex::class)->name('shipping.shipengine.index');
 });
 

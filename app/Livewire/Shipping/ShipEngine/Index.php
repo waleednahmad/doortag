@@ -4,6 +4,7 @@ namespace App\Livewire\Shipping\ShipEngine;
 
 use App\Models\Customer;
 use App\Services\ShipEngineService;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Illuminate\Support\Facades\Log;
@@ -24,6 +25,7 @@ class Index extends Component
         'state_province' => '',
         'postal_code' => '',
         'country_code' => 'US',
+        'address_residential_indicator' => false
     ];
 
     public $shipToAddress = [
@@ -36,14 +38,15 @@ class Index extends Component
         'state_province' => '',
         'postal_code' => '',
         'country_code' => 'US',
+        'address_residential_indicator' => true
     ];
 
     public $package = [
         'weight' => 1,
         'weight_unit' => 'pound',
-        'length' => '',
-        'width' => '',
-        'height' => '',
+        'length' => '12',
+        'width' => '12',
+        'height' => '12',
         'dimension_unit' => 'inch',
         'insured_value' => 1,
         "insurance_provider" => "shipsurance",
@@ -62,9 +65,14 @@ class Index extends Component
     public $selectedPackaging = 'custom';
     public $selectedPackage = null;
     public $isInsuranceChecked = false;
+    
+    // Sorting properties
+    public $sortBy = 'price'; // 'price' or 'delivery'
+    public $sortDirection = 'asc'; // 'asc' or 'desc'
 
     public function updated($name, $value)
     {
+
         if ($name === 'isInsuranceChecked') {
             if (!$value) {
                 $this->package['insured_value'] = 1;
@@ -109,11 +117,6 @@ class Index extends Component
         $this->loadCarrierPackaging();
     }
 
-    public function render()
-    {
-        return view('livewire.shipping.shipengine.index');
-    }
-
     public function setDefaultAddresses()
     {
         // Set default ship from address
@@ -127,6 +130,7 @@ class Index extends Component
             'state_province' => 'FL',
             'postal_code' =>  Auth::user()->zipcode,
             'country_code' => 'US',
+            'address_residential_indicator' => Auth::user()->address_residential_indicator == true ? 'yes' : 'no'
         ];
 
         // Set default ship to address
@@ -141,6 +145,7 @@ class Index extends Component
             'state_province' => 'DC',
             'postal_code' => '20500',
             'country_code' => 'US',
+            'address_residential_indicator' => true
         ];
     }
 
@@ -195,13 +200,18 @@ class Index extends Component
             $packaging = $shipEngine->getCarrierPackages($this->selectedCarrier);
             $collection = collect($packaging['packages']) ?? collect();
 
+            $filteredPackagest = $collection->filter(function ($package) {
+                // Exclude pakages which name includes "One"
+                return !str_contains(strtolower($package['name']), 'one');
+            });
+
             $customPackaging = [
                 'package_id' => 'custom',
                 'package_code' => 'custom',
                 'name' => 'Custom Box or Rigid Packaging',
                 'description' => 'Any custom box or thick parcel',
             ];
-            $this->carrierPackaging  = $collection->prepend($customPackaging)->toArray();
+            $this->carrierPackaging  = $filteredPackagest->prepend($customPackaging)->toArray();
         } catch (\Exception $e) {
             $this->toast()->error('Failed to load carrier packaging: ' . $e->getMessage())->send();
             Log::error('Failed to load ShipEngine carrier packaging', [
@@ -229,8 +239,11 @@ class Index extends Component
 
         $this->validate();
 
-        $isValidated = $this->validateAddresses();
+        // handle the address_residential_indicator
+        $this->shipToAddress['address_residential_indicator'] = $this->shipToAddress['address_residential_indicator'] == true ? 'yes' : 'no';
 
+
+        $isValidated = $this->validateAddresses();
         if (! $isValidated) {
             return;
         }
@@ -252,11 +265,6 @@ class Index extends Component
                     ],
 
                     'package_code' => $this->selectedPackage['package_code'] ?? '',
-
-                    'insured_value' => [
-                        'amount' => $this->package['insured_value'] ?? 0,
-                        'currency' => $this->package['currency'] ?? 'USD'
-                    ]
                 ];
             } else { // Custom package
                 $packageData =  [
@@ -270,10 +278,15 @@ class Index extends Component
                         'height' => $this->package['height'] ?? 12,
                         'unit' => $this->package['dimension_unit'] ?? 'inch'
                     ],
-                    'insured_value' => [
-                        'amount' => $this->package['insured_value'] ?? 0,
-                        'currency' => $this->package['currency'] ?? 'USD'
-                    ]
+                ];
+            }
+
+
+            // Add insurance value if checked
+            if ($this->isInsuranceChecked) {
+                $packageData['insured_value'] = [
+                    'amount' => $this->package['insured_value'] ?? 1,
+                    'currency' => 'USD'
                 ];
             }
 
@@ -286,12 +299,15 @@ class Index extends Component
                 'shipment' => [
                     'ship_to' => $shipEngine->formatAddress($this->shipToAddress),
                     'ship_from' => $shipEngine->formatAddress($this->shipFromAddress),
-                    "insurance_provider" => "parcelguard",
                     'packages' => [
                         $packageData
                     ],
                 ]
             ];
+            // Add insurance provider if checked
+            if ($this->isInsuranceChecked) {
+                $shipmentData['shipment']['insurance_provider'] = 'parcelguard';
+            }
 
             $response = $shipEngine->getRates($shipmentData);
 
@@ -322,31 +338,31 @@ class Index extends Component
                     $newTotal = $originalTotal * $marginMultiplier * $custmoerMargin;
 
                     // New data 
-                    $rate['original_total'] = $originalTotal;
-                    $rate['margin'] = $marginMultiplier;
-                    $rate['customer_margin'] = $custmoerMargin;
-                    $rate['calculated_amount'] = $newTotal;
+                    $rate['original_total'] = number_format($originalTotal, 2);
+                    $rate['margin'] = number_format($marginMultiplier, 2);
+                    $rate['customer_margin'] = number_format($custmoerMargin, 2);
+                    $rate['calculated_amount'] = number_format($newTotal, 2);
                     return $rate;
                 }, $responseRates->toArray());
             } else { // WEB Guard
-                 $formatedRates = array_map(function ($rate) use ($authenticatedUser) {
+                $formatedRates = array_map(function ($rate) use ($authenticatedUser) {
                     $shippingAmount = (float) $rate['shipping_amount']['amount'];
                     $insuranceAmount = (float) ($rate['insurance_amount']['amount'] ?? 0);
                     $confirmationAmount = (float) ($rate['confirmation_amount']['amount'] ?? 0);
                     $otherAmount = (float) ($rate['other_amount']['amount'] ?? 0);
                     $requestedComparisonAmount = (float) ($rate['requested_comparison_amount']['amount'] ?? 0);
                     $originalTotal = $shippingAmount + $insuranceAmount + $confirmationAmount + $otherAmount + $requestedComparisonAmount;
-             
 
                     // New data 
-                    $rate['original_total'] = $originalTotal;
-                    $rate['calculated_amount'] = $originalTotal;
+                    $rate['original_total'] = number_format($originalTotal, 2);
+                    $rate['calculated_amount'] = number_format($originalTotal, 2);
                     return $rate;
                 }, $responseRates->toArray());
             }
-            
-            
+
+
             $this->rates = $formatedRates;
+            $this->sortRates(); // Apply default sorting
             $this->toast()->success('Rates retrieved successfully!')->send();
         } catch (\Exception $e) {
             $this->toast()->error('Failed to get rates: ' . $e->getMessage())->send();
@@ -366,6 +382,77 @@ class Index extends Component
         $this->selectedRate = collect($this->rates)->firstWhere('rate_id', $rateId);
 
         $this->toast()->info('Selected rate: ' . ($this->selectedRate['service_type'] ?? 'N/A'))->send();
+    }
+
+    public function sortByPrice()
+    {
+        if ($this->sortBy === 'price') {
+            // Toggle direction if already sorting by price
+            $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            // Set to price sorting with ascending (cheapest first)
+            $this->sortBy = 'price';
+            $this->sortDirection = 'asc';
+        }
+        
+        $this->sortRates();
+        
+        $direction = $this->sortDirection === 'asc' ? 'lowest to highest' : 'highest to lowest';
+        $this->toast()->info("Sorted by price: {$direction}")->send();
+    }
+
+    public function sortByDelivery()
+    {
+        if ($this->sortBy === 'delivery') {
+            // Toggle direction if already sorting by delivery
+            $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            // Set to delivery sorting with ascending (closest first)
+            $this->sortBy = 'delivery';
+            $this->sortDirection = 'asc';
+        }
+        
+        $this->sortRates();
+        
+        $direction = $this->sortDirection === 'asc' ? 'earliest to latest' : 'latest to earliest';
+        $this->toast()->info("Sorted by delivery: {$direction}")->send();
+    }
+
+    private function sortRates()
+    {
+        if (empty($this->rates)) {
+            return;
+        }
+
+        $rates = collect($this->rates);
+
+        if ($this->sortBy === 'price') {
+            $rates = $rates->sortBy(function ($rate) {
+                // Remove formatting and convert to float for proper numeric sorting
+                $amount = str_replace(',', '', $rate['calculated_amount']);
+                return (float) $amount;
+            });
+        } elseif ($this->sortBy === 'delivery') {
+            $rates = $rates->sortBy(function ($rate) {
+                if (!isset($rate['estimated_delivery_date'])) {
+                    return PHP_INT_MAX; // Put rates without delivery date at the end
+                }
+                
+                try {
+                    $deliveryDate = Carbon::parse($rate['estimated_delivery_date']);
+                    return $deliveryDate->timestamp;
+                } catch (\Exception $e) {
+                    return PHP_INT_MAX; // Put invalid dates at the end
+                }
+            });
+        }
+
+        // Apply direction
+        if ($this->sortDirection === 'desc') {
+            $rates = $rates->reverse();
+        }
+
+        $this->rates = $rates->values()->all();
     }
 
     public function createLabel()
@@ -501,5 +588,11 @@ class Index extends Component
         } finally {
             $this->loading = false;
         }
+    }
+
+
+    public function render()
+    {
+        return view('livewire.shipping.shipengine.index');
     }
 }

@@ -24,6 +24,8 @@ class Profile extends Component
 
     public ?string $password_confirmation = null;
 
+    public $addressResidentialIndicator = false;
+
     public function mount(): void
     {
         $authenticatedUser = Auth::user();
@@ -33,6 +35,7 @@ class Profile extends Component
         } elseif ($authenticatedUser instanceof Customer) {
             $this->user = Customer::find($authenticatedUser->id);
         }
+        $this->addressResidentialIndicator = (bool) ($this->user->address_residential_indicator ?? false);
     }
 
     public function rules(): array
@@ -73,6 +76,9 @@ class Profile extends Component
                 'string',
                 'max:255'
             ],
+            'addressResidentialIndicator' => [
+                'boolean'
+            ],
             'password' => [
                 'nullable',
                 'string',
@@ -92,6 +98,7 @@ class Profile extends Component
         $this->validate();
 
         $this->user->password = when($this->password !== null, Hash::make($this->password), $this->user->password);
+        $this->user->address_residential_indicator = $this->addressResidentialIndicator;
         $this->user->save();
 
         $this->dispatch('updated', name: $this->user->name);
