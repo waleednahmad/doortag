@@ -239,9 +239,9 @@
                                         <img src="/assets/images/Parcel-box.png" alt="Parcel"
                                             class="w-[130px] h-[130px] object-cover" />
                                         <div class="ml-[.9em]">
-                                            <h1 class="text-[1em] font-[400] text-gray-900 dark:text-gray-100">Box or
-                                                Rigid
-                                                Packaging</h1>
+                                            <h1 class="text-[1em] font-[400] text-gray-900 dark:text-gray-100">
+                                                Box or Rigid Packaging
+                                            </h1>
                                             <p
                                                 class="text-[.824em] font-[400] text-gray-500 dark:text-gray-400 mt-[3px]">
                                                 Any custom box or thick parcel

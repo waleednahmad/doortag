@@ -1,5 +1,4 @@
 <div x-data="shipEngineShippingForm()">
-    <x-toast />
     <div>
         <!-- Loading Spinner -->
         @if ($loading)
@@ -61,6 +60,99 @@
                             </div>
                         </section> --}}
 
+                        <!-- Ship From Section -->
+                        <section>
+                            <h2
+                                class="text-base sm:text-lg font-semibold mb-3 sm:mb-2 text-gray-800 dark:text-gray-200">
+                                Ship
+                                From
+                            </h2>
+
+                            <div class="bg-white dark:bg-gray-700 rounded-lg p-3 sm:p-4 mb-3 sm:mb-4">
+                                <div class="flex items-center justify-between mb-3">
+                                    <div>
+                                        <h5 class="font-medium text-sm sm:text-base text-gray-800 dark:text-gray-200">
+                                            Sender Information</h5>
+                                        <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 hidden sm:block">
+                                            Origin address details</p>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                                    @if (auth('customer')->user()->email)
+                                        <div>
+                                            <label
+                                                class="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email
+                                                *</label>
+                                            <p class="text-sm sm:text-base text-gray-900 dark:text-white">
+                                                {{ auth('customer')->user()->email }}</p>
+                                        </div>
+                                    @endif
+
+                                    @if (auth('customer')->user()->phone)
+                                        <div>
+                                            <label
+                                                class="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Phone</label>
+                                            <p class="text-sm sm:text-base text-gray-900 dark:text-white">
+                                                {{ auth('customer')->user()->phone }}</p>
+                                        </div>
+                                    @endif
+
+                                    @if (auth('customer')->user()->address)
+                                        <div>
+                                            <label
+                                                class="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Address
+                                                *</label>
+                                            <p class="text-sm sm:text-base text-gray-900 dark:text-white">
+                                                {{ auth('customer')->user()->address }}</p>
+                                        </div>
+                                    @endif
+
+                                    @if (auth('customer')->user()->address2)
+                                        <div>
+                                            <label
+                                                class="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                Address 2
+                                            </label>
+                                            <p class="text-sm sm:text-base text-gray-900 dark:text-white">
+                                                {{ auth('customer')->user()->address2 }}</p>
+                                        </div>
+                                    @endif
+
+                                    @if (auth('customer')->user()->city)
+                                        <div>
+                                            <label
+                                                class="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">City
+                                                *</label>
+                                            <p class="text-sm sm:text-base text-gray-900 dark:text-white">
+                                                {{ auth('customer')->user()->city }}</p>
+                                        </div>
+                                    @endif
+
+                                    @if (auth('customer')->user()->state)
+                                        <div>
+                                            <label
+                                                class="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">State
+                                                *</label>
+                                            <p class="text-sm sm:text-base text-gray-900 dark:text-white">
+                                                {{ auth('customer')->user()->state }}</p>
+                                        </div>
+                                    @endif
+
+                                    @if (auth('customer')->user()->zipcode)
+                                        <div>
+                                            <label
+                                                class="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Zipcode
+                                                *</label>
+                                            <p class="text-sm sm:text-base text-gray-900 dark:text-white">
+                                                {{ auth('customer')->user()->zipcode }}</p>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        </section>
+
+
                         <!-- Ship To Section -->
                         <section>
                             <h2
@@ -73,6 +165,8 @@
                                     <x-input label="Name *" wire:model="shipToAddress.name" required />
                                     {{-- Company --}}
                                     <x-input label="Company (optional)" wire:model="shipToAddress.company_name" />
+                                    {{-- Email --}}
+                                    <x-input label="Email (optional)" wire:model="shipToAddress.email" />
                                     {{-- Phone --}}
                                     <x-input label="Phone (optional)" wire:model="shipToAddress.phone" />
                                     {{-- Address --}}
@@ -91,7 +185,7 @@
                                             <x-input label="State *" wire:model="shipToAddress.state_province"
                                                 maxlength="2" required />
                                             {{-- Zipcode --}}
-                                            <x-input label="ZIP Code *" wire:model="shipToAddress.postal_code"
+                                            <x-input label="Postal Code *" wire:model="shipToAddress.postal_code"
                                                 required />
                                         </div>
                                     </div>
@@ -129,6 +223,101 @@
                             </div>
                         </section> --}}
 
+
+
+
+                        <!-- Type of Packaging -->
+                        <section class="mt-3">
+                            <h1
+                                class="text-base sm:text-lg font-semibold mb-3 sm:mb-2 text-gray-800 dark:text-gray-200">
+                                Type of Packaging</h1>
+
+                            <div x-data="{ packagingOpen: false }" class="rounded-[5px] border-2 transition-colors duration-200"
+                                :class="packagingOpen ? 'border-[#00a9ff]' :
+                                    'border-gray-300 dark:border-gray-600 bg-gradient-to-b from-white to-gray-100 dark:from-gray-700 dark:to-gray-800'">
+
+                                <!-- Toggle Header - Shows Selected Package -->
+                                <div @click="packagingOpen = !packagingOpen"
+                                    class="w-full flex items-center justify-between p-[10px] cursor-pointer rounded-[4px] transition-colors"
+                                    :class="packagingOpen ? 'hover:bg-blue-50 dark:hover:bg-blue-900/20' :
+                                        'hover:bg-gray-50 dark:hover:bg-gray-600'">
+                                    @php
+                                        $selectedPackage = collect($carrierPackaging)->firstWhere(
+                                            'package_code',
+                                            $selectedPackaging,
+                                        );
+
+                                        info('selecte package is : ');
+                                        info($selectedPackage);
+                                    @endphp
+                                    <div class="flex items-center">
+                                        {{-- img container --}}
+                                        <span class="w-[130px] h-[90px]  flex items-center justify-center">
+                                            @if ($selectedPackage['package_code'] === 'custom')
+                                                <img src="{{ asset('assets/images/Parcel-box.png') }}" alt="Parcel"
+                                                    class=" w-full object-contain" />
+                                            @else
+                                                <img src="{{ asset('assets/images/fedex.svg') }}" alt="Parcel"
+                                                    class="w-full object-contain" />
+                                            @endif
+                                        </span>
+                                        <div class="ml-[.9em]">
+
+                                            <h1 class="text-[1em] font-[400] text-gray-900 dark:text-gray-100">
+                                                {{ $selectedPackage['name'] ?? 'Custom Box or Rigid Packaging' }}
+                                            </h1>
+                                            <p
+                                                class="text-[.824em] font-[400] text-gray-500 dark:text-gray-400 mt-[3px]">
+                                                {{ $selectedPackage['description'] ?? 'Any custom box or thick parcel' }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <i class="fa-solid fa-caret-down text-[1.3em] text-gray-900 dark:text-gray-100"
+                                        :class="packagingOpen ? 'rotate-180' : ''"
+                                        style="transition: transform 0.2s;"></i>
+                                </div>
+
+                                <!-- Package Options -->
+                                <div x-show="packagingOpen" x-transition @click.away="packagingOpen = false">
+                                    @forelse ($carrierPackaging as $index => $package)
+                                        <div wire:click="selectPackaging('{{ $package['package_code'] }}')"
+                                            @click="packagingOpen = false"
+                                            class="w-full flex items-center justify-between p-[10px] cursor-pointer transition-colors {{ $selectedPackaging === $package['package_code'] ? 'bg-blue-50 dark:bg-blue-900/20 border-[#00a9ff]' : 'hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-[#00a9ff] dark:hover:border-blue-400' }} {{ $index === 0 ? 'border-t-[1px] border-gray-300 dark:border-gray-600' : '' }}">
+                                            <div class="flex items-center">
+                                                @if ($package['package_code'] === 'custom')
+                                                    <img src="{{ asset('assets/images/Parcel-box.png') }}"
+                                                        alt="Custom Package" class="object-contain w-[60px] h-[60px]" />
+                                                @else
+                                                    <img src="{{ asset('assets/images/fedex.svg') }}"
+                                                        alt="FedEx Package" class="object-contain w-[60px] h-[60px]" />
+                                                @endif
+                                                <div class="ml-[.9em]">
+                                                    <h1 class="text-[1em] font-[400] text-gray-900 dark:text-gray-100">
+                                                        {{ $package['name'] }}
+                                                    </h1>
+                                                    <p
+                                                        class="text-[.824em] font-[400] text-gray-500 dark:text-gray-400 mt-[3px]">
+                                                        {{ $package['description'] }}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            @if ($selectedPackaging === $package['package_code'])
+                                                <i
+                                                    class="fa-solid fa-check text-[1.2em] text-blue-600 dark:text-blue-400"></i>
+                                            @endif
+                                        </div>
+                                    @empty
+                                        <div class="p-4 text-center text-gray-500 dark:text-gray-400">
+                                            <p>No packaging options available</p>
+                                        </div>
+                                    @endforelse
+                                </div>
+                            </div>
+                        </section>
+
+
+
+
                         <!-- Package Details Section -->
                         <section class="mt-3">
                             <div class="flex items-center justify-between mb-3 sm:mb-4">
@@ -146,70 +335,74 @@
                                 </div>
 
                                 <!-- Package Dimensions -->
-                                <div class="mb-6 sm:mb-8">
-                                    <h6
-                                        class="text-sm sm:text-base font-medium text-gray-800 dark:text-gray-200 mb-3 sm:mb-4">
-                                        Package Dimensions (Inches)
-                                    </h6>
+                                @if ($selectedPackage['package_code'] == 'custom')
+                                    <div class="mb-6 sm:mb-8"
+                                        x-hide="{{ $selectedPackage['package_code'] !== 'custom' }}">
+                                        <h6
+                                            class="text-sm sm:text-base font-medium text-gray-800 dark:text-gray-200 mb-3 sm:mb-4">
+                                            Package Dimensions (Inches)
+                                        </h6>
 
-                                    <!-- Desktop Layout (Large screens) -->
-                                    <div class="hidden lg:grid lg:grid-cols-5 gap-4 items-end">
-                                        <div>
-                                            <x-input type="number" wire:model="package.length" label="Length *"
-                                                step="0.1" min="1" required />
-                                        </div>
-                                        <div
-                                            class="flex items-center justify-center text-gray-500 dark:text-gray-400 pb-3">
-                                            <span class="text-lg sm:text-xl">×</span>
-                                        </div>
-                                        <div>
-                                            <x-input type="number" wire:model="package.width" label="Width *"
-                                                step="0.1" min="1" required />
-                                        </div>
-                                        <div
-                                            class="flex items-center justify-center text-gray-500 dark:text-gray-400 pb-3">
-                                            <span class="text-lg sm:text-xl">×</span>
-                                        </div>
-                                        <div>
-                                            <x-input type="number" wire:model="package.height" label="Height *"
-                                                step="0.1" min="1" required />
-                                        </div>
-                                    </div>
-
-                                    <!-- Tablet Layout (Medium screens) -->
-                                    <div class="hidden md:grid lg:hidden md:grid-cols-3 gap-4">
-                                        <div>
-                                            <x-input type="number" wire:model="package.length" label="Length *"
-                                                step="0.1" min="1" required />
-                                        </div>
-                                        <div>
-                                            <x-input type="number" wire:model="package.width" label="Width *"
-                                                step="0.1" min="1" required />
-                                        </div>
-                                        <div>
-                                            <x-input type="number" wire:model="package.height" label="Height *"
-                                                step="0.1" min="1" required />
-                                        </div>
-                                    </div>
-
-                                    <!-- Mobile Layout (Small screens) -->
-                                    <div class="md:hidden space-y-3">
-                                        <div class="grid grid-cols-1 gap-3">
+                                        <!-- Desktop Layout (Large screens) -->
+                                        <div class="hidden lg:grid lg:grid-cols-5 gap-4 items-end">
                                             <div>
-                                                <x-input type="number" label="Length *" wire:model="package.length"
-                                                    min="1" step="0.1" required />
+                                                <x-input type="number" wire:model="package.length" label="Length *"
+                                                    step="0.1" min="1" required />
+                                            </div>
+                                            <div
+                                                class="flex items-center justify-center text-gray-500 dark:text-gray-400 pb-3">
+                                                <span class="text-lg sm:text-xl">×</span>
                                             </div>
                                             <div>
                                                 <x-input type="number" wire:model="package.width" label="Width *"
-                                                    min="1" step="0.1" required />
+                                                    step="0.1" min="1" required />
+                                            </div>
+                                            <div
+                                                class="flex items-center justify-center text-gray-500 dark:text-gray-400 pb-3">
+                                                <span class="text-lg sm:text-xl">×</span>
                                             </div>
                                             <div>
                                                 <x-input type="number" wire:model="package.height" label="Height *"
                                                     step="0.1" min="1" required />
                                             </div>
                                         </div>
+
+                                        <!-- Tablet Layout (Medium screens) -->
+                                        <div class="hidden md:grid lg:hidden md:grid-cols-3 gap-4">
+                                            <div>
+                                                <x-input type="number" wire:model="package.length" label="Length *"
+                                                    step="0.1" min="1" required />
+                                            </div>
+                                            <div>
+                                                <x-input type="number" wire:model="package.width" label="Width *"
+                                                    step="0.1" min="1" required />
+                                            </div>
+                                            <div>
+                                                <x-input type="number" wire:model="package.height" label="Height *"
+                                                    step="0.1" min="1" required />
+                                            </div>
+                                        </div>
+
+                                        <!-- Mobile Layout (Small screens) -->
+                                        <div class="md:hidden space-y-3">
+                                            <div class="grid grid-cols-1 gap-3">
+                                                <div>
+                                                    <x-input type="number" label="Length *"
+                                                        wire:model="package.length" min="1" step="0.1"
+                                                        required />
+                                                </div>
+                                                <div>
+                                                    <x-input type="number" wire:model="package.width"
+                                                        label="Width *" min="1" step="0.1" required />
+                                                </div>
+                                                <div>
+                                                    <x-input type="number" wire:model="package.height"
+                                                        label="Height *" step="0.1" min="1" required />
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
+                                @endif
 
                                 <!-- Weight -->
                                 <div class="mb-6 sm:mb-8">
@@ -228,18 +421,36 @@
                             </div>
                         </section>
 
+                        <!-- Insurance Section -->
+                        <div class="my-4" x-data="{ insuranceChecked: @entangle('isInsuranceChecked') }">
+                            <x-checkbox label="Insurance" wire:model.live='isInsuranceChecked'
+                                hint="Enter the total value of your shipment to add coverage by InsureShield"
+                                class="text-sm" />
+                            <div class="mt-2">
+                                <x-link href="#" color="primary" class="text-sm">
+                                    View Pricing, Excluded Items, and Terms
+                                </x-link>
+                            </div>
+
+                            <div x-show="insuranceChecked" x-transition class="mt-3">
+                                <x-number label="Declared Package Value ($)" placeholder="Enter package value"
+                                    type="number" step="0.01" wire:model='package.insured_value'
+                                    min="1" />
+                            </div>
+                        </div>
+
                     </section>
 
                     <!-- Action Buttons -->
                     <div class="flex flex-wrap gap-4 pt-4">
-                        <x-button wire:click="validateAddresses" color="gray" wire:loading.attr="disabled">
+                        {{-- <x-button wire:click="validateAddresses" color="gray" wire:loading.attr="disabled">
                             <span wire:loading.remove wire:target="validateAddresses">Validate Addresses</span>
                             <span wire:loading wire:target="validateAddresses">Validating...</span>
-                        </x-button>
+                        </x-button> --}}
 
                         <x-button type="submit" wire:loading.attr="disabled"
                             class="px-6 py-3 sm:px-8 sm:py-3 w-full sm:w-auto">
-                            <span wire:loading.remove wire:target="getRates">Get ShipEngine Rates</span>
+                            <span wire:loading.remove wire:target="getRates">Get Rates</span>
                             <span wire:loading wire:target="getRates">Getting Rates...</span>
                         </x-button>
                     </div>
@@ -376,28 +587,32 @@
                                                 <div class="flex-1">
                                                     <h4
                                                         class="font-semibold text-gray-900 dark:text-white text-sm sm:text-base">
-                                                        {{ $rate['carrier_friendly_name'] ?? 'Unknown Carrier' }} -
+                                                        {{-- {{ $rate['carrier_friendly_name'] ?? 'Unknown Carrier' }} - --}}
                                                         {{ $rate['service_type'] ?? 'Unknown Service' }}
                                                     </h4>
-                                                    <p
+                                                    {{-- <p
                                                         class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">
                                                         Service Code: {{ $rate['service_code'] ?? 'N/A' }}
-                                                    </p>
+                                                    </p> --}}
                                                     @if (isset($rate['carrier_delivery_days']))
-                                                        <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-                                                            Delivery: {{ $rate['estimated_delivery_date'] }} /
-                                                            {{ $rate['carrier_delivery_days'] }}
+                                                        <p
+                                                            class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 ">
+                                                            Estimated Delivery:
+                                                            <span class="font-bold">
+                                                                {{ $rate['carrier_delivery_days'] }}
+                                                            </span>
                                                             @if ($rate['delivery_days'])
                                                                 ({{ $rate['delivery_days'] }}
                                                                 {{ Str::plural('day', $rate['delivery_days']) }})
                                                             @endif
+
                                                         </p>
                                                     @endif
-                                                    @if (isset($rate['zone']))
+                                                    {{-- @if (isset($rate['zone']))
                                                         <p class="text-xs sm:text-sm text-blue-600 dark:text-blue-400">
                                                             Zone: {{ $rate['zone'] }}
                                                         </p>
-                                                    @endif
+                                                    @endif --}}
                                                 </div>
                                             </div>
 
@@ -411,14 +626,8 @@
                                                     </div>
                                                     <div
                                                         class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
-                                                        ${{ number_format($rate['shipping_amount']['amount'], 2) }}
+                                                        ${{ $rate['calculated_amount'] }}
                                                     </div>
-                                                    @if (isset($rate['insurance_amount']) && $rate['insurance_amount']['amount'] > 0)
-                                                        <div class="text-sm text-green-600 dark:text-green-400">
-                                                            +${{ number_format($rate['insurance_amount']['amount'], 2) }}
-                                                            insurance
-                                                        </div>
-                                                    @endif
                                                 </div>
                                             </div>
                                         </div>
@@ -432,6 +641,47 @@
                                                 </div>
                                             </div>
                                         @endif
+
+                                        <div>
+                                            {{-- $rate['original_total'] = $originalTotal;
+                    $rate['margin'] = $marginMultiplier;
+                    $rate['customer_margin'] = $custmoerMargin; --}}
+
+                                            <ul>
+                                                <li>
+                                                    shipping amount :
+                                                    ${{ $rate['shipping_amount']['amount'] ?? 'N/A' }}
+                                                </li>
+                                                <li>
+                                                    Insurance amount :
+                                                    ${{ $rate['insurance_amount']['amount'] ?? '0.00' }}
+                                                </li>
+                                                <li>
+                                                    Confirmation Amount :
+                                                    ${{ $rate['confirmation_amount']['amount'] ?? '0.00' }}
+                                                </li>
+                                                <li>
+                                                    Requested Comparison Amount :
+                                                    ${{ $rate['requested_comparison_amount']['amount'] ?? 'N/A' }}
+                                                </li>
+                                                <li>
+                                                    Total Amount :
+                                                    ${{ $rate['original_total'] ?? 'N/A' }}
+                                                </li>
+                                                <li>
+                                                    Margin :
+                                                    {{ $rate['margin'] ?? 'N/A' }}%
+                                                </li>
+                                                <li>
+                                                    Customer Margin :
+                                                    {{ $rate['customer_margin'] ?? 'N/A' }}%
+                                                </li>
+                                                <li>
+                                                    Caluclulated Amount :
+                                                    ${{ $rate['calculated_amount'] ?? 'N/A' }}
+                                                </li>
+                                            </ul>
+                                        </div>
 
                                         <!-- Rate Actions -->
                                         <div class="mt-3 flex justify-between items-center">

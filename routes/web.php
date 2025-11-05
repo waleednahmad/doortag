@@ -19,9 +19,9 @@ Route::middleware(['auth:web,customer'])->group(function () {
     Route::get('/users', Index::class)->name('users.index');
 
     Route::get('/user/profile', Profile::class)->name('user.profile');
-    Route::get('/shipping', ShippingIndex::class)->name('shipping.index');
+    Route::get('/shipping/test', ShippingIndex::class)->name('shipping.index');
     Route::get('/shipping/fedex', FedexShippingIndex::class)->name('shipping.fedex.index');
-    Route::get('/shipping/shipengine', ShipEngineShippingIndex::class)->name('shipping.shipengine.index');
+    Route::get('/shipping', ShipEngineShippingIndex::class)->name('shipping.shipengine.index');
 });
 
 require __DIR__ . '/auth.php';
