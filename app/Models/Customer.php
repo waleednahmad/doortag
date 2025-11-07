@@ -53,4 +53,13 @@ class Customer extends Authenticatable
             'address_residential_indicator' => 'boolean',
         ];
     }
+
+
+    // =====================
+    // Relationships
+    // =====================
+    public function shipments()
+    {
+        return $this->hasMany(Shipment::class, 'customer_id', 'id');
+    }
 }

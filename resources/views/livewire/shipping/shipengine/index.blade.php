@@ -1,7 +1,7 @@
 <div x-data="shipEngineShippingForm()">
     <div>
         <!-- Loading Spinner -->
-        @if ($loading)
+        {{-- @if ($loading)
             <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
                 <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
                     <div class="mt-3 text-center">
@@ -10,7 +10,7 @@
                     </div>
                 </div>
             </div>
-        @endif
+        @endif --}}
 
         @if (!$rates)
             <form wire:submit="getRates" @submit="if(window.showGlobalLoader) window.showGlobalLoader()"
@@ -62,8 +62,7 @@
 
                         <!-- Ship From Section -->
                         <section>
-                            <h2
-                                class="text-base sm:text-lg font-semibold mb-3 sm:mb-2 text-gray-800 dark:text-gray-200">
+                            <h2 class="text-base sm:text-lg font-semibold mb-3 sm:mb-2 text-gray-800 dark:text-gray-200">
                                 Ship
                                 From
                             </h2>
@@ -178,15 +177,23 @@
 
                                     <div class="col-span-full md:col-span-2">
                                         {{-- City, State, Zipcode --}}
-                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                                             {{-- City --}}
                                             <x-input label="City *" wire:model="shipToAddress.city_locality" required />
-                                            {{-- State --}}
-                                            <x-input label="State *" wire:model="shipToAddress.state_province"
-                                                maxlength="2" required />
+                                            @if ($shipToAddress['country_code'] == 'US')
+                                                <x-input label="State *" wire:model="shipToAddress.state_province"
+                                                    maxlength="2" required />
+                                                <x-input label="Postal Code *" wire:model="shipToAddress.postal_code"
+                                                    required />
+                                            @else
+                                                <x-input label="State" wire:model="shipToAddress.state_province" />
+                                                <x-input label="Postal Code" wire:model="shipToAddress.postal_code" />
+                                            @endif
                                             {{-- Zipcode --}}
-                                            <x-input label="Postal Code *" wire:model="shipToAddress.postal_code"
-                                                required />
+                                            {{-- Country --}}
+                                            <x-select.styled label="Country *" searchable
+                                                wire:model.live="shipToAddress.country_code" :options="$this->countries"
+                                                placeholder="Select country" required />
                                         </div>
                                     </div>
 
@@ -421,6 +428,10 @@
                                     </div>
                                 </div>
                             </div>
+
+
+
+
                         </section>
 
                         <!-- Insurance Section -->
@@ -441,7 +452,72 @@
                             </div>
                         </div>
 
+
+                        {{-- For the international shipments --}}
+                        @if ($shipToAddress['country_code'] != 'US')
+                            <!-- Customs Information Section -->
+                            <section class="mt-4" wire:transition>
+                                <h2
+                                    class="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-gray-800 dark:text-gray-200">
+                                    Customs Information
+                                </h2>
+                                <div
+                                    class="bg-white dark:bg-gray-700 rounded-lg p-3 sm:p-4 mb-3 sm:mb-4 border border-gray-200 dark:border-gray-600">
+                                    <div class="flex items-center justify-between mb-4">
+                                        <h5 class="font-medium text-sm sm:text-base text-gray-800 dark:text-gray-200">
+                                            Customs Details
+                                        </h5>
+                                    </div>
+
+                                    @foreach ($customs['customs_items'] as $customItemIndex => $customItem)
+                                        <div
+                                            class="bg-white dark:bg-gray-700 rounded-lg p-3 sm:p-4 mb-3 sm:mb-4 border border-gray-200 dark:border-gray-600">
+                                            <div class="flex items-center justify-between mb-4">
+                                                <h5
+                                                    class="font-medium text-sm sm:text-base text-gray-800 dark:text-gray-200">
+                                                    Item {{ $customItemIndex + 1 }}
+                                                </h5>
+                                            </div>
+
+                                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                <x-input label="Description *" type="text"
+                                                    wire:model="customs.customs_items.{{ $customItemIndex }}.description"
+                                                    required />
+                                                <x-input label="Quantity *" type="number"
+                                                    wire:model="customs.customs_items.{{ $customItemIndex }}.quantity"
+                                                    required />
+                                                <x-input label="Value *" type="number" step="0.01"
+                                                    wire:model="customs.customs_items.{{ $customItemIndex }}.value.amount"
+                                                    required />
+                                                <div class="grid grid-cols-6">
+                                                    <div class="col-span-5">
+                                                        <x-input label="Harmonization # *" type="text" required
+                                                            class=" w-full"
+                                                            wire:model="customs.customs_items.{{ $customItemIndex }}.harmonized_tariff_code" />
+                                                    </div>
+                                                    <div class="col-span-1 flex items-end">
+                                                        <x-button text="Search #'s"
+                                                            href="https://uscensus.prod.3ceonline.com/ui/"
+                                                            target='_blank' />
+                                                    </div>
+                                                </div>
+                                                <x-select.styled label="Country of Origin *" searchable
+                                                    wire:model="customs.customs_items.{{ $customItemIndex }}.country_of_origin"
+                                                    :options="$this->countries" placeholder="Select country" required />
+
+
+                                                <x-input label="Weight *" type="number" step="0.01"
+                                                    wire:model="customs.customs_items.{{ $customItemIndex }}.weight.value"
+                                                    required />
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </section>
+                        @endif
                     </section>
+
+
 
                     <!-- Action Buttons -->
                     <div class="flex flex-wrap gap-4 pt-4">
@@ -767,53 +843,6 @@
                                             </div>
                                         @endif
 
-                                        <div>
-                                            {{-- $rate['original_total'] = $originalTotal;
-                    $rate['margin'] = $marginMultiplier;
-                    $rate['customer_margin'] = $custmoerMargin; --}}
-
-                                            <ul>
-                                                <li>
-                                                    shipping amount :
-                                                    ${{ $rate['shipping_amount']['amount'] ?? 'N/A' }}
-                                                </li>
-                                                <li>
-                                                    Insurance amount :
-                                                    ${{ $rate['insurance_amount']['amount'] ?? '0.00' }}
-                                                </li>
-                                                <li>
-                                                    Confirmation Amount :
-                                                    ${{ $rate['confirmation_amount']['amount'] ?? '0.00' }}
-                                                </li>
-                                                <li>
-                                                    Requested Comparison Amount :
-                                                    ${{ $rate['requested_comparison_amount']['amount'] ?? 'N/A' }}
-                                                </li>
-                                                <li>
-                                                    Other amout :
-                                                    ${{ $rate['other_amount']['amount'] ?? '0.00' }}
-                                                </li>
-                                                <li>
-                                                    Total Amount :
-                                                    ${{ $rate['original_total'] ?? 'N/A' }}
-                                                </li>
-                                                <li>
-                                                    Margin :
-                                                    {{ $rate['margin'] ?? 'N/A' }}%
-                                                </li>
-                                                <li>
-                                                    Customer Margin :
-                                                    {{ $rate['customer_margin'] ?? 'N/A' }}%
-                                                </li>
-                                                @if (isset($rate['calculated_amount']) && $rate['calculated_amount'])
-                                                    <li>
-                                                        Caluclulated Amount :
-                                                        ${{ $rate['calculated_amount'] ?? 'N/A' }}
-                                                    </li>
-                                                @endif
-                                            </ul>
-                                        </div>
-
                                         <!-- Rate Actions -->
                                         <div class="mt-3 flex justify-between items-center">
                                             <button wire:click.stop="selectRate('{{ $rate['rate_id'] }}')"
@@ -828,7 +857,8 @@
 
                         @if ($selectedRate)
                             <div class="mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
-                                <x-button wire:click="createLabel" color="green" class="w-full sm:w-auto">
+                                <x-button wire:click="createLabel" color="green" class="w-full sm:w-auto"
+                                    loading="createLabel">
                                     Create Shipping Label
                                 </x-button>
                             </div>
