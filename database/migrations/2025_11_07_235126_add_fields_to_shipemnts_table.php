@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('shipemnts', function (Blueprint $table) {
+        Schema::table('shipments', function (Blueprint $table) {
             $table->float('origin_total')->nuulable();
             $table->float('customer_total')->nuulable();
             $table->float('end_user_total')->nuulable();
@@ -23,7 +23,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('shipemnts', function (Blueprint $table) {
+        Schema::table('shipments', function (Blueprint $table) {
             $table->dropColumn(['origin_total', 'customer_total', 'end_user_total']);
         });
     }
