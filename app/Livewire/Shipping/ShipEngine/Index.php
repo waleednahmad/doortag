@@ -299,168 +299,172 @@ class Index extends Component
         $this->shipToAddress['address_residential_indicator'] = $this->shipToAddress['address_residential_indicator'] == true ? 'yes' : 'no';
 
 
-        // $isValidated = $this->validateAddresses();
-        // if (! $isValidated) {
-        //     return;
-        // }
-        // try {
-        $this->loading = true;
-        $this->rates = [];
-        $this->selectedRate = null;
-
-        $shipEngine = new ShipEngineService();
-
-
-        $packageData = [];
-
-        if ($this->selectedPackage && $this->selectedPackage['package_code'] != 'custom') {
-            $packageData =  [
-                'weight' => [
-                    'value' => $this->package['weight'] ?? 1,
-                    'unit' => $this->package['weight_unit'] ?? 'pound'
-                ],
-
-                'package_code' => $this->selectedPackage['package_code'] ?? '',
-            ];
-        } else { // Custom package
-            $packageData =  [
-                'weight' => [
-                    'value' => $this->package['weight'] ?? 1,
-                    'unit' => $this->package['weight_unit'] ?? 'pound'
-                ],
-                'dimensions' => [
-                    'length' => $this->package['length'] ?? 12,
-                    'width' => $this->package['width'] ?? 12,
-                    'height' => $this->package['height'] ?? 12,
-                    'unit' => $this->package['dimension_unit'] ?? 'inch'
-                ],
-            ];
+        if ($this->shipToAddress['country_code'] == "US") {
+            $isValidated = $this->validateAddresses();
+            if (! $isValidated) {
+                return;
+            }
         }
 
 
-        // Add insurance value if checked
-        if ($this->isInsuranceChecked) {
-            $packageData['insured_value'] = [
-                'amount' => $this->package['insured_value'] ?? 1,
-                'currency' => 'USD'
-            ];
-        }
+        try {
+            $this->loading = true;
+            $this->rates = [];
+            $this->selectedRate = null;
+
+            $shipEngine = new ShipEngineService();
 
 
-        $shipmentData = [
-            'rate_options' => [
-                'carrier_ids' => ["se-4038210"], // For fedex only
-                'service_codes' => [],
-            ],
-            'shipment' => [
-                'ship_to' => $shipEngine->formatAddress($this->shipToAddress),
-                'ship_from' => $shipEngine->formatAddress($this->shipFromAddress),
-                'packages' => [
-                    $packageData
+            $packageData = [];
+
+            if ($this->selectedPackage && $this->selectedPackage['package_code'] != 'custom') {
+                $packageData =  [
+                    'weight' => [
+                        'value' => $this->package['weight'] ?? 1,
+                        'unit' => $this->package['weight_unit'] ?? 'pound'
+                    ],
+
+                    'package_code' => $this->selectedPackage['package_code'] ?? '',
+                ];
+            } else { // Custom package
+                $packageData =  [
+                    'weight' => [
+                        'value' => $this->package['weight'] ?? 1,
+                        'unit' => $this->package['weight_unit'] ?? 'pound'
+                    ],
+                    'dimensions' => [
+                        'length' => $this->package['length'] ?? 12,
+                        'width' => $this->package['width'] ?? 12,
+                        'height' => $this->package['height'] ?? 12,
+                        'unit' => $this->package['dimension_unit'] ?? 'inch'
+                    ],
+                ];
+            }
+
+
+            // Add insurance value if checked
+            if ($this->isInsuranceChecked) {
+                $packageData['insured_value'] = [
+                    'amount' => $this->package['insured_value'] ?? 1,
+                    'currency' => 'USD'
+                ];
+            }
+
+
+            $shipmentData = [
+                'rate_options' => [
+                    'carrier_ids' => ["se-4038210"], // For fedex only
+                    'service_codes' => [],
                 ],
-            ]
-        ];
-        // Add insurance provider if checked
-        if ($this->isInsuranceChecked) {
-            $shipmentData['shipment']['insurance_provider'] = 'parcelguard';
-        }
-
-        // ================== Just For International ==================
-        if ($this->shipToAddress['country_code'] != 'US') {
-            $shipmentData['shipment']['customs'] = $this->customs;
-
-
-            $shipmentData['shipment']['tax_identifiers'] = [
-                [
-                    "taxable_entity_type" => "shipper",
-                    "identifier_type" => "eori",
-                    "value" => "GB987654312000",
-                    "issuing_authority" => "GB"
+                'shipment' => [
+                    'ship_to' => $shipEngine->formatAddress($this->shipToAddress),
+                    'ship_from' => $shipEngine->formatAddress($this->shipFromAddress),
+                    'packages' => [
+                        $packageData
+                    ],
                 ]
             ];
-        } else {
-            // Remove customs for domestic shipments
-            if (isset($shipmentData['shipment']['customs'])) {
-                unset($shipmentData['shipment']['customs']);
+            // Add insurance provider if checked
+            if ($this->isInsuranceChecked) {
+                $shipmentData['shipment']['insurance_provider'] = 'parcelguard';
             }
-            // Remove tax_identifiers for domestic shipments
-            if (isset($shipmentData['shipment']['tax_identifiers'])) {
-                unset($shipmentData['shipment']['tax_identifiers']);
+
+            // ================== Just For International ==================
+            if ($this->shipToAddress['country_code'] != 'US') {
+                $shipmentData['shipment']['customs'] = $this->customs;
+
+
+                $shipmentData['shipment']['tax_identifiers'] = [
+                    [
+                        "taxable_entity_type" => "shipper",
+                        "identifier_type" => "eori",
+                        "value" => "GB987654312000",
+                        "issuing_authority" => "GB"
+                    ]
+                ];
+            } else {
+                // Remove customs for domestic shipments
+                if (isset($shipmentData['shipment']['customs'])) {
+                    unset($shipmentData['shipment']['customs']);
+                }
+                // Remove tax_identifiers for domestic shipments
+                if (isset($shipmentData['shipment']['tax_identifiers'])) {
+                    unset($shipmentData['shipment']['tax_identifiers']);
+                }
             }
+
+
+            $response = $shipEngine->getRates($shipmentData);
+
+            if ($response['rate_response']['status'] == 'error') {
+                $this->dialog()->error('Error getting rates: ' . ($response['rate_response']['errors'][0]['message'] ?? 'Unknown error'))->send();
+                return;
+            }
+
+
+            $responseRates = collect($response['rate_response']['rates'] ?? []);
+            if ($responseRates->isEmpty()) {
+                $this->dialog()->warning('No rates found for the given shipment details.')->send();
+                return;
+            }
+
+
+            $authenticatedUser = Auth::user();
+            if ($authenticatedUser instanceof Customer && $authenticatedUser->margin > 0) {
+                $formatedRates = array_map(function ($rate) use ($authenticatedUser) {
+                    $shippingAmount = (float) $rate['shipping_amount']['amount'];
+                    $insuranceAmount = (float) ($rate['insurance_amount']['amount'] ?? 0);
+                    $confirmationAmount = (float) ($rate['confirmation_amount']['amount'] ?? 0);
+                    $otherAmount = (float) ($rate['other_amount']['amount'] ?? 0);
+                    $requestedComparisonAmount = (float) ($rate['requested_comparison_amount']['amount'] ?? 0);
+                    $originalTotal = $shippingAmount + $insuranceAmount + $confirmationAmount + $otherAmount + $requestedComparisonAmount;
+                    $marginMultiplier = 1 + ($authenticatedUser->margin / 100);
+                    $custmoerMargin = 1 + ($authenticatedUser->customer_margin / 100);
+                    $newTotal = $originalTotal * $marginMultiplier * $custmoerMargin;
+
+                    // Set Data to stored in the shipments table
+                    $this->origin_total = number_format($originalTotal, 2);
+                    $this->customer_total = number_format($originalTotal * $marginMultiplier, 2);
+                    $this->end_user_total = number_format($newTotal, 2);
+
+                    // New data 
+                    $rate['original_total'] = number_format($originalTotal, 2);
+                    $rate['margin'] = number_format($marginMultiplier, 2);
+                    $rate['customer_margin'] = number_format($custmoerMargin, 2);
+                    $rate['calculated_amount'] = number_format($newTotal, 2);
+                    return $rate;
+                }, $responseRates->toArray());
+            } else { // WEB Guard
+                $formatedRates = array_map(function ($rate) use ($authenticatedUser) {
+                    $shippingAmount = (float) $rate['shipping_amount']['amount'];
+                    $insuranceAmount = (float) ($rate['insurance_amount']['amount'] ?? 0);
+                    $confirmationAmount = (float) ($rate['confirmation_amount']['amount'] ?? 0);
+                    $otherAmount = (float) ($rate['other_amount']['amount'] ?? 0);
+                    $requestedComparisonAmount = (float) ($rate['requested_comparison_amount']['amount'] ?? 0);
+                    $originalTotal = $shippingAmount + $insuranceAmount + $confirmationAmount + $otherAmount + $requestedComparisonAmount;
+
+                    // Set Data to stored in the shipments table
+                    $this->origin_total = number_format($originalTotal, 2);
+                    // $this->customer_total = number_format($originalTotal * $marginMultiplier, 2);
+                    // $this->end_user_total = number_format($newTotal, 2);
+
+                    // New data 
+                    $rate['original_total'] = number_format($originalTotal, 2);
+                    $rate['calculated_amount'] = number_format($originalTotal, 2);
+                    return $rate;
+                }, $responseRates->toArray());
+            }
+
+
+            $this->rates = $formatedRates;
+            $this->sortRates(); // Apply default sorting
+            $this->toast()->success('Rates retrieved successfully!')->send();
+        } catch (\Exception $e) {
+            $this->toast()->error('Failed to get rates: ' . $e->getMessage())->send();
+            Log::error('Failed to get ShipEngine rates', ['error' => $e->getMessage()]);
+        } finally {
+            $this->loading = false;
         }
-
-
-        $response = $shipEngine->getRates($shipmentData);
-
-        if ($response['rate_response']['status'] == 'error') {
-            $this->dialog()->error('Error getting rates: ' . ($response['rate_response']['errors'][0]['message'] ?? 'Unknown error'))->send();
-            return;
-        }
-
-
-        $responseRates = collect($response['rate_response']['rates'] ?? []);
-        if ($responseRates->isEmpty()) {
-            $this->dialog()->warning('No rates found for the given shipment details.')->send();
-            return;
-        }
-
-
-        $authenticatedUser = Auth::user();
-        if ($authenticatedUser instanceof Customer && $authenticatedUser->margin > 0) {
-            $formatedRates = array_map(function ($rate) use ($authenticatedUser) {
-                $shippingAmount = (float) $rate['shipping_amount']['amount'];
-                $insuranceAmount = (float) ($rate['insurance_amount']['amount'] ?? 0);
-                $confirmationAmount = (float) ($rate['confirmation_amount']['amount'] ?? 0);
-                $otherAmount = (float) ($rate['other_amount']['amount'] ?? 0);
-                $requestedComparisonAmount = (float) ($rate['requested_comparison_amount']['amount'] ?? 0);
-                $originalTotal = $shippingAmount + $insuranceAmount + $confirmationAmount + $otherAmount + $requestedComparisonAmount;
-                $marginMultiplier = 1 + ($authenticatedUser->margin / 100);
-                $custmoerMargin = 1 + ($authenticatedUser->customer_margin / 100);
-                $newTotal = $originalTotal * $marginMultiplier * $custmoerMargin;
-
-                // Set Data to stored in the shipments table
-                $this->origin_total = number_format($originalTotal, 2);
-                $this->customer_total = number_format($originalTotal * $marginMultiplier, 2);
-                $this->end_user_total = number_format($newTotal, 2);
-
-                // New data 
-                $rate['original_total'] = number_format($originalTotal, 2);
-                $rate['margin'] = number_format($marginMultiplier, 2);
-                $rate['customer_margin'] = number_format($custmoerMargin, 2);
-                $rate['calculated_amount'] = number_format($newTotal, 2);
-                return $rate;
-            }, $responseRates->toArray());
-        } else { // WEB Guard
-            $formatedRates = array_map(function ($rate) use ($authenticatedUser) {
-                $shippingAmount = (float) $rate['shipping_amount']['amount'];
-                $insuranceAmount = (float) ($rate['insurance_amount']['amount'] ?? 0);
-                $confirmationAmount = (float) ($rate['confirmation_amount']['amount'] ?? 0);
-                $otherAmount = (float) ($rate['other_amount']['amount'] ?? 0);
-                $requestedComparisonAmount = (float) ($rate['requested_comparison_amount']['amount'] ?? 0);
-                $originalTotal = $shippingAmount + $insuranceAmount + $confirmationAmount + $otherAmount + $requestedComparisonAmount;
-
-                // Set Data to stored in the shipments table
-                $this->origin_total = number_format($originalTotal, 2);
-                // $this->customer_total = number_format($originalTotal * $marginMultiplier, 2);
-                // $this->end_user_total = number_format($newTotal, 2);
-
-                // New data 
-                $rate['original_total'] = number_format($originalTotal, 2);
-                $rate['calculated_amount'] = number_format($originalTotal, 2);
-                return $rate;
-            }, $responseRates->toArray());
-        }
-
-
-        $this->rates = $formatedRates;
-        $this->sortRates(); // Apply default sorting
-        $this->toast()->success('Rates retrieved successfully!')->send();
-        // } catch (\Exception $e) {
-        //     $this->toast()->error('Failed to get rates: ' . $e->getMessage())->send();
-        //     Log::error('Failed to get ShipEngine rates', ['error' => $e->getMessage()]);
-        // } finally {
-        //     $this->loading = false;
-        // }
     }
 
     public function selectRate($rateId)
