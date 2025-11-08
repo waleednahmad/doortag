@@ -186,20 +186,20 @@ class Index extends Component
             'company_name' => '',
             'phone' => '',
             'email' => '',
-            'address_line1' => '',
+            // 'address_line1' => '',
             // 'address_line1' => '1600 Amphitheatre Pkwy',
-            // "address_line1" => "Röntgenstr. 3",
+            "address_line1" => "Röntgenstr. 3",
             'address_line2' => '',
-            'city_locality' => '',
+            // 'city_locality' => '',
             // 'city_locality' => 'mountain view',
-            // "city_locality" => "Esslingen am Neckar",
+            "city_locality" => "Esslingen am Neckar",
             // 'state_province' => 'CA',
             "state_province" => "",
-            'postal_code' => '',
+            // 'postal_code' => '',
             // 'postal_code' => '94043',
-            // "postal_code" => "73730",
-            'country_code' => 'US',
-            // "country_code" => "DE",
+            "postal_code" => "73730",
+            // 'country_code' => 'US',
+            "country_code" => "DE",
             'address_residential_indicator' => true
 
         ];
@@ -576,7 +576,7 @@ class Index extends Component
                     'shipment_data' => json_encode($response),
                     'origin_total' => $this->origin_total,
                     'customer_total' => $this->customer_total ?? null,
-                    'final_user_total' => $this->end_user_total ?? null,
+                    'end_user_total' => $this->end_user_total ?? null,
                 ]);
 
                 $this->resetData();
