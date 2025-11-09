@@ -248,7 +248,6 @@ class Index extends Component
             $this->carriers = $response['carriers'] ?? [];
         } catch (\Exception $e) {
             $this->toast()->error('Failed to load carriers: ' . $e->getMessage())->send();
-            Log::error('Failed to load ShipEngine carriers', ['error' => $e->getMessage()]);
         } finally {
             $this->loading = false;
         }
@@ -273,10 +272,7 @@ class Index extends Component
             $this->selectedService = '';
         } catch (\Exception $e) {
             $this->toast()->error('Failed to load carrier services: ' . $e->getMessage())->send();
-            Log::error('Failed to load ShipEngine carrier services', [
-                'carrier_id' => $this->selectedCarrier,
-                'error' => $e->getMessage()
-            ]);
+    
         } finally {
             $this->loading = false;
         }
@@ -304,10 +300,7 @@ class Index extends Component
             $this->carrierPackaging  = $filteredPackagest->prepend($customPackaging)->toArray();
         } catch (\Exception $e) {
             $this->toast()->error('Failed to load carrier packaging: ' . $e->getMessage())->send();
-            Log::error('Failed to load ShipEngine carrier packaging', [
-                'carrier_id' => $this->selectedCarrier,
-                'error' => $e->getMessage()
-            ]);
+      
         } finally {
             $this->loading = false;
         }
@@ -532,7 +525,6 @@ class Index extends Component
             $this->toast()->success('Rates retrieved successfully!')->send();
         } catch (\Exception $e) {
             $this->toast()->error('Failed to get rates: ' . $e->getMessage())->send();
-            Log::error('Failed to get ShipEngine rates', ['error' => $e->getMessage()]);
         } finally {
             $this->loading = false;
         }
@@ -546,7 +538,6 @@ class Index extends Component
             return;
         }
         $this->selectedRate = collect($this->rates)->firstWhere('rate_id', $rateId);
-        info($this->selectedRate);
         $this->toast()->info('Selected rate: ' . ($this->selectedRate['service_type'] ?? 'N/A'))->send();
     }
 
@@ -684,10 +675,6 @@ class Index extends Component
             $this->toast()->success('Package tracking information retrieved successfully!')->send();
         } catch (\Exception $e) {
             $this->toast()->error('Failed to track package: ' . $e->getMessage())->send();
-            Log::error('Failed to track ShipEngine package', [
-                'tracking_number' => $this->trackingNumber,
-                'error' => $e->getMessage()
-            ]);
         } finally {
             $this->loading = false;
         }
@@ -761,7 +748,6 @@ class Index extends Component
             return true;
         } catch (\Exception $e) {
             $this->toast()->error('Failed to validate addresses: ' . $e->getMessage())->send();
-            Log::error('Failed to validate ShipEngine addresses', ['error' => $e->getMessage()]);
         } finally {
             $this->loading = false;
         }

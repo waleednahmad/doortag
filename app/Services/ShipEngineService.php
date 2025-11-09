@@ -40,16 +40,13 @@ class ShipEngineService
      */
     public function getRates(array $shipmentData)
     {
-        info("====================== ShipEngine Get Rates Request ==================");
-        info(print_r($shipmentData, true));
-        info("========================================");
+
         try {
             $response = $this->client->post('rates', [
                 'json' => $shipmentData
             ]);
 
             $data = json_decode($response->getBody()->getContents(), true);
-            info('ShipEngine Rates Response: ' . print_r($data, true));
             return $data;
         } catch (ClientException $e) {
             // Handle 4xx client errors (400, 401, 404, etc.)
@@ -66,12 +63,6 @@ class ShipEngineService
                     ]
                 ];
             }
-
-            // Fall back to logging and throwing the original error
-            Log::error('ShipEngine API client error getting rates', [
-                'error' => $e->getMessage(),
-                'code' => $e->getCode()
-            ]);
             throw $e;
         } catch (ServerException $e) {
             // Handle 5xx server errors
@@ -88,16 +79,10 @@ class ShipEngineService
                 ];
             }
 
-            Log::error('ShipEngine API server error getting rates', [
-                'error' => $e->getMessage(),
-                'code' => $e->getCode()
-            ]);
+         
             throw $e;
         } catch (GuzzleException $e) {
-            Log::error('ShipEngine API error getting rates', [
-                'error' => $e->getMessage(),
-                'code' => $e->getCode()
-            ]);
+           
             throw $e;
         }
     }
@@ -116,11 +101,7 @@ class ShipEngineService
 
                 return $data;
             } catch (GuzzleException $e) {
-                Log::error('ShipEngine API error getting carrier packages', [
-                    'carrier_id' => $carrierId,
-                    'error' => $e->getMessage(),
-                    'code' => $e->getCode()
-                ]);
+           
                 throw $e;
             }
         });
@@ -224,11 +205,7 @@ class ShipEngineService
 
             return $data;
         } catch (GuzzleException $e) {
-            Log::error('ShipEngine API error tracking package', [
-                'tracking_number' => $trackingNumber,
-                'error' => $e->getMessage(),
-                'code' => $e->getCode()
-            ]);
+      
             throw $e;
         }
     }
@@ -248,10 +225,7 @@ class ShipEngineService
 
                 return $data;
             } catch (GuzzleException $e) {
-                Log::error('ShipEngine API error getting carriers', [
-                    'error' => $e->getMessage(),
-                    'code' => $e->getCode()
-                ]);
+      
                 throw $e;
             }
         });
@@ -271,11 +245,7 @@ class ShipEngineService
 
                 return $data;
             } catch (GuzzleException $e) {
-                Log::error('ShipEngine API error getting carrier services', [
-                    'carrier_id' => $carrierId,
-                    'error' => $e->getMessage(),
-                    'code' => $e->getCode()
-                ]);
+   
                 throw $e;
             }
         });
@@ -294,10 +264,7 @@ class ShipEngineService
             $data = json_decode($response->getBody()->getContents(), true);
             return $data;
         } catch (GuzzleException $e) {
-            Log::error('ShipEngine API error validating address', [
-                'error' => $e->getMessage(),
-                'code' => $e->getCode()
-            ]);
+    
             throw $e;
         }
     }
@@ -316,10 +283,7 @@ class ShipEngineService
 
             return $data;
         } catch (GuzzleException $e) {
-            Log::error('ShipEngine API error creating shipment', [
-                'error' => $e->getMessage(),
-                'code' => $e->getCode()
-            ]);
+     
             throw $e;
         }
     }
@@ -335,11 +299,7 @@ class ShipEngineService
 
             return $data;
         } catch (GuzzleException $e) {
-            Log::error('ShipEngine API error getting shipment', [
-                'shipment_id' => $shipmentId,
-                'error' => $e->getMessage(),
-                'code' => $e->getCode()
-            ]);
+      
             throw $e;
         }
     }
@@ -355,11 +315,7 @@ class ShipEngineService
 
             return $data;
         } catch (GuzzleException $e) {
-            Log::error('ShipEngine API error cancelling label', [
-                'label_id' => $labelId,
-                'error' => $e->getMessage(),
-                'code' => $e->getCode()
-            ]);
+ 
             throw $e;
         }
     }
@@ -378,10 +334,7 @@ class ShipEngineService
 
                 return $data;
             } catch (GuzzleException $e) {
-                Log::error('ShipEngine API error getting account', [
-                    'error' => $e->getMessage(),
-                    'code' => $e->getCode()
-                ]);
+            
                 throw $e;
             }
         });
