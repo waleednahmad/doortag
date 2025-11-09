@@ -58,6 +58,7 @@ class Index extends Component
 
     public $customs = [
         'contents' => 'merchandise', // [merchandise, documents]
+        'signer' => '',
         'non_delivery' => 'return_to_sender',
         'terms_of_trade_code' => 'DDU',
         'declaration' => 'I hereby certify that the information on this invoice is true and correct and the contents and value of this shipment is as stated above.',
@@ -97,17 +98,19 @@ class Index extends Component
     public $tax_identifiers = [
         [
             "taxable_entity_type" => "shipper",
-            "identifier_type" => "eori",
-            "value" => "GB987654312000",
-            "issuing_authority" => "GB"
+            // "identifier_type" => "eori",
+            "value" => "",
+            "issuing_authority" => ""
         ],
         [
             "taxable_entity_type" => "recipient",
-            "identifier_type" => "eori",
+            // "identifier_type" => "eori",
             "value" => "",
             "issuing_authority" => ""
         ]
     ];
+
+    public $shipDate  = null;
 
     public $carriers = [];
     public $selectedCarrier = 'se-4038210';
@@ -195,23 +198,40 @@ class Index extends Component
         $this->loadCarriers();
         $this->setDefaultAddresses();
         $this->loadCarrierPackaging();
+
+        // Set a default date for today date
+        $this->shipDate = now()->format('m-d-Y');
+        $this->customs['signer'] = $this->shipFromAddress['name'];
     }
 
     public function setDefaultAddresses()
     {
         // Set default ship from address
+        // $this->shipFromAddress = [
+        //     'name' => Auth::user()->name,
+        //     'company_name' => 'Test Company',
+        //     'phone' =>  Auth::user()->phone,
+        //     'email' =>  Auth::user()->email,
+        //     'address_line1' =>  Auth::user()->address,
+        //     'address_line2' =>  Auth::user()->address2,
+        //     'city_locality' =>  Auth::user()->city,
+        //     'state_province' => 'FL',
+        //     'postal_code' =>  Auth::user()->zipcode,
+        //     'country_code' => 'US',
+        //     'address_residential_indicator' => Auth::user()->address_residential_indicator
+        // ];
         $this->shipFromAddress = [
-            'name' => Auth::user()->name,
-            'company_name' => 'Test Company',
-            'phone' =>  Auth::user()->phone,
-            'email' =>  Auth::user()->email,
-            'address_line1' =>  Auth::user()->address,
-            'address_line2' =>  Auth::user()->address2,
-            'city_locality' =>  Auth::user()->city,
-            'state_province' => 'FL',
-            'postal_code' =>  Auth::user()->zipcode,
+            'name' => '',
+            'company_name' => '',
+            'phone' =>  '',
+            'email' =>  '',
+            'address_line1' =>  '',
+            'address_line2' =>  '',
+            'city_locality' =>  '',
+            'state_province' => '',
+            'postal_code' =>  '',
             'country_code' => 'US',
-            'address_residential_indicator' => Auth::user()->address_residential_indicator
+            'address_residential_indicator' => false
         ];
 
         // Set default ship to address
@@ -220,23 +240,36 @@ class Index extends Component
             'company_name' => '',
             'phone' => '',
             'email' => '',
-            // 'address_line1' => '',
-            // 'address_line1' => '1600 Amphitheatre Pkwy',
-            "address_line1" => "Röntgenstr. 3",
+            'address_line1' => '',
             'address_line2' => '',
-            // 'city_locality' => '',
-            // 'city_locality' => 'mountain view',
-            "city_locality" => "Esslingen am Neckar",
-            // 'state_province' => 'CA',
+            'city_locality' => '',
             "state_province" => "",
-            // 'postal_code' => '',
-            // 'postal_code' => '94043',
-            "postal_code" => "73730",
-            // 'country_code' => 'US',
-            "country_code" => "DE",
-            'address_residential_indicator' => true
-
+            'postal_code' => '',
+            'country_code' => 'US',
+            'address_residential_indicator' => false
         ];
+        // $this->shipToAddress = [
+        //     'name' => '',
+        //     'company_name' => '',
+        //     'phone' => '',
+        //     'email' => '',
+        //     // 'address_line1' => '',
+        //     // 'address_line1' => '1600 Amphitheatre Pkwy',
+        //     "address_line1" => "Röntgenstr. 3",
+        //     'address_line2' => '',
+        //     // 'city_locality' => '',
+        //     // 'city_locality' => 'mountain view',
+        //     "city_locality" => "Esslingen am Neckar",
+        //     // 'state_province' => 'CA',
+        //     "state_province" => "",
+        //     // 'postal_code' => '',
+        //     // 'postal_code' => '94043',
+        //     "postal_code" => "73730",
+        //     // 'country_code' => 'US',
+        //     "country_code" => "DE",
+        //     'address_residential_indicator' => true
+
+        // ];
     }
 
     public function loadCarriers()
@@ -272,7 +305,6 @@ class Index extends Component
             $this->selectedService = '';
         } catch (\Exception $e) {
             $this->toast()->error('Failed to load carrier services: ' . $e->getMessage())->send();
-    
         } finally {
             $this->loading = false;
         }
@@ -300,7 +332,6 @@ class Index extends Component
             $this->carrierPackaging  = $filteredPackagest->prepend($customPackaging)->toArray();
         } catch (\Exception $e) {
             $this->toast()->error('Failed to load carrier packaging: ' . $e->getMessage())->send();
-      
         } finally {
             $this->loading = false;
         }
@@ -430,6 +461,7 @@ class Index extends Component
                     'service_codes' => [],
                 ],
                 'shipment' => [
+                    'ship_date' => $this->shipDate, // Format: YYYY-MM-DD
                     'ship_to' => $shipEngine->formatAddress($this->shipToAddress),
                     'ship_from' => $shipEngine->formatAddress($this->shipFromAddress),
                     'packages' => [
@@ -444,6 +476,16 @@ class Index extends Component
 
             // ================== Just For International ==================
             if ($this->shipToAddress['country_code'] != 'US') {
+                // Modify the issuing_authority based on country codes
+                foreach ($this->tax_identifiers as $key => $identifier) {
+                    if ($identifier['taxable_entity_type'] == 'shipper') {
+                        $this->tax_identifiers[$key]['issuing_authority'] = $this->shipFromAddress['country_code'];
+                    } elseif ($identifier['taxable_entity_type'] == 'recipient') {
+                        $this->tax_identifiers[$key]['issuing_authority'] = $this->shipToAddress['country_code'];
+                    }
+                }
+
+
                 $shipmentData['shipment']['customs'] = $this->customs;
                 $shipmentData['shipment']['tax_identifiers'] = $this->tax_identifiers;
             } else {
@@ -509,6 +551,8 @@ class Index extends Component
 
                     // Set Data to stored in the shipments table
                     $this->origin_total = number_format($originalTotal, 2);
+
+
                     // $this->customer_total = number_format($originalTotal * $marginMultiplier, 2);
                     // $this->end_user_total = number_format($newTotal, 2);
 
@@ -522,6 +566,7 @@ class Index extends Component
 
             $this->rates = $formatedRates;
             $this->sortRates(); // Apply default sorting
+            $this->dispatch('scroll-to-top');
             $this->toast()->success('Rates retrieved successfully!')->send();
         } catch (\Exception $e) {
             $this->toast()->error('Failed to get rates: ' . $e->getMessage())->send();
@@ -535,10 +580,43 @@ class Index extends Component
         if ($this->selectedRate && $this->selectedRate['rate_id'] == $rateId) {
             $this->selectedRate = null;
             $this->toast()->info('Deselected rate.')->send();
+
+            // Set default prices for the [origin_total, customer_total, end_user_total]
+
+            if (Auth::user() instanceof Customer) {
+                $this->customer_total = null;
+                $this->end_user_total = null;
+            } else {
+                $this->customer_total = null;
+            }
+
+
             return;
         }
         $this->selectedRate = collect($this->rates)->firstWhere('rate_id', $rateId);
         $this->toast()->info('Selected rate: ' . ($this->selectedRate['service_type'] ?? 'N/A'))->send();
+
+        $shippingAmount = (float) $this->selectedRate['shipping_amount']['amount'];
+        $insuranceAmount = (float) ($this->selectedRate['insurance_amount']['amount'] ?? 0);
+        $confirmationAmount = (float) ($this->selectedRate['confirmation_amount']['amount'] ?? 0);
+        $otherAmount = (float) ($this->selectedRate['other_amount']['amount'] ?? 0);
+        $requestedComparisonAmount = (float) ($this->selectedRate['requested_comparison_amount']['amount'] ?? 0);
+        $originalTotal = $shippingAmount + $insuranceAmount + $confirmationAmount + $otherAmount + $requestedComparisonAmount;
+
+        $authenticatedUser = Auth::user();
+        if ($authenticatedUser instanceof Customer && $authenticatedUser->margin > 0) {
+            $marginMultiplier = 1 + ($authenticatedUser->margin / 100);
+            $custmoerMargin = 1 + ($authenticatedUser->customer_margin / 100);
+            $newTotal = $originalTotal * $marginMultiplier * $custmoerMargin;
+            // Set Data to stored in the shipments table
+            $this->origin_total = number_format($originalTotal, 2);
+            $this->customer_total = number_format($originalTotal * $marginMultiplier, 2);
+            $this->end_user_total = number_format($newTotal, 2);
+        } else {
+
+            // Set Data to stored in the shipments table
+            $this->origin_total = number_format($originalTotal, 2);
+        }
     }
 
     public function sortByPrice()
@@ -647,7 +725,34 @@ class Index extends Component
                 ]);
 
                 $this->resetData();
-                $this->dialog()->success('Label created successfully! Tracking number: ' . ($response['tracking_number'] ?? 'N/A'))->send();
+                $successMessage = 'Label created successfully!';
+                if (isset($response['tracking_number'])) {
+                    $successMessage .= ' Tracking number: ' . $response['tracking_number'];
+                }
+
+                // Add download buttons for available formats
+                $downloadButtons = '';
+
+                // Check for PNG label
+                if (isset($response['label_download']['png'])) {
+                    $downloadButtons .= '<button onclick="window.open(\'' . $response['label_download']['png'] . '\', \'_blank\')" class="inline-flex items-center px-3 py-2 ml-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" title="View PNG Label"><i class="fas fa-image mr-1"></i>PNG</button>';
+                }
+
+                // Check for PDF label
+                if (isset($response['label_download']['pdf'])) {
+                    $downloadButtons .= '<button onclick="window.open(\'' . $response['label_download']['pdf'] . '\', \'_blank\')" class="inline-flex items-center px-3 py-2 ml-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" title="View PDF Label"><i class="fas fa-file-pdf mr-1"></i>PDF</button>';
+                }
+
+                // Check for Form download
+                if (isset($response['form_download']['href'])) {
+                    $downloadButtons .= '<button onclick="window.open(\'' . $response['form_download']['href'] . '\', \'_blank\')" class="inline-flex items-center px-3 py-2 ml-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" title="View Customs Form"><i class="fas fa-file-alt mr-1"></i>Form</button>';
+                }
+
+                if (!empty($downloadButtons)) {
+                    $successMessage .= '<div class="flex items-center justify-between mt-3">' . $downloadButtons . '</div>';
+                }
+
+                $this->dialog()->success($successMessage)->send();
             }
         } catch (\Exception $e) {
             $this->dialog()->error('Failed to create label: ' . $e->getMessage())->send();

@@ -64,34 +64,15 @@
                             </h2>
                             <div class="bg-white dark:bg-gray-700 rounded-lg p-3 sm:p-4 mb-3 sm:mb-4">
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-                                    {{-- Name --}}
-                                    <x-input label="Name *" wire:model="shipFromAddress.name" required />
-                                    {{-- Company --}}
-                                    <x-input label="Company (optional)" wire:model="shipFromAddress.company_name" />
-                                    {{-- Email --}}
-                                    <x-input label="Email (optional)" wire:model="shipFromAddress.email" />
-                                    {{-- Phone --}}
-                                    <x-input label="Phone (optional)" wire:model="shipFromAddress.phone" />
-                                    {{-- Address --}}
-                                    <x-input label="Address Line 1 *" wire:model="shipFromAddress.address_line1"
-                                        required />
-                                    {{-- Apt / Unit / Suite / etc. --}}
-                                    <x-input label="Address Line 2 (optional)"
-                                        wire:model="shipFromAddress.address_line2" />
 
                                     <div class="col-span-full md:col-span-2">
                                         {{-- City, State, Zipcode --}}
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-                                            {{-- City --}}
-                                            <x-input label="City *" wire:model="shipFromAddress.city_locality"
-                                                required />
+
                                             @if ($shipFromAddress['country_code'] == 'US')
-                                                <x-input label="State *" wire:model="shipFromAddress.state_province"
-                                                    maxlength="2" required />
                                                 <x-input label="Postal Code *" wire:model="shipFromAddress.postal_code"
                                                     required />
                                             @else
-                                                <x-input label="State" wire:model="shipFromAddress.state_province" />
                                                 <x-input label="Postal Code" wire:model="shipFromAddress.postal_code" />
                                             @endif
                                             {{-- Country --}}
@@ -99,12 +80,6 @@
                                                 wire:model.live="shipFromAddress.country_code" :options="$this->countries"
                                                 placeholder="Select country" required />
                                         </div>
-                                    </div>
-
-                                    {{-- Residential address (checkbox) --}}
-                                    <div class="col-span-full md:col-span-2">
-                                        <x-checkbox label="Residential Address"
-                                            wire:model.live="shipFromAddress.address_residential_indicator" />
                                     </div>
                                 </div>
                             </div>
@@ -119,33 +94,14 @@
                             </h2>
                             <div class="bg-white dark:bg-gray-700 rounded-lg p-3 sm:p-4 mb-3 sm:mb-4">
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-                                    {{-- Name --}}
-                                    <x-input label="Name *" wire:model="shipToAddress.name" required />
-                                    {{-- Company --}}
-                                    <x-input label="Company (optional)" wire:model="shipToAddress.company_name" />
-                                    {{-- Email --}}
-                                    <x-input label="Email (optional)" wire:model="shipToAddress.email" />
-                                    {{-- Phone --}}
-                                    <x-input label="Phone (optional)" wire:model="shipToAddress.phone" />
-                                    {{-- Address --}}
-                                    <x-input label="Address Line 1 *" wire:model="shipToAddress.address_line1"
-                                        required />
-                                    {{-- Apt / Unit / Suite / etc. --}}
-                                    <x-input label="Address Line 2 (optional)"
-                                        wire:model="shipToAddress.address_line2" />
-
                                     <div class="col-span-full md:col-span-2">
                                         {{-- City, State, Zipcode --}}
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                                             {{-- City --}}
-                                            <x-input label="City *" wire:model="shipToAddress.city_locality" required />
                                             @if ($shipToAddress['country_code'] == 'US')
-                                                <x-input label="State *" wire:model="shipToAddress.state_province"
-                                                    maxlength="2" required />
                                                 <x-input label="Postal Code *" wire:model="shipToAddress.postal_code"
                                                     required />
                                             @else
-                                                <x-input label="State" wire:model="shipToAddress.state_province" />
                                                 <x-input label="Postal Code" wire:model="shipToAddress.postal_code" />
                                             @endif
                                             {{-- Zipcode --}}
@@ -223,12 +179,10 @@
                                             <div class="flex items-center">
                                                 @if ($package['package_code'] === 'custom')
                                                     <img src="{{ asset('assets/images/Parcel-box.png') }}"
-                                                        alt="Custom Package"
-                                                        class="object-contain w-[60px] h-[60px]" />
+                                                        alt="Custom Package" class="object-contain w-[60px] h-[60px]" />
                                                 @else
                                                     <img src="{{ asset('assets/images/fedex.svg') }}"
-                                                        alt="FedEx Package"
-                                                        class="object-contain w-[60px] h-[60px]" />
+                                                        alt="FedEx Package" class="object-contain w-[60px] h-[60px]" />
                                                 @endif
                                                 <div class="ml-[.9em]">
                                                     <h1 class="text-[1em] font-[400] text-gray-900 dark:text-gray-100">
@@ -355,27 +309,7 @@
                                     </div>
                                 </div>
                             </div>
-
-
-
-
                         </section>
-
-                        <!-- Insurance Section -->
-                        <div class="my-4 flex flex-col  gap-3" x-data="{ insuranceChecked: @entangle('isInsuranceChecked') }">
-                            <x-checkbox label="Insurance" wire:model.live='isInsuranceChecked'
-                                hint="Enter the total value of your shipment to add coverage by InsureShield"
-                                class="text-sm" />
-
-                            <div x-show="insuranceChecked" x-transition>
-                                <x-number label="Declared Package Value ($)" placeholder="Enter package value"
-                                    step="0.01" wire:model='package.insured_value' min="1" />
-                            </div>
-                            @if ($shipToAddress['country_code'] == 'US')
-                                <x-checkbox checked disabled
-                                    label="I certify that the shipment does not contain any undeclared hazardous materials (perfume, nail polish, hair spray, dry ice, lithium batteries, firearms, lighters, fuels, etc.) or any matter prohibited by law or postal regulation." />
-                            @endif
-                        </div>
 
 
                         <section class="mt-3">
@@ -386,144 +320,6 @@
                                 </div>
                             </div>
                         </section>
-
-                        {{-- For the international shipments --}}
-                        @if ($shipToAddress['country_code'] != 'US')
-                            <!-- Customs Information Section -->
-                            <section class="mt-4">
-                                <div class="flex items-center justify-between mb-3 sm:mb-4">
-                                    <h2 class="text-base sm:text-lg font-semibold text-gray-800 dark:text-gray-200">
-                                        Customs Information
-                                    </h2>
-                                    <div class="flex gap-2">
-                                        <x-button type="button" sm color="green" loading="addCustomsItem"
-                                            wire:click="addCustomsItem">
-                                            <x-slot:left>
-                                                <i class="fas fa-plus mr-1"></i>
-                                            </x-slot:left>
-                                            Add Item
-                                        </x-button>
-                                    </div>
-                                </div>
-
-                                <div
-                                    class="bg-white dark:bg-gray-700 rounded-lg p-3 sm:p-4 mb-3 sm:mb-4 border border-gray-200 dark:border-gray-600">
-
-                                    <!-- Customs General Info -->
-                                    <div class="mb-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        {{-- signer name --}}
-                                        <div class="col-span-2">
-                                            <x-input label="Sign Customs Form As *" type="text"
-                                                wire:model="customs.signer" placeholder="Enter signer name"
-                                                required />
-                                        </div>
-
-                                        <x-select.styled label="Contents Type *" wire:model.live="customs.contents"
-                                            :options="[
-                                                ['label' => 'Merchandise', 'value' => 'merchandise'],
-                                                ['label' => 'Documents', 'value' => 'documents'],
-                                                // ['label' => 'Gift', 'value' => 'gift'],
-                                                // ['label' => 'Sample', 'value' => 'sample'],
-                                            ]" placeholder="Select contents type" required />
-
-                                        <x-select.styled label="Non-Delivery Action *"
-                                            wire:model="customs.non_delivery" :options="[
-                                                ['label' => 'Return to Sender', 'value' => 'return_to_sender'],
-                                                ['label' => 'Treat as Abandoned', 'value' => 'treat_as_abandoned'],
-                                            ]"
-                                            placeholder="Select non-delivery action" required />
-                                    </div>
-
-                                    <!-- Customs Items -->
-                                    @foreach ($customs['customs_items'] as $customItemIndex => $customItem)
-                                        <div wire:key="customs-item-{{ $customItemIndex }}"
-                                            class="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 sm:p-4 mb-4 border border-gray-200 dark:border-gray-600">
-                                            <div class="flex items-center justify-between mb-4">
-                                                <h5
-                                                    class="font-medium text-sm sm:text-base text-gray-800 dark:text-gray-200">
-                                                    Item {{ $customItemIndex + 1 }}
-                                                </h5>
-                                                @if (count($customs['customs_items']) > 1)
-                                                    <x-button type="button" sm color="red" light
-                                                        loading="removeCustomsItem({{ $customItemIndex }})"
-                                                        wire:click="removeCustomsItem({{ $customItemIndex }})">
-                                                        <x-slot:left>
-                                                            <i class="fas fa-trash mr-1"></i>
-                                                        </x-slot:left>
-                                                    </x-button>
-                                                @endif
-                                            </div>
-
-                                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                                <x-input label="Descripe what you're shipping *" type="text"
-                                                    wire:model="customs.customs_items.{{ $customItemIndex }}.description"
-                                                    placeholder="e.g., Cotton T-Shirt" required />
-
-                                                <x-number label="Quantity *"
-                                                    wire:model="customs.customs_items.{{ $customItemIndex }}.quantity"
-                                                    min="1" required />
-
-                                                <x-number label="Total Value in $ *" step="0.01"
-                                                    wire:model="customs.customs_items.{{ $customItemIndex }}.value.amount"
-                                                    min="0.01" required />
-
-                                                <x-number label="Item(s) Total Weight (lbs) *" step="0.01"
-                                                    wire:model="customs.customs_items.{{ $customItemIndex }}.weight.value"
-                                                    min="0.01" required />
-
-                                                @if ($customs['contents'] != 'documents')
-                                                    <div class="col-span-2 sm:col-span-1">
-                                                        <div class="grid grid-cols-6 gap-2">
-                                                            <div class="col-span-5">
-                                                                <x-input label="Harmonized Tariff Code *"
-                                                                    type="text" required
-                                                                    wire:model="customs.customs_items.{{ $customItemIndex }}.harmonized_tariff_code"
-                                                                    placeholder="e.g., 6109.10.00" />
-                                                            </div>
-                                                            <div class="col-span-1 flex items-end">
-                                                                <x-button text="Search" color="green"
-                                                                    href="https://uscensus.prod.3ceonline.com/ui/"
-                                                                    target='_blank' size="sm" />
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                @endif
-
-                                                <x-select.styled label="Country of Origin *" searchable
-                                                    wire:model="customs.customs_items.{{ $customItemIndex }}.country_of_origin"
-                                                    :options="$this->countries" placeholder="Select country" required />
-                                            </div>
-                                        </div>
-                                    @endforeach
-                                </div>
-
-                                <!-- International Tax IDs -->
-                                <section
-                                    class="bg-white dark:bg-gray-700 rounded-lg p-3 sm:p-4 mb-3 sm:mb-4 border border-gray-200 dark:border-gray-600">
-                                    <div class="flex items-center justify-between mb-4">
-                                        <h3 class="text-lg font-medium text-gray-900">International Tax IDs</h3>
-                                    </div>
-
-                                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                        <x-input label=" Sender Tax ID" wire:model="tax_identifiers.0.value"
-                                            placeholder="Enter tax ID number" />
-                                        <x-input label=" Recipient Tax ID" wire:model="tax_identifiers.1.value"
-                                            placeholder="Enter tax ID number" />
-                                    </div>
-                                </section>
-
-
-                                <div class="mb-6 grid grid-cols-1 gap-4">
-                                    {{-- declaration --}}
-                                    <x-checkbox
-                                        label="I hereby certify that the information on this invoice is true and correct and the contents and value of this shipment is as stated above."
-                                        required checked disabled />
-
-                                    <x-checkbox checked disabled
-                                        label="I certify that the shipment does not contain any undeclared hazardous materials (perfume, nail polish, hair spray, dry ice, lithium batteries, firearms, lighters, fuels, etc.) or any matter prohibited by law or postal regulation." />
-                                </div>
-                            </section>
-                        @endif
                     </section>
 
 
@@ -774,7 +570,6 @@
                                     class="border rounded-lg overflow-hidden hover:shadow-md transition-all duration-300 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600">
                                     <!-- Main Quote Content - Clickable -->
                                     <div @click="rateBreakdownOpen = !rateBreakdownOpen"
-                                        wire:click.stop="selectRate('{{ $rate['rate_id'] }}')"
                                         class="p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-200">
                                         <div
                                             class="flex flex-col sm:flex-row sm:justify-between sm:items-start space-y-3 sm:space-y-0">
@@ -851,26 +646,16 @@
                                                 </div>
                                             </div>
                                         @endif
-
-                                        <!-- Rate Actions -->
-                                        <div class="mt-3 flex justify-between items-center">
-                                            <button wire:click.stop="selectRate('{{ $rate['rate_id'] }}')"
-                                                class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded text-sm {{ $selectedRate && $selectedRate['rate_id'] === $rate['rate_id'] ? 'bg-green-600 hover:bg-green-700' : '' }}">
-                                                {{ $selectedRate && $selectedRate['rate_id'] === $rate['rate_id'] ? 'Selected' : 'Select' }}
-                                            </button>
-                                        </div>
                                     </div>
                                 </div>
                             @endforeach
                         </div>
 
                         <div class="mt-6 pt-4 border-t border-gray-200 dark:border-gray-600 flex justify-between">
-                            @if ($selectedRate)
-                                <x-button wire:click="createLabel" color="green" class="w-full sm:w-auto"
-                                    loading="createLabel">
-                                    Create Shipping Label
-                                </x-button>
-                            @endif
+                            <x-button href="{{ route('shipping.shipengine.index') }}" color="green"
+                                class="w-full sm:w-auto" loading="createLabel">
+                                Ship Now
+                            </x-button>
                             <x-button wire:click="backToCreateRatesPage" color="blue" class="w-full sm:w-auto"
                                 loading="backToCreateRatesPage">
                                 Back

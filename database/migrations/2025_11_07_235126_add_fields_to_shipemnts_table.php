@@ -12,9 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('shipments', function (Blueprint $table) {
-            $table->float('origin_total')->nuulable();
-            $table->float('customer_total')->nuulable();
-            $table->float('end_user_total')->nuulable();
+            $table->float('origin_total')->nullable();
+            $table->float('customer_total')->nullable();
+            $table->float('end_user_total')->nullable();
         });
     }
 

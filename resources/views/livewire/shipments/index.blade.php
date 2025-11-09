@@ -117,7 +117,11 @@
                                     @if (!empty($cost))
                                         <div class="text-right mb-3 sm:mb-0">
                                             <div class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
-                                                ${{ number_format($cost['end_user_total'] ?? 0, 2) }}
+                                                @auth('web')
+                                                    ${{ number_format($cost['origin_total'] ?? 0, 2) }}
+                                                @else
+                                                    ${{ number_format($cost['end_user_total'] ?? 0, 2) }}
+                                                @endauth
                                             </div>
                                             <div class="text-xs text-gray-500 dark:text-gray-400">
                                                 {{ strtoupper($cost['currency'] ?? 'USD') }}

@@ -79,10 +79,61 @@ class ShipEngineService
                 ];
             }
 
-         
+
             throw $e;
         } catch (GuzzleException $e) {
-           
+
+            throw $e;
+        }
+    }
+
+    /**
+     * Get shipping estimated details rates for a shipment
+     */
+    public function getEstimatedRates(array $shipmentData): array
+    {
+        try {
+            $response = $this->client->post('rates/estimate', [
+                'json' => $shipmentData
+            ]);
+
+            $data = json_decode($response->getBody()->getContents(), true);
+            return $data;
+        } catch (ClientException $e) {
+            // Handle 4xx client errors (400, 401, 404, etc.)
+            $responseBody = $e->getResponse()->getBody()->getContents();
+            $errorData = json_decode($responseBody, true);
+
+            // If we successfully decoded the API error response, return it
+            if ($errorData && isset($errorData['errors'])) {
+                return [
+                    'rate_response' => [
+                        'status' => 'error',
+                        'errors' => $errorData['errors'],
+                        'request_id' => $errorData['request_id'] ?? null
+                    ]
+                ];
+            }
+            throw $e;
+        } catch (ServerException $e) {
+            // Handle 5xx server errors
+            $responseBody = $e->getResponse()->getBody()->getContents();
+            $errorData = json_decode($responseBody, true);
+
+            if ($errorData && isset($errorData['errors'])) {
+                return [
+                    'rate_response' => [
+                        'status' => 'error',
+                        'errors' => $errorData['errors'],
+                        'request_id' => $errorData['request_id'] ?? null
+                    ]
+                ];
+            }
+
+
+            throw $e;
+        } catch (GuzzleException $e) {
+
             throw $e;
         }
     }
@@ -101,7 +152,7 @@ class ShipEngineService
 
                 return $data;
             } catch (GuzzleException $e) {
-           
+
                 throw $e;
             }
         });
@@ -205,7 +256,7 @@ class ShipEngineService
 
             return $data;
         } catch (GuzzleException $e) {
-      
+
             throw $e;
         }
     }
@@ -225,7 +276,7 @@ class ShipEngineService
 
                 return $data;
             } catch (GuzzleException $e) {
-      
+
                 throw $e;
             }
         });
@@ -245,7 +296,7 @@ class ShipEngineService
 
                 return $data;
             } catch (GuzzleException $e) {
-   
+
                 throw $e;
             }
         });
@@ -264,7 +315,7 @@ class ShipEngineService
             $data = json_decode($response->getBody()->getContents(), true);
             return $data;
         } catch (GuzzleException $e) {
-    
+
             throw $e;
         }
     }
@@ -283,7 +334,7 @@ class ShipEngineService
 
             return $data;
         } catch (GuzzleException $e) {
-     
+
             throw $e;
         }
     }
@@ -299,7 +350,7 @@ class ShipEngineService
 
             return $data;
         } catch (GuzzleException $e) {
-      
+
             throw $e;
         }
     }
@@ -315,7 +366,7 @@ class ShipEngineService
 
             return $data;
         } catch (GuzzleException $e) {
- 
+
             throw $e;
         }
     }
@@ -334,7 +385,7 @@ class ShipEngineService
 
                 return $data;
             } catch (GuzzleException $e) {
-            
+
                 throw $e;
             }
         });

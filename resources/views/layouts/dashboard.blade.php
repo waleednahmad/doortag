@@ -76,7 +76,7 @@
                         </x-slot:action>
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
-                            <x-dropdown.items :text="__('Profile')" :href="route('user.profile')" />
+                            <x-dropdown.items :text="__('Settings')" :href="route('user.profile')" />
                             <x-dropdown.items :text="__('Logout')"
                                 onclick="event.preventDefault(); this.closest('form').submit();" separator />
                         </form>
@@ -100,7 +100,7 @@
                         <!-- Repeat this block for each menu item -->
                         <a href="{{ route('shipping.shipengine.index') }}" @class([
                             'group h-[70px] flex items-center gap-4 px-4 rounded-md cursor-pointer transition hover:bg-white dark:hover:bg-gray-700 bg-transparent relative',
-                            'bg-white dark:bg-gray-700' => request()->routeIs(
+                            'bg-white dark:bg-gray-900' => request()->routeIs(
                                 'shipping.shipengine.index'),
                         ])>
                             <div class="w-[70px] h-[70px]">
@@ -109,84 +109,64 @@
                             </div>
                             <span class="text-lg font-bold">Ship</span>
                         </a>
-                        {{-- <a href="{{ route('shipping.index') }}" @class([
-                            'group h-[70px] flex items-center gap-4 px-4 rounded-md cursor-pointer transition hover:bg-white dark:hover:bg-gray-700 bg-transparent relative',
-                            'bg-white dark:bg-gray-700' => request()->routeIs('shipping.index'),
-                        ])>
-                            <div class="w-[70px] h-[70px]">
-                                <img src="{{ asset('assets/icons/menu-ship.png') }}" alt="Ship"
-                                    class="w-full h-full object-contain" />
-                            </div>
-                            <span class="text-lg font-bold">Ship</span>
-                        </a> --}}
 
-                        <a href="#" @class([
+                        <a href="{{ route('rates.index') }}" @class([
                             'group h-[70px] flex items-center gap-4 px-4 rounded-md cursor-pointer transition hover:bg-white dark:hover:bg-gray-700 bg-transparent relative',
-                            'bg-white dark:bg-gray-700' => false,
+                            'bg-white dark:bg-gray-900' => request()->routeIs('rates.index'),
                         ])>
                             <div class="w-[70px] h-[70px]">
                                 <img src="{{ asset('assets/icons/menu-rates.png') }}" alt="Rates"
                                     class="w-full h-full object-contain" />
                             </div>
-                            <div
-                                class="absolute inset-0 transition-opacity hover:opacity-0 bg-gray-100/50 dark:bg-gray-800/50">
-                            </div>
+                        
                             <span class="text-lg font-bold">Rates</span>
                         </a>
 
                         <a href="{{ route('shipments.index') }}" @class([
                             'group h-[70px] flex items-center gap-4 px-4 rounded-md cursor-pointer transition hover:bg-white dark:hover:bg-gray-700 bg-transparent relative',
-                            'bg-white dark:bg-gray-700' => request()->routeIs('shipments.index'),
+                            'bg-white dark:bg-gray-900' => request()->routeIs('shipments.index'),
                         ])>
                             <div class="w-[70px] h-[70px]">
                                 <img src="/assets/icons/menu-reports.png" alt="Reports"
                                     class="w-full h-full object-contain" />
                             </div>
-                            <div
-                                class="absolute inset-0 transition-opacity hover:opacity-0 bg-gray-100/50 dark:bg-gray-800/50">
-                            </div>
+                        
                             <span class="text-lg font-bold">Shipments</span>
                         </a>
 
-                        <a href="#" @class([
+                        <a href="{{ route('user.profile') }}" @class([
                             'group h-[70px] flex items-center gap-4 px-4 rounded-md cursor-pointer transition hover:bg-white dark:hover:bg-gray-700 bg-transparent relative',
-                            'bg-white dark:bg-gray-700' => false,
+                            'bg-white dark:bg-gray-900' => request()->routeIs('user.profile'),
                         ])>
                             <div class="w-[70px] h-[70px]">
                                 <img src="/assets/icons/menu-settings.png" alt="Settings"
                                     class="w-full h-full object-contain" />
                             </div>
-                            <div
-                                class="absolute inset-0 transition-opacity hover:opacity-0 bg-gray-100/50 dark:bg-gray-800/50">
-                            </div>
+                        
                             <span class="text-lg font-bold">Settings</span>
                         </a>
 
-                        <a href="#" @class([
+                        {{-- <a href="#" @class([
                             'group h-[70px] flex items-center gap-4 px-4 rounded-md cursor-pointer transition hover:bg-white dark:hover:bg-gray-700 bg-transparent relative',
-                            'bg-white dark:bg-gray-700' => false,
+                            'bg-white dark:bg-gray-900' => false,
                         ])>
                             <div class="w-[70px] h-[70px]">
                                 <img src="/assets/icons/menu-support.png" alt="Support"
                                     class="w-full h-full object-contain" />
                             </div>
-                            <div
-                                class="absolute inset-0 transition-opacity hover:opacity-0 bg-gray-100/50 dark:bg-gray-800/50">
-                            </div>
+                        
                             <span class="text-lg font-bold">Support</span>
-                        </a>
+                        </a> --}}
 
                         <a href="{{ route('logout') }}" @class([
                             'group h-[70px] flex items-center gap-4 px-4 rounded-md cursor-pointer transition hover:bg-white dark:hover:bg-gray-700 bg-transparent relative',
-                            'bg-white dark:bg-gray-700' => false,
+                            'bg-white dark:bg-gray-900' => false,
                         ])>
                             <div class="w-[70px] h-[70px]">
                                 <img src="/assets/icons/menu-logout.png" alt="Logout"
                                     class="w-full h-full object-contain" />
                             </div>
-                            <div
-                                class="absolute inset-0 transition-opacity hover:opacity-0 bg-gray-100/50 dark:bg-gray-800/50">
-                            </div>
+                        
                             <span class="text-lg font-bold">Logout</span>
                         </a>
                     </nav>
@@ -194,10 +174,13 @@
                     <!-- Footer -->
                     <div
                         class="text-sm text-gray-500 dark:text-gray-400 text-center space-y-1 px-2 mt-[1.38em] mb-4 bg-gray-100 dark:bg-gray-800">
-                        <p>© 2014–2025 – All Rights Reserved</p>
                         <p>
-                            <a href="#" class="underline">Manage your Privacy & Data Settings</a>
+                            ©{{ now()->year }} DoorTag
+                            | All Rights Reserved
                         </p>
+                        {{-- <p>
+                            <a href="#" class="underline">Manage your Privacy & Data Settings</a>
+                        </p> --}}
                     </div>
                 </div>
 

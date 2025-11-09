@@ -6,29 +6,29 @@
         <form id="update-profile" wire:submit="save">
             <div class="space-y-6">
                 <div>
-                    <x-input label="{{ __('Name') }} *" wire:model="user.name" required />
+                    <x-input label="{{ __('Name') }} *" wire:model="user.name" disabled />
                 </div>
                 <div>
                     <x-input label="{{ __('Email') }} *" value="{{ $user->email }}" disabled />
                 </div>
                 <div>
-                    <x-input label="{{ __('Phone') }}" wire:model="user.phone" />
+                    <x-input label="{{ __('Phone') }}" wire:model="user.phone"  disabled/>
                 </div>
                 <div>
-                    <x-input label="{{ __('Address') }} *" wire:model="user.address" required />
+                    <x-input label="{{ __('Address') }} *" wire:model="user.address" disabled />
                 </div>
                 <div>
-                    <x-input label="{{ __('Address 2') }}" wire:model="user.address2" />
+                    <x-input label="{{ __('Address 2') }}" wire:model="user.address2" disabled />
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                        <x-input label="{{ __('City') }} *" wire:model="user.city" required />
+                        <x-input label="{{ __('City') }} *" wire:model="user.city" disabled />
                     </div>
                     <div>
-                        <x-input label="{{ __('State') }} *" wire:model="user.state" required />
+                        <x-input label="{{ __('State') }} *" wire:model="user.state" disabled />
                     </div>
                     <div>
-                        <x-input label="{{ __('Zip Code') }} *" wire:model="user.zipcode" required />
+                        <x-input label="{{ __('Zip Code') }} *" wire:model="user.zipcode" disabled />
                     </div>
                 </div>
                 <div>
@@ -40,7 +40,8 @@
                 </div>
                 {{-- address_residential_indicator --}}
                 <div>
-                    <x-checkbox label="{{ __('Residential Address') }}" wire:model="addressResidentialIndicator" />
+                    <x-checkbox label="{{ __('Residential Address') }}" wire:model="addressResidentialIndicator"
+                        disabled />
                 </div>
 
             </div>

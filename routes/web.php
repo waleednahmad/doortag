@@ -1,6 +1,7 @@
 <?php
 
 use App\Livewire\Shipments\Index as ShipmentsIndex;
+use App\Livewire\Shipping\EstimateRates\Index as EstimateRatesIndex;
 use App\Livewire\Shipping\Index as ShippingIndex;
 use App\Livewire\Shipping\Fedex\Index as FedexShippingIndex;
 use App\Livewire\Shipping\ShipEngine\Index as ShipEngineShippingIndex;
@@ -33,6 +34,7 @@ Route::middleware(['auth:web,customer'])->group(function () {
     })->name('shipping.fedex.index');
     Route::get('/shipping', ShipEngineShippingIndex::class)->name('shipping.shipengine.index');
     Route::get('/shipments', ShipmentsIndex::class)->name('shipments.index');
+    Route::get('/rates', EstimateRatesIndex::class)->name('rates.index');
 });
 
 require __DIR__ . '/auth.php';
