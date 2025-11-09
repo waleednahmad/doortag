@@ -62,91 +62,53 @@
 
                         <!-- Ship From Section -->
                         <section>
-                            <h2 class="text-base sm:text-lg font-semibold mb-3 sm:mb-2 text-gray-800 dark:text-gray-200">
-                                Ship
-                                From
+                            <h2 class="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-gray-800 dark:text-gray-200">
+                                Ship From (Sender)
                             </h2>
-
                             <div class="bg-white dark:bg-gray-700 rounded-lg p-3 sm:p-4 mb-3 sm:mb-4">
-                                <div class="flex items-center justify-between mb-3">
-                                    <div>
-                                        <h5 class="font-medium text-sm sm:text-base text-gray-800 dark:text-gray-200">
-                                            Sender Information</h5>
-                                        <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 hidden sm:block">
-                                            Origin address details</p>
-                                    </div>
-                                </div>
-
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-                                    @if (auth()->user()->email)
-                                        <div>
-                                            <label
-                                                class="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email
-                                                *</label>
-                                            <p class="text-sm sm:text-base text-gray-900 dark:text-white">
-                                                {{ auth()->user()->email }}</p>
-                                        </div>
-                                    @endif
+                                    {{-- Name --}}
+                                    <x-input label="Name *" wire:model="shipFromAddress.name" required />
+                                    {{-- Company --}}
+                                    <x-input label="Company (optional)" wire:model="shipFromAddress.company_name" />
+                                    {{-- Email --}}
+                                    <x-input label="Email (optional)" wire:model="shipFromAddress.email" />
+                                    {{-- Phone --}}
+                                    <x-input label="Phone (optional)" wire:model="shipFromAddress.phone" />
+                                    {{-- Address --}}
+                                    <x-input label="Address Line 1 *" wire:model="shipFromAddress.address_line1"
+                                        required />
+                                    {{-- Apt / Unit / Suite / etc. --}}
+                                    <x-input label="Address Line 2 (optional)"
+                                        wire:model="shipFromAddress.address_line2" />
 
-                                    @if (auth()->user()->phone)
-                                        <div>
-                                            <label
-                                                class="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Phone</label>
-                                            <p class="text-sm sm:text-base text-gray-900 dark:text-white">
-                                                {{ auth()->user()->phone }}</p>
+                                    <div class="col-span-full md:col-span-2">
+                                        {{-- City, State, Zipcode --}}
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                                            {{-- City --}}
+                                            <x-input label="City *" wire:model="shipFromAddress.city_locality"
+                                                required />
+                                            @if ($shipFromAddress['country_code'] == 'US')
+                                                <x-input label="State *" wire:model="shipFromAddress.state_province"
+                                                    maxlength="2" required />
+                                                <x-input label="Postal Code *" wire:model="shipFromAddress.postal_code"
+                                                    required />
+                                            @else
+                                                <x-input label="State" wire:model="shipFromAddress.state_province" />
+                                                <x-input label="Postal Code" wire:model="shipFromAddress.postal_code" />
+                                            @endif
+                                            {{-- Country --}}
+                                            <x-select.styled label="Country *" searchable disabled
+                                                wire:model.live="shipFromAddress.country_code" :options="$this->countries"
+                                                placeholder="Select country" required />
                                         </div>
-                                    @endif
+                                    </div>
 
-                                    @if (auth()->user()->address)
-                                        <div>
-                                            <label
-                                                class="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Address
-                                                *</label>
-                                            <p class="text-sm sm:text-base text-gray-900 dark:text-white">
-                                                {{ auth()->user()->address }}</p>
-                                        </div>
-                                    @endif
-
-                                    @if (auth()->user()->address2)
-                                        <div>
-                                            <label
-                                                class="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                Address 2
-                                            </label>
-                                            <p class="text-sm sm:text-base text-gray-900 dark:text-white">
-                                                {{ auth()->user()->address2 }}</p>
-                                        </div>
-                                    @endif
-
-                                    @if (auth()->user()->city)
-                                        <div>
-                                            <label
-                                                class="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">City
-                                                *</label>
-                                            <p class="text-sm sm:text-base text-gray-900 dark:text-white">
-                                                {{ auth()->user()->city }}</p>
-                                        </div>
-                                    @endif
-
-                                    @if (auth()->user()->state)
-                                        <div>
-                                            <label
-                                                class="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">State
-                                                *</label>
-                                            <p class="text-sm sm:text-base text-gray-900 dark:text-white">
-                                                {{ auth()->user()->state }}</p>
-                                        </div>
-                                    @endif
-
-                                    @if (auth()->user()->zipcode)
-                                        <div>
-                                            <label
-                                                class="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Zipcode
-                                                *</label>
-                                            <p class="text-sm sm:text-base text-gray-900 dark:text-white">
-                                                {{ auth()->user()->zipcode }}</p>
-                                        </div>
-                                    @endif
+                                    {{-- Residential address (checkbox) --}}
+                                    <div class="col-span-full md:col-span-2">
+                                        <x-checkbox label="Residential Address" disabled
+                                            wire:model.live="shipFromAddress.address_residential_indicator" />
+                                    </div>
                                 </div>
                             </div>
                         </section>
@@ -205,39 +167,6 @@
                                 </div>
                         </section>
 
-                        <!-- Ship From Section -->
-                        {{-- <section>
-                            <h2
-                                class="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-gray-800 dark:text-gray-200">
-                                Ship From (Sender)
-                            </h2>
-                            <div class="bg-white dark:bg-gray-700 rounded-lg p-3 sm:p-4 mb-3 sm:mb-4">
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-                                    <x-input label="Name *" wire:model="shipFromAddress.name" required />
-                                    <x-input label="Company (optional)" wire:model="shipFromAddress.company_name" />
-                                    <x-input label="Phone (optional)" wire:model="shipFromAddress.phone" />
-                                    <x-input label="Address Line 1 *" wire:model="shipFromAddress.address_line1"
-                                        required />
-                                    <x-input label="Address Line 2 (optional)"
-                                        wire:model="shipFromAddress.address_line2" />
-
-                                    <div class="col-span-full md:col-span-2">
-                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
-                                            <x-input label="City *" wire:model="shipFromAddress.city_locality"
-                                                required />
-                                            <x-input label="State *" wire:model="shipFromAddress.state_province"
-                                                maxlength="2" required />
-                                            <x-input label="ZIP Code *" wire:model="shipFromAddress.postal_code"
-                                                required />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </section> --}}
-
-
-
-
                         <!-- Type of Packaging -->
                         <section class="mt-3">
                             <h1
@@ -295,10 +224,12 @@
                                             <div class="flex items-center">
                                                 @if ($package['package_code'] === 'custom')
                                                     <img src="{{ asset('assets/images/Parcel-box.png') }}"
-                                                        alt="Custom Package" class="object-contain w-[60px] h-[60px]" />
+                                                        alt="Custom Package"
+                                                        class="object-contain w-[60px] h-[60px]" />
                                                 @else
                                                     <img src="{{ asset('assets/images/fedex.svg') }}"
-                                                        alt="FedEx Package" class="object-contain w-[60px] h-[60px]" />
+                                                        alt="FedEx Package"
+                                                        class="object-contain w-[60px] h-[60px]" />
                                                 @endif
                                                 <div class="ml-[.9em]">
                                                     <h1 class="text-[1em] font-[400] text-gray-900 dark:text-gray-100">
@@ -456,67 +387,122 @@
                         {{-- For the international shipments --}}
                         @if ($shipToAddress['country_code'] != 'US')
                             <!-- Customs Information Section -->
-                            <section class="mt-4" wire:transition>
-                                <h2
-                                    class="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-gray-800 dark:text-gray-200">
-                                    Customs Information
-                                </h2>
+                            <section class="mt-4">
+                                <div class="flex items-center justify-between mb-3 sm:mb-4">
+                                    <h2 class="text-base sm:text-lg font-semibold text-gray-800 dark:text-gray-200">
+                                        Customs Information
+                                    </h2>
+                                    <div class="flex gap-2">
+                                        <x-button type="button" sm color="green" loading="addCustomsItem"
+                                            wire:click="addCustomsItem">
+                                            <x-slot:left>
+                                                <i class="fas fa-plus mr-1"></i>
+                                            </x-slot:left>
+                                            Add Item
+                                        </x-button>
+                                    </div>
+                                </div>
+
                                 <div
                                     class="bg-white dark:bg-gray-700 rounded-lg p-3 sm:p-4 mb-3 sm:mb-4 border border-gray-200 dark:border-gray-600">
-                                    <div class="flex items-center justify-between mb-4">
-                                        <h5 class="font-medium text-sm sm:text-base text-gray-800 dark:text-gray-200">
-                                            Customs Details
-                                        </h5>
+
+                                    <!-- Customs General Info -->
+                                    <div class="mb-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <x-select.styled label="Contents Type *" wire:model="customs.contents"
+                                            :options="[
+                                                ['label' => 'Merchandise', 'value' => 'merchandise'],
+                                                ['label' => 'Documents', 'value' => 'documents'],
+                                                // ['label' => 'Gift', 'value' => 'gift'],
+                                                // ['label' => 'Sample', 'value' => 'sample'],
+                                            ]" placeholder="Select contents type" required />
+
+                                        <x-select.styled label="Non-Delivery Action *" 
+                                            wire:model="customs.non_delivery" :options="[
+                                                ['label' => 'Return to Sender', 'value' => 'return_to_sender'],
+                                                ['label' => 'Treat as Abandoned', 'value' => 'treat_as_abandoned'],
+                                            ]"
+                                            placeholder="Select non-delivery action" required />
                                     </div>
 
+                                    <!-- Customs Items -->
                                     @foreach ($customs['customs_items'] as $customItemIndex => $customItem)
-                                        <div
-                                            class="bg-white dark:bg-gray-700 rounded-lg p-3 sm:p-4 mb-3 sm:mb-4 border border-gray-200 dark:border-gray-600">
+                                        <div wire:key="customs-item-{{ $customItemIndex }}"
+                                            class="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 sm:p-4 mb-4 border border-gray-200 dark:border-gray-600">
                                             <div class="flex items-center justify-between mb-4">
                                                 <h5
                                                     class="font-medium text-sm sm:text-base text-gray-800 dark:text-gray-200">
                                                     Item {{ $customItemIndex + 1 }}
                                                 </h5>
+                                                @if (count($customs['customs_items']) > 1)
+                                                    <x-button type="button" sm color="red" light
+                                                        loading="removeCustomsItem({{ $customItemIndex }})"
+                                                        wire:click="removeCustomsItem({{ $customItemIndex }})">
+                                                        <x-slot:left>
+                                                            <i class="fas fa-trash mr-1"></i>
+                                                        </x-slot:left>
+                                                    </x-button>
+                                                @endif
                                             </div>
 
                                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                                <x-input label="Description *" type="text"
+                                                <x-input label="Descripe what you're shipping *" type="text"
                                                     wire:model="customs.customs_items.{{ $customItemIndex }}.description"
-                                                    required />
+                                                    placeholder="e.g., Cotton T-Shirt" required />
+
                                                 <x-input label="Quantity *" type="number"
                                                     wire:model="customs.customs_items.{{ $customItemIndex }}.quantity"
-                                                    required />
-                                                <x-input label="Value *" type="number" step="0.01"
+                                                    min="1" required />
+
+                                                <x-input label="Total Value in $ *" type="number" step="0.01"
                                                     wire:model="customs.customs_items.{{ $customItemIndex }}.value.amount"
-                                                    required />
-                                                <div class="grid grid-cols-6">
-                                                    <div class="col-span-5">
-                                                        <x-input label="Harmonization # *" type="text" required
-                                                            class=" w-full"
-                                                            wire:model="customs.customs_items.{{ $customItemIndex }}.harmonized_tariff_code" />
-                                                    </div>
-                                                    <div class="col-span-1 flex items-end">
-                                                        <x-button text="Search #'s"
-                                                            href="https://uscensus.prod.3ceonline.com/ui/"
-                                                            target='_blank' />
+                                                    min="0.01" required />
+
+                                                <x-input label="Item(s) Total Weight (lbs) *" type="number"
+                                                    step="0.01"
+                                                    wire:model="customs.customs_items.{{ $customItemIndex }}.weight.value"
+                                                    min="0.01" required />
+
+                                                <div class="col-span-2 sm:col-span-1">
+                                                    <div class="grid grid-cols-6 gap-2">
+                                                        <div class="col-span-5">
+                                                            <x-input label="Harmonized Tariff Code *" type="text"
+                                                                required
+                                                                wire:model="customs.customs_items.{{ $customItemIndex }}.harmonized_tariff_code"
+                                                                placeholder="e.g., 6109.10.00" />
+                                                        </div>
+                                                        <div class="col-span-1 flex items-end">
+                                                            <x-button text="Search #'s" color="green"
+                                                                href="https://uscensus.prod.3ceonline.com/ui/"
+                                                                target='_blank' size="sm" />
+                                                        </div>
                                                     </div>
                                                 </div>
+
                                                 <x-select.styled label="Country of Origin *" searchable
                                                     wire:model="customs.customs_items.{{ $customItemIndex }}.country_of_origin"
                                                     :options="$this->countries" placeholder="Select country" required />
-
-
-                                                <x-input label="Weight *" type="number" step="0.01"
-                                                    wire:model="customs.customs_items.{{ $customItemIndex }}.weight.value"
-                                                    required />
                                             </div>
                                         </div>
                                     @endforeach
                                 </div>
+
+                                <!-- International Tax IDs -->
+                                <section
+                                    class="bg-white dark:bg-gray-700 rounded-lg p-3 sm:p-4 mb-3 sm:mb-4 border border-gray-200 dark:border-gray-600">
+                                    <div class="flex items-center justify-between mb-4">
+                                        <h3 class="text-lg font-medium text-gray-900">International Tax IDs</h3>
+                                    </div>
+
+                                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                        <x-input label=" Sender Tax ID" wire:model="tax_identifiers.0.value"
+                                            placeholder="Enter tax ID number" />
+                                        <x-input label=" Recipient Tax ID" wire:model="tax_identifiers.1.value"
+                                            placeholder="Enter tax ID number" />
+                                    </div>
+                                </section>
                             </section>
                         @endif
                     </section>
-
 
 
                     <!-- Action Buttons -->
@@ -557,7 +543,7 @@
                 <!-- Ship To Details Section -->
                 <div class="mt-4 sm:mt-6">
                     <h1 class="text-[30px] font-[700] text-gray-900 dark:text-white leading-[1.1] mb-[12px]">
-                        ShipEngine Shipping to {{ $shipToAddress['country_code'] ?? 'US' }}
+                        Shipping to {{ $shipToAddress['country_code'] ?? 'US' }}
                     </h1>
                     <div class="flex items-center gap-2 mb-[48px]">
                         <p class="text-[17px] text-gray-700 dark:text-gray-300 leading-[1.42857143] font-[500]">
@@ -634,8 +620,9 @@
                         <!-- Title and Count -->
                         <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start">
                             <div>
-                                <h3 class="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">ShipEngine
-                                    Rate Quotes</h3>
+                                <h3 class="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">
+                                    Rate Quotes
+                                </h3>
                                 @if (!empty($rates))
                                     <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">
                                         Found {{ count($rates) }} shipping option(s)
@@ -855,14 +842,18 @@
                             @endforeach
                         </div>
 
-                        @if ($selectedRate)
-                            <div class="mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
+                        <div class="mt-6 pt-4 border-t border-gray-200 dark:border-gray-600 flex justify-between">
+                            @if ($selectedRate)
                                 <x-button wire:click="createLabel" color="green" class="w-full sm:w-auto"
                                     loading="createLabel">
                                     Create Shipping Label
                                 </x-button>
-                            </div>
-                        @endif
+                            @endif
+                            <x-button wire:click="backToCreateRatesPage" color="blue" class="w-full sm:w-auto"
+                                loading="backToCreateRatesPage">
+                                Back
+                            </x-button>
+                        </div>
                     @else
                         <div class="text-center py-8">
                             <div class="text-gray-500 dark:text-gray-400 mb-2">📦</div>

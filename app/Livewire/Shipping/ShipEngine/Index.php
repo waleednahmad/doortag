@@ -59,8 +59,9 @@ class Index extends Component
     public $customs = [
         'contents' => 'merchandise', // [merchandise, documents]
         'non_delivery' => 'return_to_sender',
-        'terms_of_trade_code' => 'DDP',
+        'terms_of_trade_code' => 'DDU',
         'declaration' => 'I hereby certify that the information on this invoice is true and correct and the contents and value of this shipment is as stated above.',
+        'signer' => '',
         'customs_items' => [
             // [
             //     "description" => "Wooden coffee table",
@@ -90,6 +91,21 @@ class Index extends Component
                     "unit" => "pound"
                 ]
             ]
+        ]
+    ];
+
+    public $tax_identifiers = [
+        [
+            "taxable_entity_type" => "shipper",
+            "identifier_type" => "eori",
+            "value" => "GB987654312000",
+            "issuing_authority" => "GB"
+        ],
+        [
+            "taxable_entity_type" => "recipient",
+            "identifier_type" => "eori",
+            "value" => "",
+            "issuing_authority" => ""
         ]
     ];
 
@@ -154,6 +170,23 @@ class Index extends Component
             $rules['package.height'] = 'required|numeric|min:1';
         }
 
+        // Add customs validation for international shipments
+        if ($this->shipToAddress['country_code'] != 'US') {
+            $rules['customs.contents'] = 'required|string';
+            $rules['customs.non_delivery'] = 'required|string';
+            $rules['customs.customs_items'] = 'required|array|min:1';
+
+            // Validate each customs item
+            foreach ($this->customs['customs_items'] as $index => $item) {
+                $rules["customs.customs_items.{$index}.description"] = 'required|string|max:255';
+                $rules["customs.customs_items.{$index}.quantity"] = 'required|integer|min:1';
+                $rules["customs.customs_items.{$index}.value.amount"] = 'required|numeric|min:0.01';
+                $rules["customs.customs_items.{$index}.harmonized_tariff_code"] = 'required|string|max:20';
+                $rules["customs.customs_items.{$index}.country_of_origin"] = 'required|string|size:2';
+                $rules["customs.customs_items.{$index}.weight.value"] = 'required|numeric|min:0.01';
+            }
+        }
+
         return $rules;
     }
 
@@ -171,13 +204,14 @@ class Index extends Component
             'name' => Auth::user()->name,
             'company_name' => 'Test Company',
             'phone' =>  Auth::user()->phone,
+            'email' =>  Auth::user()->email,
             'address_line1' =>  Auth::user()->address,
             'address_line2' =>  Auth::user()->address2,
             'city_locality' =>  Auth::user()->city,
             'state_province' => 'FL',
             'postal_code' =>  Auth::user()->zipcode,
             'country_code' => 'US',
-            'address_residential_indicator' => Auth::user()->address_residential_indicator == true ? 'yes' : 'no'
+            'address_residential_indicator' => Auth::user()->address_residential_indicator
         ];
 
         // Set default ship to address
@@ -290,12 +324,58 @@ class Index extends Component
         }
     }
 
+    public function addCustomsItem()
+    {
+        $this->customs['customs_items'][] = [
+            "description" => "",
+            "quantity" => '',
+            "value" => [
+                "currency" => "usd",
+                "amount" => ''
+            ],
+            "harmonized_tariff_code" => "",
+            "country_of_origin" => "",
+            "weight" => [
+                "value" => '',
+                "unit" => "pound"
+            ]
+        ];
+
+        $this->toast()->info('Added new customs item')->send();
+    }
+
+    public function removeCustomsItem($index)
+    {
+        // Ensure we don't remove the last item (minimum 1 required)
+        $currentCount = count($this->customs['customs_items']);
+
+        if ($currentCount > 1 && isset($this->customs['customs_items'][$index])) {
+            // Create a new array without the specified index
+            $newItems = [];
+            foreach ($this->customs['customs_items'] as $i => $item) {
+                if ($i !== (int)$index) {
+                    $newItems[] = $item;
+                }
+            }
+
+            // Update the array
+            $this->customs['customs_items'] = $newItems;
+
+            $this->toast()->info('Removed customs item ' . ($index + 1))->send();
+        } else if ($currentCount <= 1) {
+            $this->toast()->warning('At least one customs item is required')->send();
+        } else {
+            $this->toast()->error('Could not find item to remove')->send();
+        }
+    }
+
     public function getRates()
     {
 
         $this->validate();
 
         // handle the address_residential_indicator
+        $this->shipFromAddress['address_residential_indicator'] = $this->shipFromAddress['address_residential_indicator'] == true ? 'yes' : 'no';
         $this->shipToAddress['address_residential_indicator'] = $this->shipToAddress['address_residential_indicator'] == true ? 'yes' : 'no';
 
 
@@ -372,16 +452,7 @@ class Index extends Component
             // ================== Just For International ==================
             if ($this->shipToAddress['country_code'] != 'US') {
                 $shipmentData['shipment']['customs'] = $this->customs;
-
-
-                $shipmentData['shipment']['tax_identifiers'] = [
-                    [
-                        "taxable_entity_type" => "shipper",
-                        "identifier_type" => "eori",
-                        "value" => "GB987654312000",
-                        "issuing_authority" => "GB"
-                    ]
-                ];
+                $shipmentData['shipment']['tax_identifiers'] = $this->tax_identifiers;
             } else {
                 // Remove customs for domestic shipments
                 if (isset($shipmentData['shipment']['customs'])) {
@@ -561,13 +632,18 @@ class Index extends Component
             $this->loading = true;
             $shipEngine = new ShipEngineService();
 
-            // $labelData = [
-            //     'rate_id' => ,
-            //     'label_format' => 'pdf',
-            //     'label_layout' => '4x6',
-            // ];
-
             $response = $shipEngine->createLabel($this->selectedRate['rate_id']);
+
+            // Check if the response contains API errors
+            if (isset($response['status']) && $response['status'] === 'error') {
+                if (isset($response['api_errors']) && !empty($response['api_errors'])) {
+                    $errorMessage = $response['api_errors'][0]['message'] ?? 'Unknown API error';
+                    $this->dialog()->error($errorMessage)->send();
+                } else {
+                    $this->dialog()->error('An unknown error occurred while creating the label.')->send();
+                }
+                return;
+            }
 
             if ($response['status'] == 'completed') {
                 Shipment::create([
@@ -582,15 +658,8 @@ class Index extends Component
                 $this->resetData();
                 $this->dialog()->success('Label created successfully! Tracking number: ' . ($response['tracking_number'] ?? 'N/A'))->send();
             }
-            // $this->toast()->success('Label created successfully! Tracking number: ' . ($response['tracking_number'] ?? 'N/A'))->send();
-
-            // You could download or display the label here
-            // if (!empty($response['label_download']['pdf'])) {
-            //     $this->dispatch('download-label', $response['label_download']['pdf']);
-            // }
         } catch (\Exception $e) {
-            $this->toast()->error('Failed to create label: ' . $e->getMessage())->send();
-            Log::error('Failed to create ShipEngine label', ['error' => $e->getMessage()]);
+            $this->dialog()->error('Failed to create label: ' . $e->getMessage())->send();
         } finally {
             $this->loading = false;
         }
@@ -727,6 +796,13 @@ class Index extends Component
             'insured_value' => 1,
             "insurance_provider" => "shipsurance",
         ];
+    }
+
+
+    public function backToCreateRatesPage()
+    {
+        $this->rates = [];
+        $this->selectedRate = null;
     }
 
 

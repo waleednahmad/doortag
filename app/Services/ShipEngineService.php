@@ -4,6 +4,8 @@ namespace App\Services;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
+use GuzzleHttp\Exception\ClientException;
+use GuzzleHttp\Exception\ServerException;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
 
@@ -38,13 +40,59 @@ class ShipEngineService
      */
     public function getRates(array $shipmentData)
     {
+        info("====================== ShipEngine Get Rates Request ==================");
+        info(print_r($shipmentData, true));
+        info("========================================");
         try {
             $response = $this->client->post('rates', [
                 'json' => $shipmentData
             ]);
 
             $data = json_decode($response->getBody()->getContents(), true);
+            info('ShipEngine Rates Response: ' . print_r($data, true));
             return $data;
+        } catch (ClientException $e) {
+            // Handle 4xx client errors (400, 401, 404, etc.)
+            $responseBody = $e->getResponse()->getBody()->getContents();
+            $errorData = json_decode($responseBody, true);
+
+            // If we successfully decoded the API error response, return it
+            if ($errorData && isset($errorData['errors'])) {
+                return [
+                    'rate_response' => [
+                        'status' => 'error',
+                        'errors' => $errorData['errors'],
+                        'request_id' => $errorData['request_id'] ?? null
+                    ]
+                ];
+            }
+
+            // Fall back to logging and throwing the original error
+            Log::error('ShipEngine API client error getting rates', [
+                'error' => $e->getMessage(),
+                'code' => $e->getCode()
+            ]);
+            throw $e;
+        } catch (ServerException $e) {
+            // Handle 5xx server errors
+            $responseBody = $e->getResponse()->getBody()->getContents();
+            $errorData = json_decode($responseBody, true);
+
+            if ($errorData && isset($errorData['errors'])) {
+                return [
+                    'rate_response' => [
+                        'status' => 'error',
+                        'errors' => $errorData['errors'],
+                        'request_id' => $errorData['request_id'] ?? null
+                    ]
+                ];
+            }
+
+            Log::error('ShipEngine API server error getting rates', [
+                'error' => $e->getMessage(),
+                'code' => $e->getCode()
+            ]);
+            throw $e;
         } catch (GuzzleException $e) {
             Log::error('ShipEngine API error getting rates', [
                 'error' => $e->getMessage(),
@@ -85,15 +133,77 @@ class ShipEngineService
     {
         try {
             $response = $this->client->post('labels/rates/' . $rateId);
-
             $data = json_decode($response->getBody()->getContents(), true);
-
             return $data;
+        } catch (ClientException $e) {
+            // Handle 4xx client errors (400, 401, 404, etc.)
+            $responseBody = $e->getResponse()->getBody()->getContents();
+            $errorData = json_decode($responseBody, true);
+
+            // If we successfully decoded the API error response, return it
+            if ($errorData && isset($errorData['errors'])) {
+                return [
+                    'status' => 'error',
+                    'api_errors' => $errorData['errors'],
+                    'request_id' => $errorData['request_id'] ?? null
+                ];
+            }
+            throw $e;
+        } catch (ServerException $e) {
+            // Handle 5xx server errors
+            $responseBody = $e->getResponse()->getBody()->getContents();
+            $errorData = json_decode($responseBody, true);
+
+            if ($errorData && isset($errorData['errors'])) {
+                return [
+                    'status' => 'error',
+                    'api_errors' => $errorData['errors'],
+                    'request_id' => $errorData['request_id'] ?? null
+                ];
+            }
+            throw $e;
         } catch (GuzzleException $e) {
-            Log::error('ShipEngine API error creating label', [
-                'error' => $e->getMessage(),
-                'code' => $e->getCode()
-            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Void a shipping label
+     */
+    public function voidLabel(string $labelId): array
+    {
+        try {
+            $response = $this->client->put("labels/{$labelId}/void");
+            $data = json_decode($response->getBody()->getContents(), true);
+            return $data;
+        } catch (ClientException $e) {
+            // Handle 4xx client errors (400, 401, 404, etc.)
+            $responseBody = $e->getResponse()->getBody()->getContents();
+            $errorData = json_decode($responseBody, true);
+
+            // If we successfully decoded the API error response, return it
+            if ($errorData && isset($errorData['errors'])) {
+                return [
+                    'status' => 'error',
+                    'api_errors' => $errorData['errors'],
+                    'request_id' => $errorData['request_id'] ?? null
+                ];
+            }
+            throw $e;
+        } catch (ServerException $e) {
+            // Handle 5xx server errors
+            $responseBody = $e->getResponse()->getBody()->getContents();
+            $errorData = json_decode($responseBody, true);
+
+            if ($errorData && isset($errorData['errors'])) {
+                return [
+                    'status' => 'error',
+                    'api_errors' => $errorData['errors'],
+                    'request_id' => $errorData['request_id'] ?? null
+                ];
+            }
+            throw $e;
+        } catch (GuzzleException $e) {
             throw $e;
         }
     }

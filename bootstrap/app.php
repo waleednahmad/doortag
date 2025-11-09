@@ -17,4 +17,12 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
-    })->create();
+    })
+    ->booted(function () {
+        // Set the application timezone
+        if ($timezone = env('APP_TIMEZONE')) {
+            date_default_timezone_set($timezone);
+            config(['app.timezone' => $timezone]);
+        }
+    })
+    ->create();

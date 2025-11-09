@@ -120,9 +120,9 @@
                             <span class="text-lg font-bold">Ship</span>
                         </a> --}}
 
-                        <a href="{{ route('shipments.index') }}" @class([
+                        <a href="#" @class([
                             'group h-[70px] flex items-center gap-4 px-4 rounded-md cursor-pointer transition hover:bg-white dark:hover:bg-gray-700 bg-transparent relative',
-                            'bg-white dark:bg-gray-700' => request()->routeIs('shipments.index'),
+                            'bg-white dark:bg-gray-700' => false,
                         ])>
                             <div class="w-[70px] h-[70px]">
                                 <img src="{{ asset('assets/icons/menu-rates.png') }}" alt="Rates"
@@ -131,12 +131,12 @@
                             <div
                                 class="absolute inset-0 transition-opacity hover:opacity-0 bg-gray-100/50 dark:bg-gray-800/50">
                             </div>
-                            <span class="text-lg font-bold">Shipments</span>
+                            <span class="text-lg font-bold">Rates</span>
                         </a>
 
-                        <a href="#" @class([
+                        <a href="{{ route('shipments.index') }}" @class([
                             'group h-[70px] flex items-center gap-4 px-4 rounded-md cursor-pointer transition hover:bg-white dark:hover:bg-gray-700 bg-transparent relative',
-                            'bg-white dark:bg-gray-700' => false,
+                            'bg-white dark:bg-gray-700' => request()->routeIs('shipments.index'),
                         ])>
                             <div class="w-[70px] h-[70px]">
                                 <img src="/assets/icons/menu-reports.png" alt="Reports"
@@ -145,7 +145,7 @@
                             <div
                                 class="absolute inset-0 transition-opacity hover:opacity-0 bg-gray-100/50 dark:bg-gray-800/50">
                             </div>
-                            <span class="text-lg font-bold">Reports</span>
+                            <span class="text-lg font-bold">Shipments</span>
                         </a>
 
                         <a href="#" @class([
