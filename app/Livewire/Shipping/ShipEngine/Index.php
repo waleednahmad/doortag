@@ -52,7 +52,7 @@ class Index extends Component
         'width' => '',
         'height' => '',
         'dimension_unit' => 'inch',
-        'insured_value' => 1,
+        'insured_value' => 100,
         "insurance_provider" => "parcelguard",
     ];
 
@@ -62,7 +62,6 @@ class Index extends Component
         'non_delivery' => 'return_to_sender',
         'terms_of_trade_code' => 'DDU',
         'declaration' => 'I hereby certify that the information on this invoice is true and correct and the contents and value of this shipment is as stated above.',
-        'signer' => '',
         'customs_items' => [
             // [
             //     "description" => "Wooden coffee table",
@@ -135,7 +134,7 @@ class Index extends Component
 
         if ($name === 'isInsuranceChecked') {
             if (!$value) {
-                $this->package['insured_value'] = 1;
+                $this->package['insured_value'] = 100;
             }
         }
     }
@@ -156,6 +155,7 @@ class Index extends Component
             'shipToAddress.country_code' => 'required|string|size:2',
 
             'package.weight' => 'required|numeric|min:0.1',
+            'package.insured_value' => 'required_if:isInsuranceChecked,true|numeric|min:100',
         ];
 
         if ($this->shipToAddress['country_code'] == 'US') {
@@ -187,10 +187,21 @@ class Index extends Component
                 $rules["customs.customs_items.{$index}.harmonized_tariff_code"] = 'required|string|max:20';
                 $rules["customs.customs_items.{$index}.country_of_origin"] = 'required|string|size:2';
                 $rules["customs.customs_items.{$index}.weight.value"] = 'required|numeric|min:0.01';
+                // customs.content is documents then harmonized_tariff_code is not required
+                if ($this->customs['contents'] == 'documents') {
+                    $rules["customs.customs_items.{$index}.harmonized_tariff_code"] = 'nullable|string|max:20';
+                }
             }
         }
 
         return $rules;
+    }
+
+    public function messages()
+    {
+        return [
+            'package.insured_value.min' => 'Please enter an amount of $101 or more. Amounts below this are already covered by the carrier.',
+        ];
     }
 
     public function mount()
@@ -201,7 +212,6 @@ class Index extends Component
 
         // Set a default date for today date
         $this->shipDate = now()->format('m-d-Y');
-        $this->customs['signer'] = $this->shipFromAddress['name'];
     }
 
     public function setDefaultAddresses()
@@ -396,7 +406,10 @@ class Index extends Component
     public function getRates()
     {
 
-        $this->validate();
+        $this->validate(
+            $this->rules(),
+            $this->messages()
+        );
 
         // handle the address_residential_indicator
         $this->shipFromAddress['address_residential_indicator'] = $this->shipFromAddress['address_residential_indicator'] == true ? 'yes' : 'no';
@@ -457,7 +470,7 @@ class Index extends Component
 
             $shipmentData = [
                 'rate_options' => [
-                    'carrier_ids' => ["se-4038210"], // For fedex only
+                    'carrier_ids' => ["se-4121981"], // For fedex only
                     'service_codes' => [],
                 ],
                 'shipment' => [
@@ -716,6 +729,7 @@ class Index extends Component
 
             if ($response['status'] == 'completed') {
                 Shipment::create([
+                    'label_id' => $response['label_id'] ?? null,
                     'user_id' => auth('web')->check() ? auth('web')->id() : null,
                     'customer_id' => auth('customer')->check() ? auth('customer')->id() : null,
                     'shipment_data' => json_encode($response),

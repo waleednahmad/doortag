@@ -392,6 +392,48 @@ class ShipEngineService
     }
 
     /**
+     * Get all labels with pagination
+     */
+    public function getLabels(int $page = 1, int $pageSize = 10, string $sortBy = 'created_at', string $sortDir = 'desc'): array
+    {
+        try {
+            $url = "labels?page={$page}&page_size={$pageSize}&sort_by={$sortBy}&sort_dir={$sortDir}";
+            $response = $this->client->get($url);
+            $data = json_decode($response->getBody()->getContents(), true);
+
+            return $data;
+        } catch (ClientException $e) {
+            // Handle 4xx client errors
+            $responseBody = $e->getResponse()->getBody()->getContents();
+            $errorData = json_decode($responseBody, true);
+
+            if ($errorData && isset($errorData['errors'])) {
+                return [
+                    'status' => 'error',
+                    'errors' => $errorData['errors'],
+                    'request_id' => $errorData['request_id'] ?? null
+                ];
+            }
+            throw $e;
+        } catch (ServerException $e) {
+            // Handle 5xx server errors
+            $responseBody = $e->getResponse()->getBody()->getContents();
+            $errorData = json_decode($responseBody, true);
+
+            if ($errorData && isset($errorData['errors'])) {
+                return [
+                    'status' => 'error',
+                    'errors' => $errorData['errors'],
+                    'request_id' => $errorData['request_id'] ?? null
+                ];
+            }
+            throw $e;
+        } catch (GuzzleException $e) {
+            throw $e;
+        }
+    }
+
+    /**
      * Helper method to format address for ShipEngine API
      */
     public function formatAddress(array $address): array

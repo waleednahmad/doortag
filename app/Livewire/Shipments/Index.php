@@ -14,31 +14,115 @@ class Index extends Component
 {
     use Interactions, WithPagination;
 
-    #[Computed()]
-    public function shipments()
+    public $labels = [];
+    public $totalLabels = 0;
+    public $currentPage = 1;
+    public $perPage = -1; // Show all labels by default
+    public $totalPages = 0;
+    public $loading = false;
+    public $sortBy = 'created_at';
+    public $sortDir = 'desc';
+
+    public function mount()
     {
-        $user = Auth::user();
-        return $user->shipments()->latest()->paginate(10);
+        $this->loadLabels();
     }
 
-    public function voidLabel($labelId, $shipmentId)
+    public function loadLabels()
     {
-        $shipengine = new ShipEngineService();
-        $response = $shipengine->voidLabel($labelId);
+        $authUser = Auth::user();
+        $userLabels = $authUser->shipments()->whereNotNull('label_id')->pluck('label_id')->toArray();
+        try {
+            $this->loading = true;
+            $shipEngine = new ShipEngineService();
+            $response = $shipEngine->getLabels($this->currentPage, $this->perPage, $this->sortBy, $this->sortDir);
 
-
-        // Handle response and provide feedback to the user
-        if (isset($response['errors'])) {
-            $this->toast()->error('Failed to void the label: ' . $response['errors'][0]['message'])->send();
-        } elseif (isset($response['approved']) && $response['approved'] == 1) {
-            $this->toast()->success('Label voided successfully.')->send();
-
-            // Update the shipment's voided_at timestamp
-            $shipment = \App\Models\Shipment::find($shipmentId);
-            if ($shipment) {
-                $shipment->voided_at = now();
-                $shipment->save();
+            if (isset($response['status']) && $response['status'] === 'error') {
+                $errorMessage = $response['errors'][0]['message'] ?? 'Failed to load labels';
+                $this->toast()->error($errorMessage)->send();
+                return;
             }
+            $responseLabels = $response['labels'] ?? [];
+            // Filter labels to include only those associated with the authenticated user
+            $filteredLabels = array_filter($responseLabels, function ($label) use ($userLabels) {
+                return in_array($label['label_id'], $userLabels);
+            });
+            // Here iwant to add three values to each label from the shipments table: origin_total, customer_total, end_user_total
+            foreach ($filteredLabels as &$label) {
+                $shipment = $authUser->shipments()->where('label_id', $label['label_id'])->first();
+                if ($shipment) {
+                    $label['origin_total'] = $shipment->origin_total;
+                    $label['customer_total'] = $shipment->customer_total;
+                    $label['end_user_total'] = $shipment->end_user_total;
+                } else {
+                    $label['origin_total'] = null;
+                    $label['customer_total'] = null;
+                    $label['end_user_total'] = null;
+                }
+            }
+
+
+            $this->labels = array_values($filteredLabels);
+            $this->totalLabels = count($this->labels);
+            $this->totalPages = 1;
+            // $this->totalLabels = $response['total'] ?? 0;
+            // $this->totalPages = $response['pages'] ?? 0;
+        } catch (\Exception $e) {
+            $this->toast()->error('Failed to load labels: ' . $e->getMessage())->send();
+            $this->labels = [];
+        } finally {
+            $this->loading = false;
+        }
+    }
+
+    public function nextPage()
+    {
+        if ($this->currentPage < $this->totalPages) {
+            $this->currentPage++;
+            $this->loadLabels();
+        }
+    }
+
+    public function previousPage()
+    {
+        if ($this->currentPage > 1) {
+            $this->currentPage--;
+            $this->loadLabels();
+        }
+    }
+
+    public function goToPage($page)
+    {
+        $this->currentPage = max(1, min($page, $this->totalPages));
+        $this->loadLabels();
+    }
+
+    public function refreshLabels()
+    {
+        $this->loadLabels();
+        $this->toast()->success('Labels refreshed successfully!')->send();
+    }
+
+    public function voidLabel($labelId)
+    {
+        try {
+            $this->loading = true;
+            $shipengine = new ShipEngineService();
+            $response = $shipengine->voidLabel($labelId);
+
+            // Handle response and provide feedback to the user
+            if (isset($response['errors'])) {
+                $this->toast()->error('Failed to void the label: ' . $response['errors'][0]['message'])->send();
+            } elseif (isset($response['approved']) && $response['approved'] == 1) {
+                $this->toast()->success('Label voided successfully.')->send();
+
+                // Refresh the labels list
+                $this->loadLabels();
+            }
+        } catch (\Exception $e) {
+            $this->toast()->error('Failed to void label: ' . $e->getMessage())->send();
+        } finally {
+            $this->loading = false;
         }
     }
 

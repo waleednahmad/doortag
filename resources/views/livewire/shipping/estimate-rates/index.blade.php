@@ -1,16 +1,6 @@
 <div x-data="shipEngineShippingForm()">
     <div>
-        <!-- Loading Spinner -->
-        {{-- @if ($loading)
-            <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-                <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-                    <div class="mt-3 text-center">
-                        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                        <h3 class="text-lg font-medium text-gray-900 mt-4">Processing...</h3>
-                    </div>
-                </div>
-            </div>
-        @endif --}}
+
 
         @if (!$rates)
             <form wire:submit="getRates" @submit="if(window.showGlobalLoader) window.showGlobalLoader()"
@@ -18,44 +8,12 @@
                 <x-card>
                     <x-slot:header>
                         <h3 class="text-lg md:text-2xl font-semibold">
-                            Create Shipping Label
+                            Check Rates
                         </h3>
                     </x-slot:header>
 
                     <!-- Main Form Section -->
                     <section class="mb-[1.489em] bg-gray-50 dark:bg-gray-800 rounded-lg p-4 sm:p-6">
-
-                        <!-- Carrier Selection -->
-                        {{-- <section class="mb-6">
-                            <h2 class="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-gray-800 dark:text-gray-200">
-                                Carrier Options
-                            </h2>
-                            <div class="bg-white dark:bg-gray-700 rounded-lg p-3 sm:p-4 mb-3 sm:mb-4">
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Select Carrier (Optional)</label>
-                                        <select wire:model.live="selectedCarrier" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
-                                            <option value="">All Carriers</option>
-                                            @foreach ($carriers as $carrier)
-                                                <option value="{{ $carrier['carrier_id'] }}">{{ $carrier['friendly_name'] }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-
-                                    @if ($carrierServices)
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Select Service (Optional)</label>
-                                            <select wire:model="selectedService" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
-                                                <option value="">All Services</option>
-                                                @foreach ($carrierServices['services'] as $service)
-                                                    <option value="{{ $service['service_code'] }}">{{ $service['name'] }}</option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-                                    @endif
-                                </div>
-                            </div>
-                        </section> --}}
 
                         <!-- Ship From Section -->
                         <section>
@@ -339,20 +297,6 @@
                 </x-card>
             </form>
         @endif
-
-        <!-- Navigation Tabs -->
-        {{-- @if ($rates)
-            <div class="border-b border-gray-200 mb-6">
-                <nav class="-mb-px flex space-x-8" aria-label="Tabs">
-                    <button id="rates-tab" class="border-blue-500 text-blue-600 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm tab-button active">
-                        Get Rates
-                    </button>
-                    <button id="tracking-tab" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm tab-button">
-                        Track Package
-                    </button>
-                </nav>
-            </div>
-        @endif --}}
 
         <!-- Rates Tab Content -->
         <div id="rates-content" class="tab-content">

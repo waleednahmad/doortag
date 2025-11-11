@@ -18,7 +18,7 @@
                 <x-card>
                     <x-slot:header>
                         <h3 class="text-lg md:text-2xl font-semibold">
-                            Create Shipping Label
+                        Create Shipping Label
                         </h3>
                     </x-slot:header>
 
@@ -139,14 +139,14 @@
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                                             {{-- City --}}
                                             <x-input label="City *" wire:model="shipToAddress.city_locality" required />
+                                            <x-input label="Postal Code *" wire:model="shipToAddress.postal_code"
+                                                required />
+
                                             @if ($shipToAddress['country_code'] == 'US')
                                                 <x-input label="State *" wire:model="shipToAddress.state_province"
                                                     maxlength="2" required />
-                                                <x-input label="Postal Code *" wire:model="shipToAddress.postal_code"
-                                                    required />
                                             @else
                                                 <x-input label="State" wire:model="shipToAddress.state_province" />
-                                                <x-input label="Postal Code" wire:model="shipToAddress.postal_code" />
                                             @endif
                                             {{-- Zipcode --}}
                                             {{-- Country --}}
@@ -223,8 +223,7 @@
                                             <div class="flex items-center">
                                                 @if ($package['package_code'] === 'custom')
                                                     <img src="{{ asset('assets/images/Parcel-box.png') }}"
-                                                        alt="Custom Package"
-                                                        class="object-contain w-[60px] h-[60px]" />
+                                                        alt="Custom Package" class="object-contain w-[60px] h-[60px]" />
                                                 @else
                                                     <img src="{{ asset('assets/images/fedex.svg') }}"
                                                         alt="FedEx Package"
@@ -368,8 +367,9 @@
                                 class="text-sm" />
 
                             <div x-show="insuranceChecked" x-transition>
-                                <x-number label="Declared Package Value ($)" placeholder="Enter package value"
-                                    step="0.01" wire:model='package.insured_value' min="1" />
+                                <x-number label="Declared Package Value ($) *" placeholder="Enter package value"
+                                    :required="$this->isInsuranceChecked" step="0.01" wire:model='package.insured_value'
+                                    min="100" />
                             </div>
                             @if ($shipToAddress['country_code'] == 'US')
                                 <x-checkbox checked disabled
