@@ -14,11 +14,11 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        $admin = User::where('email', 'info@doortag.net')->first();
+        $admin = User::where('email', 'info@doortag.com')->first();
         if (!$admin) {
             User::create([
                 'name' => 'DoorTag Shipper',
-                'email' => 'info@doortag.net',
+                'email' => 'info@doortag.com',
                 'phone' => '(708) 307-7663',
                 'address' => '1700 Oviedo Mall Blvd',
                 'address2' => '',
