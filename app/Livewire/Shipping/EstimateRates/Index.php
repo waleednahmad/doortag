@@ -78,9 +78,22 @@ class Index extends Component
     {
         $this->setDefaultAddresses();
         $this->loadCarrierPackaging();
+        $this->setDefaultSelectedPackage();
 
         // Set a default date for today date
         $this->shipDate = now()->format('m-d-Y');
+    }
+
+    public function setDefaultSelectedPackage()
+    {
+        // Set default selected package to 'custom'
+        $defaultPackage = collect($this->carrierPackaging)->firstWhere('package_code', $this->selectedPackaging);
+        $this->selectedPackage = $defaultPackage ?? [
+            'package_id' => 'custom',
+            'package_code' => 'custom',
+            'name' => 'Custom Box or Rigid Packaging',
+            'description' => 'Any custom box or thick parcel',
+        ];
     }
 
     public function setDefaultAddresses()
@@ -148,8 +161,8 @@ class Index extends Component
         $selectedPackage = collect($this->carrierPackaging)->firstWhere('package_code', $package_code);
 
         $this->selectedPackage = $selectedPackage;
-        if ($selectedPackage) {
-            $this->toast()->info('Selected packaging: ' . ($selectedPackage['name'] ?? 'Unknown'))->send();
+        if ($this->selectedPackage) {
+            $this->toast()->info('Selected packaging: ' . ($this->selectedPackage['name'] ?? 'Unknown'))->send();
         }
     }
 
