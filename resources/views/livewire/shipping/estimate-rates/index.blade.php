@@ -1,6 +1,19 @@
 <div x-data="shipEngineShippingForm()">
     <div>
 
+        <!-- Loading Spinner -->
+        <div class="fixed inset-0 bg-gray-600/90 bg-opacity-50 overflow-y-auto h-full w-full z-50
+        flex items-center justify-center
+        "
+            wire:loading>
+            <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+                <div class="mt-3 text-center">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                    <h3 class="text-lg font-medium text-gray-900 mt-4">Loading...</h3>
+                </div>
+            </div>
+        </div>
+
 
         @if (!$rates)
             <form wire:submit="getRates" @submit="if(window.showGlobalLoader) window.showGlobalLoader()"
@@ -17,7 +30,8 @@
 
                         <!-- Ship From Section -->
                         <section>
-                            <h2 class="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-gray-800 dark:text-gray-200">
+                            <h2
+                                class="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-gray-800 dark:text-gray-200">
                                 Ship From
                             </h2>
                             <div class="bg-white dark:bg-gray-700 rounded-lg p-3 sm:p-4 mb-3 sm:mb-4">
@@ -701,6 +715,16 @@
         function shipEngineShippingForm() {
             return {
                 // Any additional data needed for the form
+                init() {
+                    // Prevent mouse wheel scroll from changing number input values on macOS
+                    this.$nextTick(() => {
+                        document.querySelectorAll('input[type="number"]').forEach(input => {
+                            input.addEventListener('wheel', (e) => e.preventDefault(), {
+                                passive: false
+                            });
+                        });
+                    });
+                }
             }
         }
 
@@ -745,6 +769,62 @@
                 document.getElementById('rates-tab').classList.add('border-blue-500', 'text-blue-600');
                 document.getElementById('rates-tab').classList.remove('border-transparent', 'text-gray-500');
             }
+
+            // Setup wheel prevention and hide increment/decrement buttons for all number inputs
+            const preventNumberScroll = (e) => e.preventDefault();
+
+            const setupNumberInputs = () => {
+                document.querySelectorAll('input[type="number"]').forEach(input => {
+                    // Check if we've already setup this input
+                    if (input.dataset.wheelSetup === 'true') return;
+
+                    // Prevent wheel scroll
+                    input.addEventListener('wheel', preventNumberScroll, {
+                        passive: false
+                    });
+
+                    // Hide the increment/decrement buttons (siblings)
+                    const parent = input.parentElement;
+                    if (parent) {
+                        const buttons = parent.querySelectorAll('button');
+                        buttons.forEach(button => {
+                            button.style.display = 'none';
+                        });
+                    }
+
+                    // Mark this input as setup
+                    input.dataset.wheelSetup = 'true';
+                });
+            };
+
+            // Initial setup
+            setupNumberInputs();
+
+            // Use MutationObserver to watch for changes in the DOM
+            const observer = new MutationObserver((mutations) => {
+                // Check if any mutation involves new number inputs
+                let hasNumberInputs = false;
+                mutations.forEach((mutation) => {
+                    if (mutation.addedNodes.length > 0) {
+                        hasNumberInputs = true;
+                    }
+                });
+
+                if (hasNumberInputs) {
+                    setupNumberInputs();
+                }
+            });
+
+            // Start observing the document for changes
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true,
+                attributes: false,
+                characterData: false
+            });
+
+            // Also listen for Livewire events
+            window.addEventListener('livewire:updated', setupNumberInputs);
         });
 
         // Listen for label download event

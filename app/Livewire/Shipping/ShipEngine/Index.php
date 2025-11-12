@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use TallStackUi\Traits\Interactions;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class Index extends Component
 {
@@ -129,15 +131,18 @@ class Index extends Component
     public $sortBy = 'price'; // 'price' or 'delivery'
     public $sortDirection = 'asc'; // 'asc' or 'desc'
 
+    public $showModal = false;
+    public $signature;
+
     public function updated($name, $value)
     {
-
         if ($name === 'isInsuranceChecked') {
             if (!$value) {
                 $this->package['insured_value'] = 100;
             }
         }
     }
+
 
     public function rules()
     {
@@ -217,32 +222,32 @@ class Index extends Component
     public function setDefaultAddresses()
     {
         // Set default ship from address
-        // $this->shipFromAddress = [
-        //     'name' => Auth::user()->name,
-        //     'company_name' => 'Test Company',
-        //     'phone' =>  Auth::user()->phone,
-        //     'email' =>  Auth::user()->email,
-        //     'address_line1' =>  Auth::user()->address,
-        //     'address_line2' =>  Auth::user()->address2,
-        //     'city_locality' =>  Auth::user()->city,
-        //     'state_province' => 'FL',
-        //     'postal_code' =>  Auth::user()->zipcode,
-        //     'country_code' => 'US',
-        //     'address_residential_indicator' => Auth::user()->address_residential_indicator
-        // ];
         $this->shipFromAddress = [
             'name' => '',
-            'company_name' => '',
-            'phone' =>  '',
+            'company_name' => 'DoorTag',
+            'phone' =>  Auth::user()->phone,
             'email' =>  '',
-            'address_line1' =>  '',
-            'address_line2' =>  '',
-            'city_locality' =>  '',
-            'state_province' => '',
-            'postal_code' =>  '',
+            'address_line1' =>  Auth::user()->address,
+            'address_line2' =>  Auth::user()->address2,
+            'city_locality' =>  Auth::user()->city,
+            'state_province' =>  Auth::user()->state,
+            'postal_code' =>  Auth::user()->zipcode,
             'country_code' => 'US',
-            'address_residential_indicator' => false
+            'address_residential_indicator' => Auth::user()->address_residential_indicator
         ];
+        // $this->shipFromAddress = [
+        //     'name' => '',
+        //     'company_name' => '',
+        //     'phone' =>  '',
+        //     'email' =>  '',
+        //     'address_line1' =>  '',
+        //     'address_line2' =>  '',
+        //     'city_locality' =>  '',
+        //     'state_province' => '',
+        //     'postal_code' =>  '',
+        //     'country_code' => 'US',
+        //     'address_residential_indicator' => false
+        // ];
 
         // Set default ship to address
         $this->shipToAddress = [
@@ -703,10 +708,63 @@ class Index extends Component
         $this->rates = $rates->values()->all();
     }
 
+    /**
+     * Save base64 signature as PNG file in public storage
+     * 
+     * @param string $base64Signature
+     * @return string|null Path to saved signature file
+     */
+    private function saveSignature($base64Signature)
+    {
+        try {
+            // Remove the data:image/png;base64, prefix if present
+            $base64Image = preg_replace('/^data:image\/\w+;base64,/', '', $base64Signature);
+
+            // Decode base64
+            $imageData = base64_decode($base64Image);
+
+            if ($imageData === false) {
+                Log::error('Failed to decode base64 signature');
+                return null;
+            }
+
+            // Generate unique filename
+            $filename = 'signatures/' . date('Y/m/d') . '/' . Str::uuid() . '.png';
+
+            // Store in public disk
+            $stored = Storage::disk('public')->put($filename, $imageData);
+
+            if ($stored) {
+                return $filename;
+            }
+
+            return null;
+        } catch (\Exception $e) {
+            Log::error('Error saving signature: ' . $e->getMessage());
+            return null;
+        }
+    }
+
     public function createLabel()
     {
+        // Validate signature, it's required
+
+        $this->validate([
+            'signature' => 'required|string',
+        ], [
+            'signature.required' => 'Please provide a signature before creating the label.',
+        ]);
+
         if (!$this->selectedRate) {
             $this->toast()->warning('Please select a rate first.')->send();
+            return;
+        }
+
+        // Save signature as PNG file
+        $signaturePath = $this->saveSignature($this->signature);
+
+        if (!$signaturePath) {
+            $this->toast()->error('Failed to save signature. Please try again.')->send();
             return;
         }
 
@@ -733,6 +791,7 @@ class Index extends Component
                     'user_id' => auth('web')->check() ? auth('web')->id() : null,
                     'customer_id' => auth('customer')->check() ? auth('customer')->id() : null,
                     'shipment_data' => json_encode($response),
+                    'signature_path' => "storage/" . $signaturePath,
                     'origin_total' => $this->origin_total,
                     'customer_total' => $this->customer_total ?? null,
                     'end_user_total' => $this->end_user_total ?? null,
@@ -878,6 +937,7 @@ class Index extends Component
         $this->rates = [];
         $this->selectedRate = null;
         $this->trackingResults = [];
+        $this->signature = null;
         $this->shipToAddress = [
             'name' => '',
             'company_name' => '',

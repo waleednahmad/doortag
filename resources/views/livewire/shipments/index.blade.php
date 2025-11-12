@@ -222,6 +222,14 @@
                                                 Form
                                             </button>
                                         @endif
+                                        @if (isset($label['siganture']) && !empty($label['signature']) && file_exists(public_path($label['signature'])))
+                                            <button onclick="window.open('{{ asset($label['signature']) }}', '_blank')"
+                                                class="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-purple-600 border border-transparent rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                                                title="View Signature">
+                                                <i class="fas fa-signature mr-1"></i>
+                                                Signature
+                                            </button>
+                                        @endif
                                     </div>
                                 </div>
                             </div>
@@ -289,6 +297,22 @@
                                         </div>
                                     </div>
                                 </div>
+
+                                <!-- Signature Preview -->
+                                @if (!empty($label['signature']))
+                                    <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+                                        <h4 class="font-medium text-gray-900 dark:text-white mb-3 flex items-center">
+                                            <i class="fas fa-signature mr-2 text-blue-600"></i>
+                                            Customer Signature
+                                        </h4>
+                                        <div
+                                            class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 inline-block border border-gray-200 dark:border-gray-600">
+                                            <img src="{{ asset($label['signature']) }}" alt="Customer Signature"
+                                                class="max-w-full h-auto max-h-32 rounded"
+                                                style="image-rendering: crisp-edges;">
+                                        </div>
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     </div>

@@ -54,6 +54,7 @@ class Index extends Component
                     $label['origin_total'] = $shipment->origin_total;
                     $label['customer_total'] = $shipment->customer_total;
                     $label['end_user_total'] = $shipment->end_user_total;
+                    $label['signature'] = $shipment->signature_path;
                 } else {
                     $label['origin_total'] = null;
                     $label['customer_total'] = null;
