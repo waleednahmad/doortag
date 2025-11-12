@@ -1294,6 +1294,17 @@
                                         </div>
                                     @endif
 
+                                    <div class="flex flex-col gap-3 mt-3">
+                                        <x-checkbox checked disabled
+                                            label="I certify that the shipment does not contain any undeclared hazardous materials (perfume, nail polish, hair spray, dry ice, lithium batteries, firearms, lighters, fuels, etc.) or any matter prohibited by law or postal regulation." />
+
+                                        @if ($shipToAddress['country_code'] != 'US')
+                                            <x-checkbox
+                                                label="I hereby certify that the information on this invoice is true and correct and the contents and value of this shipment is as stated above."
+                                                required checked disabled />
+                                        @endif
+                                    </div>
+
                                     {{-- Siganture --}}
                                     <div class="mt-6" x-data="{ signatureReady: false }" x-init="setTimeout(() => { signatureReady = true }, 400)">
                                         <h3
@@ -1308,26 +1319,12 @@
                                                 exportable color="#000000" background="#ffffff" :height="200" />
                                         </div>
                                     </div>
-
-                                    <div class="flex flex-col gap-3 mt-3">
-                                        <x-checkbox checked disabled
-                                            label="I certify that the shipment does not contain any undeclared hazardous materials (perfume, nail polish, hair spray, dry ice, lithium batteries, firearms, lighters, fuels, etc.) or any matter prohibited by law or postal regulation." />
-
-                                        @if ($shipToAddress['country_code'] != 'US')
-                                            <x-checkbox
-                                                label="I hereby certify that the information on this invoice is true and correct and the contents and value of this shipment is as stated above."
-                                                required checked disabled />
-                                        @endif
-                                    </div>
                                 </div>
                                 {{-- Modal Footer  // will contain only two buttons [createLabel , and close modal] --}}
                                 <div class="mt-6 flex justify-end space-x-3">
                                     <x-button wire:click="createLabel" color="blue" class="w-full sm:w-auto"
                                         loading="createLabel">
                                         Create Label
-                                    </x-button>
-                                    <x-button wire:click="$emit('close')" color="gray" class="w-full sm:w-auto">
-                                        Close
                                     </x-button>
                                 </div>
                             </x-modal>
@@ -1362,7 +1359,9 @@
                     // Prevent mouse wheel scroll from changing number input values on macOS
                     this.$nextTick(() => {
                         document.querySelectorAll('input[type="number"]').forEach(input => {
-                            input.addEventListener('wheel', (e) => e.preventDefault(), { passive: false });
+                            input.addEventListener('wheel', (e) => e.preventDefault(), {
+                                passive: false
+                            });
                         });
                     });
                 }
