@@ -114,7 +114,7 @@ class Index extends Component
     public $shipDate  = null;
 
     public $carriers = [];
-    public $selectedCarrier = 'se-4038210';
+    public $selectedCarrier = 'se-4121981';
     public $carrierServices = [];
     public $selectedService = '';
     public $rates = [];
@@ -495,7 +495,7 @@ class Index extends Component
 
             $shipmentData = [
                 'rate_options' => [
-                    'carrier_ids' => ["se-4038210"], // For fedex only
+                    'carrier_ids' => ["se-4121981"], // For fedex only
                     'service_codes' => [],
                 ],
                 'shipment' => [

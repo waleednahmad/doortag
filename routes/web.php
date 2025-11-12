@@ -11,7 +11,7 @@ use App\Livewire\Users\Index;
 
 // Route::view('/', 'welcome')->name('welcome');
 Route::get('/', function () {
-    return redirect()->route('login');
+    return view('welcome');
 })->name('welcome');
 
 Route::middleware(['auth:web,customer'])->group(function () {
