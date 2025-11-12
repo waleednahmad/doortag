@@ -181,21 +181,14 @@
                                 :class="packagingOpen ? 'border-[#00a9ff]' :
                                     'border-gray-300 dark:border-gray-600 bg-gradient-to-b from-white to-gray-100 dark:from-gray-700 dark:to-gray-800'">
 
-                                <!-- Toggle Header - Shows Selected Package -->
                                 <div @click="packagingOpen = !packagingOpen"
                                     class="w-full flex items-center justify-between p-[10px] cursor-pointer rounded-[4px] transition-colors"
                                     :class="packagingOpen ? 'hover:bg-blue-50 dark:hover:bg-blue-900/20' :
                                         'hover:bg-gray-50 dark:hover:bg-gray-600'">
-                                    @php
-                                        $selectedPackage = collect($carrierPackaging)->firstWhere(
-                                            'package_code',
-                                            $selectedPackaging,
-                                        );
-                                    @endphp
                                     <div class="flex items-center">
                                         {{-- img container --}}
                                         <span class="w-[130px] h-[90px]  flex items-center justify-center">
-                                            @if ($selectedPackage['package_code'] === 'custom')
+                                            @if ($selectedPackage && $selectedPackage['package_code'] === 'custom')
                                                 <img src="{{ asset('assets/images/Parcel-box.png') }}" alt="Parcel"
                                                     class=" w-full object-contain" />
                                             @else

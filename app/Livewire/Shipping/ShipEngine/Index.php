@@ -223,13 +223,20 @@ class Index extends Component
     public function setDefaultSelectedPackage()
     {
         // Set default selected package to 'custom'
-        $defaultPackage = collect($this->carrierPackaging)->firstWhere('package_code', $this->selectedPackaging);
-        $this->selectedPackage = $defaultPackage ?? [
-            'package_id' => 'custom',
-            'package_code' => 'custom',
-            'name' => 'Custom Box or Rigid Packaging',
-            'description' => 'Any custom box or thick parcel',
-        ];
+        if (!empty($this->carrierPackaging)) {
+            $defaultPackage = collect($this->carrierPackaging)->firstWhere('package_code', $this->selectedPackaging);
+            $this->selectedPackage = $defaultPackage;
+        }
+        
+        // Always ensure selectedPackage has a fallback value
+        if (empty($this->selectedPackage)) {
+            $this->selectedPackage = [
+                'package_id' => 'custom',
+                'package_code' => 'custom',
+                'name' => 'Custom Box or Rigid Packaging',
+                'description' => 'Any custom box or thick parcel',
+            ];
+        }
     }
 
     public function setDefaultAddresses()
