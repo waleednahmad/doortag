@@ -375,7 +375,7 @@
                             <div class="bg-white dark:bg-gray-700 rounded-lg p-3 sm:p-4 mb-3 sm:mb-4">
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                                     <x-date label="Shipment Date" :min-date="now()" :max-date="now()->addWeek()"
-                                        format="MM-DD-YYYY" wire:model="shipDate" required />
+                                        format="YYYY-MM-DD" wire:model.live="shipDate" required storage-format="YYYY-MM-DD" />
                                 </div>
                             </div>
                         </section>
@@ -511,6 +511,20 @@
 
                     <!-- Action Buttons -->
                     <div class="flex flex-wrap gap-4 pt-4">
+
+                        @if (isset($errors) && $errors->any())
+                            <div class="w-full">
+                                <x-alert type="error" title="Please fix the errors below:">
+                                    <ul class="mt-2 list-disc list-inside text-sm">
+                                        @foreach ($errors->all() as $error)
+                                            <li>{{ $error }}</li>
+                                        @endforeach
+                                    </ul>
+                                </x-alert>
+                            </div>
+                        @endif
+
+
                         {{-- <x-button wire:click="validateAddresses" color="gray" wire:loading.attr="disabled">
                             <span wire:loading.remove wire:target="validateAddresses">Validate Addresses</span>
                             <span wire:loading wire:target="validateAddresses">Validating...</span>
@@ -1082,7 +1096,7 @@
                                                         class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
                                                         Ship Date</p>
                                                     <p class="text-base font-medium text-gray-900 dark:text-white">
-                                                        {{ \Carbon\Carbon::parse($shipDate)->format('F d, Y') }}
+                                                        {{ \Carbon\Carbon::createFromFormat('Y-m-d', $shipDate)->format('F d, Y') }}
                                                     </p>
                                                 </div>
                                             @endif

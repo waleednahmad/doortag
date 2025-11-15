@@ -40,18 +40,19 @@ class ShipEngineService
      */
     public function getRates(array $shipmentData)
     {
-
         try {
             $response = $this->client->post('rates', [
                 'json' => $shipmentData
             ]);
 
             $data = json_decode($response->getBody()->getContents(), true);
+      
             return $data;
         } catch (ClientException $e) {
             // Handle 4xx client errors (400, 401, 404, etc.)
             $responseBody = $e->getResponse()->getBody()->getContents();
             $errorData = json_decode($responseBody, true);
+
 
             // If we successfully decoded the API error response, return it
             if ($errorData && isset($errorData['errors'])) {

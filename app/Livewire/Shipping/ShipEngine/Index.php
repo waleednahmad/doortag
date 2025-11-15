@@ -141,6 +141,16 @@ class Index extends Component
                 $this->package['insured_value'] = 100;
             }
         }
+
+        // For the ship date, ensure the format is correct
+        if ($name === 'shipDate') {
+            try {
+                // Try both formats
+                $this->shipDate = \Carbon\Carbon::createFromFormat('m-d-Y', $value)->format('Y-m-d');
+            } catch (\Exception $e) {
+                $this->shipDate = \Carbon\Carbon::createFromFormat('Y-m-d', $value)->format('Y-m-d');
+            }
+        }
     }
 
 
@@ -217,7 +227,7 @@ class Index extends Component
         $this->setDefaultSelectedPackage();
 
         // Set a default date for today date
-        $this->shipDate = now()->format('m-d-Y');
+        $this->shipDate = now()->format('Y-m-d');
     }
 
     public function setDefaultSelectedPackage()
@@ -227,7 +237,7 @@ class Index extends Component
             $defaultPackage = collect($this->carrierPackaging)->firstWhere('package_code', $this->selectedPackaging);
             $this->selectedPackage = $defaultPackage;
         }
-        
+
         // Always ensure selectedPackage has a fallback value
         if (empty($this->selectedPackage)) {
             $this->selectedPackage = [
@@ -303,7 +313,6 @@ class Index extends Component
         //     // 'country_code' => 'US',
         //     "country_code" => "DE",
         //     'address_residential_indicator' => true
-
         // ];
     }
 
@@ -447,7 +456,6 @@ class Index extends Component
                 return;
             }
         }
-
 
         try {
             $this->loading = true;
