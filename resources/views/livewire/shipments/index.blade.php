@@ -147,29 +147,8 @@
                                     </div>
                                 </div>
 
-                                <!-- Right: Cost and Actions -->
+                                <!-- Right: Actions -->
                                 <div class="flex flex-col sm:flex-row sm:items-center sm:gap-4 lg:justify-end">
-                                    <!-- Cost -->
-                                    @if (!empty($cost))
-                                        <div class="text-right mb-3 sm:mb-0">
-                                            <div class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
-                                                @auth('web')
-                                                    ${{ number_format($cost['origin_total'] ?? 0, 2) }}
-
-                                                    @if ($cost['origin_total'] != $cost['end_user_total'] ?? 0)
-                                                        <br>
-                                                        <span class="text-sm text-gray-500 dark:text-gray-400">
-                                                            (sold for
-                                                            ${{ number_format($cost['end_user_total'] ?? 0, 2) }})
-                                                        </span>
-                                                    @endif
-                                                @else
-                                                    ${{ number_format($cost['end_user_total'] ?? 0, 2) }}
-                                                @endauth
-                                            </div>
-                                        </div>
-                                    @endif
-
                                     <!-- Action Buttons -->
                                     <div class="flex gap-2 justify-end">
                                         {{-- void a label --}}
@@ -192,6 +171,14 @@
                                                 Track
                                             </button>
                                         @endif
+
+                                        <button wire:click="downloadShipmentDetails('{{ $label['label_id'] ?? '' }}')"
+                                            wire:loading.attr="disabled"
+                                            class="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-teal-600 border border-transparent rounded-md hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            title="Download Shipment Details PDF">
+                                            <i class="fas fa-file-download mr-1"></i>
+                                            Details
+                                        </button>
 
                                         @if (isset($label['label_download']['png']))
                                             <button
@@ -222,10 +209,11 @@
                                                 Form
                                             </button>
                                         @endif
-                                        @if (isset($label['siganture']) && !empty($label['signature']) && file_exists(public_path($label['signature'])))
+
+                                        @if (!empty($label['signature']) && file_exists(public_path($label['signature'])))
                                             <button onclick="window.open('{{ asset($label['signature']) }}', '_blank')"
                                                 class="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-purple-600 border border-transparent rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
-                                                title="View Signature">
+                                                title="Download Signature">
                                                 <i class="fas fa-signature mr-1"></i>
                                                 Signature
                                             </button>
@@ -296,23 +284,31 @@
                                             </p>
                                         </div>
                                     </div>
-                                </div>
 
-                                <!-- Signature Preview -->
-                                @if (!empty($label['signature']))
-                                    <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
-                                        <h4 class="font-medium text-gray-900 dark:text-white mb-3 flex items-center">
-                                            <i class="fas fa-signature mr-2 text-blue-600"></i>
-                                            Customer Signature
-                                        </h4>
-                                        <div
-                                            class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 inline-block border border-gray-200 dark:border-gray-600">
-                                            <img src="{{ asset($label['signature']) }}" alt="Customer Signature"
-                                                class="max-w-full h-auto max-h-32 rounded"
-                                                style="image-rendering: crisp-edges;">
+                                    <!-- Cost Info -->
+                                    @if (!empty($cost))
+                                        <div>
+                                            <h4 class="font-medium text-gray-900 dark:text-white mb-2">Shipping Cost</h4>
+                                            <div class="text-gray-600 dark:text-gray-400">
+                                                @auth('web')
+                                                    <p class="text-lg font-bold text-gray-900 dark:text-white">
+                                                        ${{ number_format($cost['origin_total'] ?? 0, 2) }}
+                                                    </p>
+                                                    @if ($cost['origin_total'] != $cost['end_user_total'] ?? 0)
+                                                        <p class="text-sm mt-1">
+                                                            <span class="font-medium">Sold for:</span>
+                                                            ${{ number_format($cost['end_user_total'] ?? 0, 2) }}
+                                                        </p>
+                                                    @endif
+                                                @else
+                                                    <p class="text-lg font-bold text-gray-900 dark:text-white">
+                                                        ${{ number_format($cost['end_user_total'] ?? 0, 2) }}
+                                                    </p>
+                                                @endauth
+                                            </div>
                                         </div>
-                                    </div>
-                                @endif
+                                    @endif
+                                </div>
                             </div>
                         </div>
                     </div>

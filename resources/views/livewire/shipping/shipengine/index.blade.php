@@ -131,7 +131,7 @@
                                     {{-- Email --}}
                                     <x-input label="Email (optional)" wire:model="shipToAddress.email" />
                                     {{-- Phone --}}
-                                    <x-input label="Phone *" wire:model="shipToAddress.phone" required />
+                                    <x-input label="Phone" wire:model="shipToAddress.phone" />
                                     {{-- Address --}}
                                     <x-input label="Address Line 1 *" wire:model="shipToAddress.address_line1"
                                         required />
@@ -375,7 +375,8 @@
                             <div class="bg-white dark:bg-gray-700 rounded-lg p-3 sm:p-4 mb-3 sm:mb-4">
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                                     <x-date label="Shipment Date" :min-date="now()" :max-date="now()->addWeek()"
-                                        format="YYYY-MM-DD" wire:model.live="shipDate" required storage-format="YYYY-MM-DD" />
+                                        format="YYYY-MM-DD" wire:model.live="shipDate" required
+                                        storage-format="YYYY-MM-DD" />
                                 </div>
                             </div>
                         </section>
@@ -1334,7 +1335,6 @@
                                         </div>
                                     </div>
                                 </div>
-                                {{-- Modal Footer  // will contain only two buttons [createLabel , and close modal] --}}
                                 <div class="mt-6 flex justify-end space-x-3">
                                     <x-button wire:click="createLabel" color="blue" class="w-full sm:w-auto"
                                         loading="createLabel">
@@ -1487,5 +1487,10 @@
             // Open PDF in new tab instead of downloading
             window.open(url, '_blank');
         });
+
+        // Download Shipment Details PDF
+        function downloadPDF(trackingNumber, signaturePath) {
+            @this.downloadPDF(trackingNumber, signaturePath);
+        }
     </script>
 </div>

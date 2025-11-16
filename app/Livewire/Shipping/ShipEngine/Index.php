@@ -15,6 +15,7 @@ use Livewire\Attributes\Layout;
 use TallStackUi\Traits\Interactions;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class Index extends Component
 {
@@ -126,6 +127,8 @@ class Index extends Component
     public $selectedPackaging = 'custom';
     public $selectedPackage = null;
     public $isInsuranceChecked = false;
+    public $lastRequestData = null; // Store the last request sent to ShipEngine API
+    public $lastCreatedShipment = null; // Store the shipment record created from API response
 
     // Sorting properties
     public $sortBy = 'price'; // 'price' or 'delivery'
@@ -280,40 +283,40 @@ class Index extends Component
         // ];
 
         // Set default ship to address
-        $this->shipToAddress = [
-            'name' => '',
-            'company_name' => '',
-            'phone' => '',
-            'email' => '',
-            'address_line1' => '',
-            'address_line2' => '',
-            'city_locality' => '',
-            "state_province" => "",
-            'postal_code' => '',
-            'country_code' => 'US',
-            'address_residential_indicator' => false
-        ];
         // $this->shipToAddress = [
         //     'name' => '',
         //     'company_name' => '',
         //     'phone' => '',
         //     'email' => '',
-        //     // 'address_line1' => '',
-        //     // 'address_line1' => '1600 Amphitheatre Pkwy',
-        //     "address_line1" => "Röntgenstr. 3",
+        //     'address_line1' => '',
         //     'address_line2' => '',
-        //     // 'city_locality' => '',
-        //     // 'city_locality' => 'mountain view',
-        //     "city_locality" => "Esslingen am Neckar",
-        //     // 'state_province' => 'CA',
+        //     'city_locality' => '',
         //     "state_province" => "",
-        //     // 'postal_code' => '',
-        //     // 'postal_code' => '94043',
-        //     "postal_code" => "73730",
-        //     // 'country_code' => 'US',
-        //     "country_code" => "DE",
-        //     'address_residential_indicator' => true
+        //     'postal_code' => '',
+        //     'country_code' => 'US',
+        //     'address_residential_indicator' => false
         // ];
+        $this->shipToAddress = [
+            'name' => '',
+            'company_name' => '',
+            'phone' => '',
+            'email' => '',
+            // 'address_line1' => '',
+            // 'address_line1' => '1600 Amphitheatre Pkwy',
+            "address_line1" => "Röntgenstr. 3",
+            'address_line2' => '',
+            // 'city_locality' => '',
+            // 'city_locality' => 'mountain view',
+            "city_locality" => "Esslingen am Neckar",
+            // 'state_province' => 'CA',
+            "state_province" => "",
+            // 'postal_code' => '',
+            // 'postal_code' => '94043',
+            "postal_code" => "73730",
+            // 'country_code' => 'US',
+            "country_code" => "DE",
+            'address_residential_indicator' => true
+        ];
     }
 
     public function loadCarriers()
@@ -531,7 +534,6 @@ class Index extends Component
                     }
                 }
 
-
                 $shipmentData['shipment']['customs'] = $this->customs;
                 $shipmentData['shipment']['tax_identifiers'] = $this->tax_identifiers;
             } else {
@@ -545,6 +547,8 @@ class Index extends Component
                 }
             }
 
+            // Store the request data for later use
+            $this->lastRequestData = $shipmentData;
 
             $response = $shipEngine->getRates($shipmentData);
 
@@ -814,25 +818,35 @@ class Index extends Component
             }
 
             if ($response['status'] == 'completed') {
-                Shipment::create([
+                $shipmentRecord = Shipment::create([
                     'label_id' => $response['label_id'] ?? null,
                     'user_id' => auth('web')->check() ? auth('web')->id() : null,
                     'customer_id' => auth('customer')->check() ? auth('customer')->id() : null,
                     'shipment_data' => json_encode($response),
+                    'request_data' => json_encode($this->lastRequestData),
+                    'ship_from' => json_encode($response['ship_from'] ?? []),
                     'signature_path' => "storage/" . $signaturePath,
                     'origin_total' => $this->origin_total,
                     'customer_total' => $this->customer_total ?? null,
                     'end_user_total' => $this->end_user_total ?? null,
                 ]);
 
+                // Store the shipment record for downloadPDF to use
+                $this->lastCreatedShipment = $shipmentRecord;
+
                 $this->resetData();
                 $successMessage = 'Label created successfully!';
+                $trackingNumber = '';
                 if (isset($response['tracking_number'])) {
-                    $successMessage .= ' Tracking number: ' . $response['tracking_number'];
+                    $trackingNumber = $response['tracking_number'];
+                    $successMessage .= ' Tracking number: ' . $trackingNumber;
                 }
 
                 // Add download buttons for available formats
                 $downloadButtons = '';
+
+                // Add PDF Shipment Details button - pass the shipment record
+                $downloadButtons .= '<button onclick="downloadPDF(\'' . $trackingNumber . '\', \'' . $signaturePath . '\')" class="inline-flex items-center px-3 py-2 ml-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500" title="Download Shipment Details PDF"><i class="fas fa-file-download mr-1"></i>Shipment Details</button>';
 
                 // Check for PNG label
                 if (isset($response['label_download']['png'])) {
@@ -998,6 +1012,142 @@ class Index extends Component
         $this->selectedRate = null;
     }
 
+    public function downloadPDF($trackingNumber = null, $signaturePath = null)
+    {
+        try {
+            $shipment = $this->lastCreatedShipment;
+            
+            if (!$shipment) {
+                Log::error('No shipment data available for PDF download');
+                $this->dialog()->error('Shipment data not available.')->send();
+                return;
+            }
+
+            // Prefer request_data (which contains all original data) over response data
+            if ($shipment->request_data) {
+                $requestData = json_decode($shipment->request_data, true);
+                // Extract from nested shipment structure
+                $shipmentData = is_array($requestData['shipment'] ?? null) ? $requestData['shipment'] : [];
+            } else {
+                // Fallback to response data for older records
+                $shipmentData = json_decode($shipment->shipment_data, true);
+            }
+            
+            if (!is_array($shipmentData)) {
+                Log::error('Invalid shipment_data: ' . ($shipment->shipment_data ?? $shipment->request_data));
+                $this->dialog()->error('Invalid shipment data.')->send();
+                return;
+            }
+
+            // Get tracking number from response data
+            $trackingResponse = json_decode($shipment->shipment_data, true);
+            $tracking = $trackingResponse['tracking_number'] ?? $trackingNumber;
+
+            $logoPath = public_path('assets/images/logo-black.png');
+            $logoBase64 = '';
+            
+            if (file_exists($logoPath)) {
+                $logoBase64 = 'data:image/png;base64,' . base64_encode(file_get_contents($logoPath));
+            }
+
+            $signatureBase64 = '';
+            if ($shipment->signature_path) {
+                $signatureFilePath = $shipment->signature_path;
+                $fullSignaturePath = $signatureFilePath;
+                
+                // Handle different path formats - signature_path stored as "storage/signatures/2025/11/16/uuid.png"
+                // Files are actually in storage/app/public/signatures/
+                if (strpos($signatureFilePath, 'storage/') === 0) {
+                    // Remove 'storage/' prefix and look in storage/app/public
+                    $cleanPath = str_replace('storage/', '', $signatureFilePath);
+                    $fullSignaturePath = storage_path('app/public/' . $cleanPath);
+                } elseif (strpos($signatureFilePath, 'signatures/') === 0) {
+                    // Path is relative to storage/app/public
+                    $fullSignaturePath = storage_path('app/public/' . $signatureFilePath);
+                } else {
+                    // Assume it's relative to storage/app/public
+                    $fullSignaturePath = storage_path('app/public/' . $signatureFilePath);
+                }
+                
+                if (file_exists($fullSignaturePath)) {
+                    $signatureBase64 = 'data:image/png;base64,' . base64_encode(file_get_contents($fullSignaturePath));
+                } else {
+                    Log::warning('Signature file not found in downloadPDF: ' . $fullSignaturePath . ' (original: ' . $signatureFilePath . ')');
+                }
+            }
+
+            // Extract shipment details from request data (which has all the data we sent)
+            $shipFromAddress = is_array($shipmentData['ship_from'] ?? null) ? $shipmentData['ship_from'] : [];
+            $shipToAddress = is_array($shipmentData['ship_to'] ?? null) ? $shipmentData['ship_to'] : [];
+            $customs = is_array($shipmentData['customs'] ?? null) ? $shipmentData['customs'] : [];
+            $packages = is_array($shipmentData['packages'] ?? null) ? $shipmentData['packages'] : [];
+
+            // Get the first package or create empty one
+            $firstPackage = is_array($packages[0] ?? null) ? $packages[0] : [];
+
+            // Get tax identifiers from request data
+            $taxIdentifiers = is_array($shipmentData['tax_identifiers'] ?? null) ? $shipmentData['tax_identifiers'] : [];
+
+            // Get service details from response data (shipment_data)
+            $serviceCode = $trackingResponse['service_code'] ?? '';
+            $carrierCode = $trackingResponse['carrier_code'] ?? '';
+
+            $data = [
+                'shipFromAddress' => $shipFromAddress,
+                'shipToAddress' => $shipToAddress,
+                'package' => [
+                    'weight' => is_array($firstPackage['weight'] ?? null) ? $firstPackage['weight']['value'] ?? 0 : 0,
+                    'weight_unit' => is_array($firstPackage['weight'] ?? null) ? $firstPackage['weight']['unit'] ?? 'pound' : 'pound',
+                    'length' => is_array($firstPackage['dimensions'] ?? null) ? $firstPackage['dimensions']['length'] ?? null : null,
+                    'width' => is_array($firstPackage['dimensions'] ?? null) ? $firstPackage['dimensions']['width'] ?? null : null,
+                    'height' => is_array($firstPackage['dimensions'] ?? null) ? $firstPackage['dimensions']['height'] ?? null : null,
+                    'dimension_unit' => is_array($firstPackage['dimensions'] ?? null) ? $firstPackage['dimensions']['unit'] ?? 'inch' : 'inch',
+                    'insured_value' => is_array($firstPackage['insured_value'] ?? null) ? $firstPackage['insured_value']['amount'] ?? 0 : 0,
+                ],
+                'customs' => $customs,
+                'tax_identifiers' => $taxIdentifiers,
+                'shipDate' => $shipmentData['ship_date'] ?? null,
+                'serviceCode' => $serviceCode,
+                'carrierCode' => $carrierCode,
+                'carrierPackaging' => [
+                    [
+                        'package_code' => $firstPackage['package_code'] ?? 'package',
+                        'name' => ucfirst(str_replace('_', ' ', $firstPackage['package_code'] ?? 'Package'))
+                    ]
+                ],
+                'selectedPackaging' => $firstPackage['package_code'] ?? 'package',
+                'selectedPackage' => [
+                    'package_code' => $firstPackage['package_code'] ?? 'package',
+                    'name' => ucfirst(str_replace('_', ' ', $firstPackage['package_code'] ?? 'Package'))
+                ],
+                'isInsuranceChecked' => (is_array($firstPackage['insured_value'] ?? null) ? $firstPackage['insured_value']['amount'] ?? 0 : 0) > 0,
+                'end_user_total' => $shipment->end_user_total,
+                'customer_total' => $shipment->customer_total,
+                'origin_total' => $shipment->origin_total,
+                'logoBase64' => $logoBase64,
+                'trackingNumber' => $tracking,
+                'signatureBase64' => $signatureBase64,
+            ];
+
+            $pdf = Pdf::loadView('pdfs.shipment-details', $data)
+                ->setPaper('a4', 'portrait')
+                ->setOption('margin-top', 10)
+                ->setOption('margin-bottom', 10)
+                ->setOption('margin-left', 10)
+                ->setOption('margin-right', 10);
+
+            return response()->streamDownload(
+                fn () => print($pdf->output()),
+                'shipment-details-' . now()->format('Y-m-d-His') . '.pdf'
+            );
+        } catch (\Exception $e) {
+            Log::error('ShipEngine PDF Download Error: ' . $e->getMessage(), [
+                'exception' => $e,
+                'trace' => $e->getTraceAsString()
+            ]);
+            $this->dialog()->error('Failed to generate PDF: ' . $e->getMessage())->send();
+        }
+    }
 
     #[Computed()]
     public function countries()

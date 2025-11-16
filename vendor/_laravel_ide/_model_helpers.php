@@ -661,6 +661,7 @@ namespace App\Models {
     /**
      * App\Models\Shipment
      *
+     * @property string|null $ship_from
      * @property string|null $signature_path
      * @property string|null $voided_at
      * @property float|null $end_user_total
@@ -668,6 +669,7 @@ namespace App\Models {
      * @property float|null $origin_total
      * @property \Illuminate\Support\Carbon|null $updated_at
      * @property \Illuminate\Support\Carbon|null $created_at
+     * @property string|null $request_data
      * @property string $shipment_data
      * @property int|null $customer_id
      * @property int|null $user_id
@@ -678,6 +680,7 @@ namespace App\Models {
      * @method static \Illuminate\Database\Eloquent\Builder<Shipment>|Shipment whereUserId($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Shipment>|Shipment whereCustomerId($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Shipment>|Shipment whereShipmentData($value)
+     * @method static \Illuminate\Database\Eloquent\Builder<Shipment>|Shipment whereRequestData($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Shipment>|Shipment whereCreatedAt($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Shipment>|Shipment whereUpdatedAt($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Shipment>|Shipment whereOriginTotal($value)
@@ -685,6 +688,7 @@ namespace App\Models {
      * @method static \Illuminate\Database\Eloquent\Builder<Shipment>|Shipment whereEndUserTotal($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Shipment>|Shipment whereVoidedAt($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Shipment>|Shipment whereSignaturePath($value)
+     * @method static \Illuminate\Database\Eloquent\Builder<Shipment>|Shipment whereShipFrom($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Shipment>|Shipment newModelQuery()
      * @method static \Illuminate\Database\Eloquent\Builder<Shipment>|Shipment newQuery()
      * @method static \Illuminate\Database\Eloquent\Builder<Shipment>|Shipment query()
