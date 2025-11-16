@@ -47,6 +47,8 @@ class Index extends Component
         'country_code' => 'US',
         'address_residential_indicator' => true
     ];
+    public $shipToAddressCountryFullName = '';
+    public $hsipFromAddressCountryFullName = '';
 
     public $package = [
         'weight' => '',
@@ -154,6 +156,11 @@ class Index extends Component
                 $this->shipDate = \Carbon\Carbon::createFromFormat('Y-m-d', $value)->format('Y-m-d');
             }
         }
+
+        if ($name === 'shipToAddress.country_code') {
+            $country = Country::where('value', $value)->first();
+            $this->shipToAddressCountryFullName = $country ? $country->label : '';
+        }
     }
 
 
@@ -231,6 +238,9 @@ class Index extends Component
 
         // Set a default date for today date
         $this->shipDate = now()->format('Y-m-d');
+
+        $country = Country::where('value', $this->shipToAddress['country_code'])->first();
+        $this->shipToAddressCountryFullName = $country ? $country->label : '';
     }
 
     public function setDefaultSelectedPackage()
@@ -548,9 +558,11 @@ class Index extends Component
             }
 
             // Store the request data for later use
-            $this->lastRequestData = $shipmentData;
 
             $response = $shipEngine->getRates($shipmentData);
+            // store the $shipToAddressCountryFullName in the $shipmentData
+            $shipmentData['ship_to_address_country_full_name'] = $this->shipToAddressCountryFullName;
+            $this->lastRequestData = $shipmentData;
 
             if ($response['rate_response']['status'] == 'error') {
                 $this->dialog()->error('Error getting rates: ' . ($response['rate_response']['errors'][0]['message'] ?? 'Unknown error'))->send();
@@ -1016,7 +1028,7 @@ class Index extends Component
     {
         try {
             $shipment = $this->lastCreatedShipment;
-            
+
             if (!$shipment) {
                 Log::error('No shipment data available for PDF download');
                 $this->dialog()->error('Shipment data not available.')->send();
@@ -1032,7 +1044,7 @@ class Index extends Component
                 // Fallback to response data for older records
                 $shipmentData = json_decode($shipment->shipment_data, true);
             }
-            
+
             if (!is_array($shipmentData)) {
                 Log::error('Invalid shipment_data: ' . ($shipment->shipment_data ?? $shipment->request_data));
                 $this->dialog()->error('Invalid shipment data.')->send();
@@ -1045,7 +1057,7 @@ class Index extends Component
 
             $logoPath = public_path('assets/images/logo-black.png');
             $logoBase64 = '';
-            
+
             if (file_exists($logoPath)) {
                 $logoBase64 = 'data:image/png;base64,' . base64_encode(file_get_contents($logoPath));
             }
@@ -1054,7 +1066,7 @@ class Index extends Component
             if ($shipment->signature_path) {
                 $signatureFilePath = $shipment->signature_path;
                 $fullSignaturePath = $signatureFilePath;
-                
+
                 // Handle different path formats - signature_path stored as "storage/signatures/2025/11/16/uuid.png"
                 // Files are actually in storage/app/public/signatures/
                 if (strpos($signatureFilePath, 'storage/') === 0) {
@@ -1068,7 +1080,7 @@ class Index extends Component
                     // Assume it's relative to storage/app/public
                     $fullSignaturePath = storage_path('app/public/' . $signatureFilePath);
                 }
-                
+
                 if (file_exists($fullSignaturePath)) {
                     $signatureBase64 = 'data:image/png;base64,' . base64_encode(file_get_contents($fullSignaturePath));
                 } else {
@@ -1137,7 +1149,7 @@ class Index extends Component
                 ->setOption('margin-right', 10);
 
             return response()->streamDownload(
-                fn () => print($pdf->output()),
+                fn() => print($pdf->output()),
                 'shipment-details-' . now()->format('Y-m-d-His') . '.pdf'
             );
         } catch (\Exception $e) {

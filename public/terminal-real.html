@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stripe S700 Terminal - Real Hardware</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        .mode-badge {
+            display: inline-block;
+            background: #28a745;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+        .step {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+        }
+        .step h3 {
+            margin: 0 0 10px 0;
+            color: #555;
+        }
+        .step p {
+            margin: 10px 0;
+            color: #666;
+            font-size: 13px;
+        }
+        button {
+            background: #6772e5;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #5469d4;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .loading {
+            opacity: 0.6;
+        }
+        input, select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-right: 10px;
+            font-size: 14px;
+        }
+        input[type="number"] {
+            width: 150px;
+        }
+        input[type="text"] {
+            width: 250px;
+        }
+        select {
+            width: 200px;
+        }
+        .input-group {
+            margin: 10px 0;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .log {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 4px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .log-entry {
+            margin-bottom: 10px;
+            padding: 10px;
+            background: white;
+            border-left: 3px solid #6772e5;
+            font-size: 13px;
+        }
+        .success {
+            border-left-color: #28a745;
+        }
+        .error {
+            border-left-color: #dc3545;
+        }
+        .warning {
+            border-left-color: #ffc107;
+        }
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .info-box h4 {
+            margin: 0 0 10px 0;
+            color: #1976D2;
+        }
+        .info-box ul {
+            margin: 5px 0;
+            padding-left: 20px;
+        }
+        .info-box li {
+            margin: 5px 0;
+            color: #555;
+        }
+        .waiting-indicator {
+            display: none;
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .waiting-indicator.active {
+            display: block;
+        }
+        .waiting-indicator .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #ffc107;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>🔌 Stripe S700 Terminal <span class="mode-badge">REAL HARDWARE</span></h2>
+        <p class="subtitle">Connect and process payments with your physical S700 reader</p>
+        
+        <div class="info-box">
+            <h4>📋 Before You Start:</h4>
+            <ul>
+                <li>Ensure your S700 reader is powered on and connected to the internet</li>
+                <li>Have your reader's registration code ready (found on the reader screen)</li>
+                <li>The reader will display payment amount and prompt customer to tap/insert card</li>
+                <li>No simulation needed - real card transactions only</li>
+            </ul>
+        </div>
+
+        <div class="step">
+            <h3>Step 1: Select Existing Reader</h3>
+            <p>Choose from your already connected readers.</p>
+            <button id="load-readers" onclick="loadReaders()">Load My Readers</button>
+            <div id="readers-list" style="margin-top: 15px; display: none;">
+                <div class="input-group">
+                    <label>Available Readers:</label>
+                    <select id="reader-select" style="width: 100%; padding: 10px;">
+                        <option value="">-- Select a reader --</option>
+                    </select>
+                </div>
+                <button id="select-reader" onclick="selectReader()" disabled style="margin-top: 10px;">Use This Reader</button>
+            </div>
+        </div>
+
+        <div class="step" style="opacity: 0.6;">
+            <h3>Step 2: Or Register New Reader (Optional)</h3>
+            <p>Only if you need to register a new reader.</p>
+            <div class="input-group">
+                <label>Location Name:</label>
+                <input type="text" id="location-name" value="Main Store" placeholder="e.g., Main Store, Warehouse">
+            </div>
+            <button id="create-location" onclick="createLocation()">Create Location</button>
+            <div id="register-section" style="margin-top: 15px; display: none;">
+                <div class="input-group">
+                    <label>Registration Code:</label>
+                    <input type="text" id="registration-code" placeholder="e.g., CLEVER-GINGER-TIGER" style="width: 300px;">
+                </div>
+                <div class="input-group">
+                    <label>Reader Label (Optional):</label>
+                    <input type="text" id="reader-label" value="Front Desk S700" placeholder="e.g., Front Desk S700">
+                </div>
+                <button id="register-reader" onclick="registerReader()">Register New Reader</button>
+            </div>
+        </div>
+
+        <div class="step">
+            <h3>Step 3: Process Payment</h3>
+            <p>Enter the amount and process payment. The reader will display the amount and prompt the customer.</p>
+            <div class="input-group">
+                <label>Amount (in cents):</label>
+                <input type="number" id="amount" value="2000" placeholder="Amount in cents" min="50">
+                <span style="color: #666; font-size: 13px;">($<span id="amount-display">20.00</span>)</span>
+            </div>
+            <button id="process-payment" onclick="processPayment()" disabled>Process Payment</button>
+            
+            <div id="waiting-reader" class="waiting-indicator">
+                <div class="spinner"></div>
+                <strong>Waiting for customer to present card on the reader...</strong>
+                <p style="margin: 10px 0 0 0; font-size: 13px; color: #666;">The S700 reader is displaying the payment amount</p>
+            </div>
+        </div>
+
+        <div class="step">
+            <h3>Step 4: Manual Capture (Only if needed)</h3>
+            <p>Payment will auto-capture. Use this only if manual capture is required.</p>
+            <button id="capture-payment" onclick="capturePayment()" disabled>Capture Payment Manually</button>
+        </div>
+
+        <div class="step">
+            <h3>Step 5: Cancel Payment (Optional)</h3>
+            <p>Cancel the current payment if needed before capture.</p>
+            <button id="cancel-payment" onclick="cancelPayment()" disabled style="background: #dc3545;">Cancel Payment</button>
+        </div>
+
+        <div class="log" id="logs">
+            <strong>Activity Log:</strong>
+        </div>
+    </div>
+
+    <script>
+        let locationId = null;
+        let readerId = null;
+        let paymentIntentId = null;
+        let pollInterval = null;
+        let availableReaders = [];
+
+        // Update amount display
+        document.getElementById('amount').addEventListener('input', function() {
+            const amount = parseFloat(this.value) / 100;
+            document.getElementById('amount-display').textContent = amount.toFixed(2);
+        });
+
+        // Enable select button when reader is chosen
+        document.getElementById('reader-select').addEventListener('change', function() {
+            document.getElementById('select-reader').disabled = !this.value;
+        });
+
+        async function loadReaders() {
+            const btn = document.getElementById('load-readers');
+            btn.disabled = true;
+            btn.classList.add('loading');
+            
+            try {
+                const response = await fetch('/api/terminal/list-readers');
+                const data = await response.json();
+                
+                if (data.error) {
+                    log('❌ Error loading readers: ' + data.error, 'error');
+                } else {
+                    availableReaders = data.data;
+                    const select = document.getElementById('reader-select');
+                    select.innerHTML = '<option value="">-- Select a reader --</option>';
+                    
+                    if (availableReaders.length === 0) {
+                        log('ℹ️ No readers found. Please register a new reader.', 'warning');
+                        document.getElementById('create-location').disabled = false;
+                    } else {
+                        availableReaders.forEach(reader => {
+                            const option = document.createElement('option');
+                            option.value = reader.id;
+                            option.textContent = `${reader.label || 'Unnamed'} (${reader.device_type}) - ${reader.serial_number} - ${reader.status}`;
+                            select.appendChild(option);
+                        });
+                        log('✅ Found ' + availableReaders.length + ' reader(s)', 'success');
+                        document.getElementById('readers-list').style.display = 'block';
+                    }
+                }
+            } catch (error) {
+                log('❌ Error: ' + error.message, 'error');
+            }
+            
+            btn.classList.remove('loading');
+        }
+
+        async function selectReader() {
+            const selectedId = document.getElementById('reader-select').value;
+            if (!selectedId) return;
+            
+            const reader = availableReaders.find(r => r.id === selectedId);
+            if (!reader) {
+                log('❌ Reader not found', 'error');
+                return;
+            }
+            
+            readerId = reader.id;
+            log('✅ Selected reader: ' + (reader.label || 'Unnamed'), 'success');
+            log('📱 Serial: ' + reader.serial_number + ' | Status: ' + reader.status, 'info');
+            
+            if (reader.status === 'online') {
+                log('🟢 Reader is online and ready!', 'success');
+                document.getElementById('process-payment').disabled = false;
+            } else {
+                log('⚠️ Reader status: ' + reader.status + '. May not be ready for payments.', 'warning');
+            }
+        }
+
+        function log(message, type = 'info') {
+            const logs = document.getElementById('logs');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.innerHTML = `<small>${new Date().toLocaleTimeString()}</small><br>${message}`;
+            logs.appendChild(entry);
+            logs.scrollTop = logs.scrollHeight;
+        }
+
+        async function createLocation() {
+            const btn = document.getElementById('create-location');
+            const locationName = document.getElementById('location-name').value;
+            
+            if (!locationName.trim()) {
+                log('❌ Please enter a location name', 'error');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.classList.add('loading');
+            
+            try {
+                const response = await fetch('/api/terminal/create-location', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await response.json();
+                
+                if (data.error) {
+                    log('❌ Error creating location: ' + data.error, 'error');
+                } else {
+                    locationId = data.id;
+                    log('✅ Location created: ' + data.display_name + ' (ID: ' + data.id + ')', 'success');
+                    document.getElementById('register-section').style.display = 'block';
+                }
+            } catch (error) {
+                log('❌ Error: ' + error.message, 'error');
+            }
+            
+            btn.classList.remove('loading');
+        }
+
+        async function registerReader() {
+            const btn = document.getElementById('register-reader');
+            const registrationCode = document.getElementById('registration-code').value;
+            const readerLabel = document.getElementById('reader-label').value;
+            
+            if (!registrationCode.trim()) {
+                log('❌ Please enter the registration code from your S700 reader', 'error');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.classList.add('loading');
+            
+            try {
+                const response = await fetch('/api/terminal/register-reader', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        location_id: locationId,
+                        registration_code: registrationCode,
+                        label: readerLabel || 'S700 Reader'
+                    })
+                });
+                const data = await response.json();
+                
+                if (data.error) {
+                    log('❌ Error registering reader: ' + data.error, 'error');
+                    btn.disabled = false;
+                } else {
+                    readerId = data.id;
+                    log('✅ Reader registered successfully!', 'success');
+                    log('📱 Reader: ' + data.label + ' (ID: ' + data.id + ')', 'success');
+                    document.getElementById('process-payment').disabled = false;
+                }
+            } catch (error) {
+                log('❌ Error: ' + error.message, 'error');
+                btn.disabled = false;
+            }
+            
+            btn.classList.remove('loading');
+        }
+
+        async function processPayment() {
+            const btn = document.getElementById('process-payment');
+            const amount = document.getElementById('amount').value;
+            
+            if (amount < 50) {
+                log('❌ Minimum amount is 50 cents', 'error');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.classList.add('loading');
+            
+            try {
+                // Create Payment Intent
+                const intentResponse = await fetch('/api/terminal/create-payment-intent', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ amount: parseInt(amount) })
+                });
+                const intentData = await intentResponse.json();
+                
+                if (intentData.error) {
+                    log('❌ Error creating payment intent: ' + intentData.error, 'error');
+                    btn.classList.remove('loading');
+                    btn.disabled = false;
+                    return;
+                }
+                
+                paymentIntentId = intentData.id;
+                log('✅ Payment Intent created: $' + (intentData.amount / 100).toFixed(2), 'success');
+                
+                // Process Payment on Reader
+                log('📤 Sending payment to reader...', 'info');
+                const processResponse = await fetch('/api/terminal/process-payment', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        reader_id: readerId,
+                        payment_intent_id: paymentIntentId
+                    })
+                });
+                const processData = await processResponse.json();
+                
+                if (processData.error) {
+                    log('❌ Error processing payment: ' + processData.error, 'error');
+                    btn.disabled = false;
+                } else {
+                    log('✅ Payment sent to reader! Amount is now displayed on S700 screen.', 'success');
+                    log('⏳ Waiting for customer to tap or insert card...', 'warning');
+                    document.getElementById('waiting-reader').classList.add('active');
+                    document.getElementById('cancel-payment').disabled = false;
+                    
+                    // Start polling for payment status
+                    startPolling();
+                }
+            } catch (error) {
+                log('❌ Error: ' + error.message, 'error');
+                btn.disabled = false;
+            }
+            
+            btn.classList.remove('loading');
+        }
+
+        function startPolling() {
+            if (pollInterval) clearInterval(pollInterval);
+            
+            pollInterval = setInterval(async () => {
+                try {
+                    const response = await fetch('/api/terminal/check-payment-status', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ payment_intent_id: paymentIntentId })
+                    });
+                    const data = await response.json();
+                    
+                    if (data.status === 'succeeded') {
+                        clearInterval(pollInterval);
+                        document.getElementById('waiting-reader').classList.remove('active');
+                        log('✅ Card detected and authorized!', 'success');
+                        log('🎉 PAYMENT AUTO-CAPTURED!', 'success');
+                        log('💰 Amount: $' + (data.amount / 100).toFixed(2) + ' | Status: ' + data.status, 'success');
+                        log('🔖 Payment Intent ID: ' + data.id, 'success');
+                        document.getElementById('cancel-payment').disabled = true;
+                        
+                        // Reset for next payment
+                        setTimeout(() => {
+                            document.getElementById('process-payment').disabled = false;
+                            paymentIntentId = null;
+                        }, 2000);
+                    } else if (data.status === 'requires_capture') {
+                        clearInterval(pollInterval);
+                        document.getElementById('waiting-reader').classList.remove('active');
+                        log('✅ Card detected and authorized!', 'success');
+                        document.getElementById('capture-payment').disabled = false;
+                        document.getElementById('cancel-payment').disabled = true;
+                    } else if (data.status === 'canceled' || data.status === 'failed') {
+                        clearInterval(pollInterval);
+                        document.getElementById('waiting-reader').classList.remove('active');
+                        log('❌ Payment ' + data.status, 'error');
+                        document.getElementById('process-payment').disabled = false;
+                    }
+                } catch (error) {
+                    console.error('Polling error:', error);
+                }
+            }, 2000); // Poll every 2 seconds
+        }
+
+        async function capturePayment() {
+            const btn = document.getElementById('capture-payment');
+            btn.disabled = true;
+            btn.classList.add('loading');
+            
+            try {
+                const response = await fetch('/api/terminal/capture-payment-intent', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ payment_intent_id: paymentIntentId })
+                });
+                const data = await response.json();
+                
+                if (data.error) {
+                    log('❌ Error capturing payment: ' + data.error, 'error');
+                    btn.disabled = false;
+                } else {
+                    log('🎉 PAYMENT SUCCESS!', 'success');
+                    log('💰 Amount: $' + (data.amount / 100).toFixed(2) + ' | Status: ' + data.status, 'success');
+                    log('🔖 Payment Intent ID: ' + data.id, 'success');
+                    
+                    // Reset for next payment
+                    setTimeout(() => {
+                        document.getElementById('process-payment').disabled = false;
+                        paymentIntentId = null;
+                    }, 2000);
+                }
+            } catch (error) {
+                log('❌ Error: ' + error.message, 'error');
+                btn.disabled = false;
+            }
+            
+            btn.classList.remove('loading');
+        }
+
+        async function cancelPayment() {
+            const btn = document.getElementById('cancel-payment');
+            btn.disabled = true;
+            btn.classList.add('loading');
+            
+            try {
+                const response = await fetch('/api/terminal/cancel-payment', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        reader_id: readerId,
+                        payment_intent_id: paymentIntentId 
+                    })
+                });
+                const data = await response.json();
+                
+                if (pollInterval) clearInterval(pollInterval);
+                document.getElementById('waiting-reader').classList.remove('active');
+                
+                if (data.error) {
+                    log('❌ Error canceling payment: ' + data.error, 'error');
+                } else {
+                    log('🚫 Payment canceled', 'warning');
+                    document.getElementById('process-payment').disabled = false;
+                    paymentIntentId = null;
+                }
+            } catch (error) {
+                log('❌ Error: ' + error.message, 'error');
+            }
+            
+            btn.classList.remove('loading');
+        }
+
+        // Initialize
+        log('Ready to connect to your S700 reader. Click "Load My Readers" to see your connected devices.');
+    </script>
+</body>
+</html>

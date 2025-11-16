@@ -54,10 +54,12 @@ class Index extends Component
             foreach ($filteredLabels as &$label) {
                 $shipment = $authUser->shipments()->where('label_id', $label['label_id'])->first();
                 if ($shipment) {
+                    $requestData = json_decode($shipment->request_data, true);
                     $label['origin_total'] = $shipment->origin_total;
                     $label['customer_total'] = $shipment->customer_total;
                     $label['end_user_total'] = $shipment->end_user_total;
                     $label['signature'] = $shipment->signature_path;
+                    $label['ship_to_address_country_full_name'] = $requestData['ship_to_address_country_full_name'] ?? null;
                 } else {
                     $label['origin_total'] = null;
                     $label['customer_total'] = null;
@@ -265,6 +267,7 @@ class Index extends Component
                 'logoBase64' => $logoBase64,
                 'trackingNumber' => $tracking,
                 'signatureBase64' => $signatureBase64,
+                'ship_to_address_country_full_name' => $requestData['ship_to_address_country_full_name'] ?? ($shipToAddress['country_code'] ?? ''),
             ];
 
             $pdf = Pdf::loadView('pdfs.shipment-details', $data)

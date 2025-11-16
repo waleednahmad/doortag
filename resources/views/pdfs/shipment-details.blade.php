@@ -361,16 +361,12 @@
                                 @endif
                             </div>
                             <div class="address-line">
-                                {{ $shipFromAddress['city_locality'] ?? '' ? $shipFromAddress['city_locality'] . ', ' : '' }}
+                                {{ $shipFromAddress['city_locality'] ? $shipFromAddress['city_locality'] . ', ' : '' }}
                                 @if (!empty($shipFromAddress['state_province']))
-                                    {{ $shipFromAddress['state_province'] ?? '' }}
+                                    {{ $shipFromAddress['state_province'] ? $shipFromAddress['state_province'] : '' }}
                                 @endif
-                                {{ $shipFromAddress['postal_code'] ?? '' ? ' ' . $shipFromAddress['postal_code'] : '' }}
-                                @if (!empty($shipFromAddress['country_code']))
-                                    , {{ $shipFromAddress['country_code'] }}
-                                @else
-                                    , United States
-                                @endif
+                                {{ $shipFromAddress['postal_code'] ? ' ' . $shipFromAddress['postal_code'] : '' }},
+                                United States
                             </div>
                         </div>
                     </div>
@@ -427,23 +423,19 @@
                         <div class="address-line">
                             {{ $shipToAddress['address_line1'] ?? 'N/A' }}
                             @if (!empty($shipToAddress['address_line2']))
-                                , {{ $shipToAddress['address_line2'] }}
+                                {{ $shipToAddress['address_line2'] }}
                             @endif
                         </div>
                         <div class="address-line">
-                            {{ $shipToAddress['city_locality'] ?? '' ? $shipToAddress['city_locality'] . ', ' : '' }}
+                            {{ $shipToAddress['city_locality'] ? $shipToAddress['city_locality'] . ', ' : '' }}
                             @if (!empty($shipToAddress['state_province']))
-                                {{ $shipToAddress['state_province'] ?? '' }}
+                                {{ $shipToAddress['state_province'] ? $shipToAddress['state_province'] : '' }}
                             @endif
                             @if (!empty($shipToAddress['postal_code']))
-                                {{ $shipToAddress['postal_code'] ?? '' }}
+                                {{ $shipToAddress['postal_code'] }},
+                                {{ $ship_to_address_country_full_name }}
                             @endif
                         </div>
-                        @if (!empty($shipToAddress['country_code']))
-                            <div class="address-line">
-                                {{ $shipToAddress['country_code'] }}
-                            </div>
-                        @endif
                     </div>
                 </div>
 

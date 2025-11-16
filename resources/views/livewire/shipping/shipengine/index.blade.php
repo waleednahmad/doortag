@@ -562,14 +562,14 @@
                 <!-- Ship To Details Section -->
                 <div class="mt-4 sm:mt-6">
                     <h1 class="text-[30px] font-[700] text-gray-900 dark:text-white leading-[1.1] mb-[12px]">
-                        Shipping to {{ $shipToAddress['country_code'] ?? 'US' }}
+                        Shipping to {{ $shipToAddressCountryFullName ?? 'US' }}
                     </h1>
                     <div class="flex items-center gap-2 mb-[48px]">
                         <p class="text-[17px] text-gray-700 dark:text-gray-300 leading-[1.42857143] font-[500]">
-                            {{ $shipToAddress['postal_code'] }} {{ $shipToAddress['country_code'] ?? 'US' }}
+                            {{ $shipToAddress['postal_code'] }} {{ $shipToAddressCountryFullName ?? 'US' }}
                         </p>
                         <i class="fas fa-paste text-[1em] text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition"
-                            onclick="navigator.clipboard.writeText('{{ $shipToAddress['postal_code'] }} {{ $shipToAddress['country_code'] ?? 'US' }}')"
+                            onclick="navigator.clipboard.writeText('{{ $shipToAddress['postal_code'] }} {{ $shipToAddressCountryFullName ?? 'US' }}')"
                             title="Copy to clipboard"></i>
                     </div>
                 </div>
@@ -1006,7 +1006,7 @@
                                                         @endif
                                                         @if (!empty($shipToAddress['postal_code']))
                                                             {{ $shipToAddress['postal_code'] }},
-                                                            {{ $shipToAddress['country_code'] }}
+                                                            {{ $shipToAddressCountryFullName ?? 'US' }}
                                                         @endif
                                                     </p>
                                                 </div>

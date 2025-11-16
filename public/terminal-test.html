@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stripe S700 Terminal Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .step {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+        }
+        .step h3 {
+            margin: 0 0 10px 0;
+            color: #555;
+        }
+        button {
+            background: #6772e5;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #5469d4;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .loading {
+            opacity: 0.6;
+        }
+        input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 200px;
+            margin-right: 10px;
+        }
+        .log {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 4px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .log-entry {
+            margin-bottom: 10px;
+            padding: 10px;
+            background: white;
+            border-left: 3px solid #6772e5;
+        }
+        .success {
+            border-left-color: #28a745;
+        }
+        .error {
+            border-left-color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>🔌 Stripe S700 Terminal Test <span style="background: #6772e5; color: white; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; margin-left: 10px;">SIMULATOR</span></h2>
+        <p style="color: #666; margin-bottom: 30px; font-size: 14px;">Testing mode with simulated reader - No physical hardware required</p>
+        
+        <div style="background: #fff3cd; border: 1px solid #ffc107; padding: 15px; margin-bottom: 20px; border-radius: 4px;">
+            <strong>ℹ️ Simulator Mode:</strong> This page uses a simulated reader for testing. 
+            <a href="/terminal-real.html" style="color: #0066cc; text-decoration: underline;">Click here for real hardware integration</a>
+        </div>
+        
+        <div class="step">
+            <h3>Step 1: Create Location</h3>
+            <button id="create-location" onclick="createLocation()">Create Location</button>
+        </div>
+
+        <div class="step">
+            <h3>Step 2: Register Reader</h3>
+            <button id="register-reader" onclick="registerReader()" disabled>Register S700 Reader</button>
+        </div>
+
+        <div class="step">
+            <h3>Step 3: Create & Process Payment</h3>
+            <input type="number" id="amount" value="2000" placeholder="Amount in cents">
+            <button id="process-payment" onclick="processPayment()" disabled>Process Payment</button>
+        </div>
+
+        <div class="step">
+            <h3>Step 4: Simulate Card Presentation</h3>
+            <input type="text" id="card-number" value="4242424242424242" placeholder="Card number">
+            <button id="simulate-payment" onclick="simulatePayment()" disabled>Simulate Payment</button>
+        </div>
+
+        <div class="step">
+            <h3>Step 5: Capture Payment</h3>
+            <button id="capture-payment" onclick="capturePayment()" disabled>Capture Payment</button>
+        </div>
+
+        <div class="log" id="logs">
+            <strong>Activity Log:</strong>
+        </div>
+    </div>
+
+    <script>
+        let locationId = null;
+        let readerId = null;
+        let paymentIntentId = null;
+
+        function log(message, type = 'info') {
+            const logs = document.getElementById('logs');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.innerHTML = `<small>${new Date().toLocaleTimeString()}</small><br>${message}`;
+            logs.appendChild(entry);
+            logs.scrollTop = logs.scrollHeight;
+        }
+
+        async function createLocation() {
+            const btn = document.getElementById('create-location');
+            btn.disabled = true;
+            btn.classList.add('loading');
+            
+            try {
+                const response = await fetch('/api/terminal/create-location', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await response.json();
+                
+                if (data.error) {
+                    log('❌ Error creating location: ' + data.error, 'error');
+                } else {
+                    locationId = data.id;
+                    log('✅ Location created: ' + data.id, 'success');
+                    document.getElementById('register-reader').disabled = false;
+                }
+            } catch (error) {
+                log('❌ Error: ' + error.message, 'error');
+            }
+            
+            btn.classList.remove('loading');
+        }
+
+        async function registerReader() {
+            const btn = document.getElementById('register-reader');
+            btn.disabled = true;
+            btn.classList.add('loading');
+            
+            try {
+                const response = await fetch('/api/terminal/register-reader', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ location_id: locationId })
+                });
+                const data = await response.json();
+                
+                if (data.error) {
+                    log('❌ Error registering reader: ' + data.error, 'error');
+                } else {
+                    readerId = data.id;
+                    log('✅ Reader registered: ' + data.label + ' (' + data.id + ')', 'success');
+                    document.getElementById('process-payment').disabled = false;
+                }
+            } catch (error) {
+                log('❌ Error: ' + error.message, 'error');
+            }
+            
+            btn.classList.remove('loading');
+        }
+
+        async function processPayment() {
+            const btn = document.getElementById('process-payment');
+            btn.disabled = true;
+            btn.classList.add('loading');
+            
+            try {
+                // Create Payment Intent
+                const amount = document.getElementById('amount').value;
+                const intentResponse = await fetch('/api/terminal/create-payment-intent', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ amount: parseInt(amount) })
+                });
+                const intentData = await intentResponse.json();
+                
+                if (intentData.error) {
+                    log('❌ Error creating payment intent: ' + intentData.error, 'error');
+                    btn.classList.remove('loading');
+                    return;
+                }
+                
+                paymentIntentId = intentData.id;
+                log('✅ Payment Intent created: $' + (intentData.amount / 100).toFixed(2), 'success');
+                
+                // Process Payment on Reader
+                const processResponse = await fetch('/api/terminal/process-payment', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        reader_id: readerId,
+                        payment_intent_id: paymentIntentId
+                    })
+                });
+                const processData = await processResponse.json();
+                
+                if (processData.error) {
+                    log('❌ Error processing payment: ' + processData.error, 'error');
+                } else {
+                    log('✅ Payment processing started on reader', 'success');
+                    document.getElementById('simulate-payment').disabled = false;
+                }
+            } catch (error) {
+                log('❌ Error: ' + error.message, 'error');
+            }
+            
+            btn.classList.remove('loading');
+        }
+
+        async function simulatePayment() {
+            const btn = document.getElementById('simulate-payment');
+            btn.disabled = true;
+            btn.classList.add('loading');
+            
+            try {
+                const cardNumber = document.getElementById('card-number').value;
+                const response = await fetch('/api/terminal/simulate-payment', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        reader_id: readerId,
+                        card_number: cardNumber
+                    })
+                });
+                const data = await response.json();
+                
+                if (data.error) {
+                    log('❌ Error simulating payment: ' + data.error, 'error');
+                } else {
+                    log('✅ Card presented successfully', 'success');
+                    document.getElementById('capture-payment').disabled = false;
+                }
+            } catch (error) {
+                log('❌ Error: ' + error.message, 'error');
+            }
+            
+            btn.classList.remove('loading');
+        }
+
+        async function capturePayment() {
+            const btn = document.getElementById('capture-payment');
+            btn.disabled = true;
+            btn.classList.add('loading');
+            
+            try {
+                const response = await fetch('/api/terminal/capture-payment-intent', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ payment_intent_id: paymentIntentId })
+                });
+                const data = await response.json();
+                
+                if (data.error) {
+                    log('❌ Error capturing payment: ' + data.error, 'error');
+                } else {
+                    log('🎉 PAYMENT SUCCESS! Amount: $' + (data.amount / 100).toFixed(2) + ' | Status: ' + data.status, 'success');
+                    log('Payment Intent ID: ' + data.id, 'success');
+                }
+            } catch (error) {
+                log('❌ Error: ' + error.message, 'error');
+            }
+            
+            btn.classList.remove('loading');
+        }
+
+        // Initialize
+        log('Ready to start. Click "Create Location" to begin.');
+    </script>
+</body>
+</html>
