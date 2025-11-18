@@ -138,6 +138,8 @@ class ShipmentController
                 'paymentNumber' => $shipment->stripe_payment_intent_id,
                 'stripe_amount_paid' => $shipment->stripe_amount_paid,
                 'packaging_amount' => $shipment->packaging_amount,
+                'carrier_delivery_days' => $shipment->carrier_delivery_days,
+                'estimated_delivery_date' => $shipment->estimated_delivery_date,
             ];
 
             return view('pdfs.shipment-details', $data);

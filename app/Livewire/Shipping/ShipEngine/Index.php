@@ -676,6 +676,7 @@ class Index extends Component
             return;
         }
         $this->selectedRate = collect($this->rates)->firstWhere('rate_id', $rateId);
+        info($this->selectedRate);
         $this->toast()->info('Selected rate: ' . ($this->selectedRate['service_type'] ?? 'N/A'))->send();
 
         $shippingAmount = (float) $this->selectedRate['shipping_amount']['amount'];
@@ -1069,7 +1070,7 @@ class Index extends Component
             if ($response['status'] == 'completed') {
                 // Save signature as PNG file
                 if ($this->signature) {
-                    $signaturePath = $this->saveSignature($this->signature);
+                    $signaturePath = "storage/" . $this->saveSignature($this->signature);
                 } else {
                     $signaturePath = null;
                 }
@@ -1089,7 +1090,7 @@ class Index extends Component
                     'shipment_data' => json_encode($response),
                     'request_data' => json_encode($this->lastRequestData),
                     'ship_from' => json_encode($response['ship_from'] ?? []),
-                    'signature_path' => "storage/" . $signaturePath,
+                    'signature_path' =>  $signaturePath,
                     'origin_total' => $this->origin_total,
                     'customer_total' => $this->customer_total ?? null,
                     'end_user_total' => $this->end_user_total ?? null,
@@ -1101,6 +1102,8 @@ class Index extends Component
                     'stripe_payment_intent_id' => $this->paymentIntentId,
                     'stripe_amount_paid' => $paymentIntentData['amount'] / 100,
                     'stripe_payment_status' => $paymentIntentData['status'],
+                    'carrier_delivery_days' => $this->selectedRate['carrier_delivery_days'] ?? null,
+                    'estimated_delivery_date' => $this->selectedRate['estimated_delivery_date'] ?? null,
                 ]);
 
                 // Store the shipment record for downloadPDF to use

@@ -175,10 +175,34 @@
 
                                 <!-- Right: Amount and Actions -->
                                 <div class="flex flex-col sm:flex-row sm:items-center sm:gap-4 lg:justify-end">
+                                    @if (!empty($label['estimated_delivery_date']))
+                                        <div class="mb-2 sm:mb-0">
+                                            <div class="text-left">
+                                                <p class="text-xs text-gray-500 dark:text-gray-400">Estimated Delivery
+                                                </p>
+                                                <p class="text-lg font-bold text-gray-900 dark:text-white">
+                                                    {{ \Carbon\Carbon::parse($label['estimated_delivery_date'])->format('l m/d') }}
+                                                    by
+                                                    {{ \Carbon\Carbon::parse($label['estimated_delivery_date'])->format('h:i A') }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        @elseif (!empty($label['carrier_delivery_days']))
+                                        <div class="mb-2 sm:mb-0">
+                                            <div class="text-left">
+                                                <p class="text-xs text-gray-500 dark:text-gray-400">Estimated Delivery
+                                                </p>
+                                                <p class="text-lg font-bold text-gray-900 dark:text-white">
+                                                    {{ $label['carrier_delivery_days'] }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    @endif
+
                                     <!-- Amount Display -->
                                     @if (!empty($cost))
                                         <div class="mb-2 sm:mb-0">
-                                            <div class="text-right">
+                                            <div class="text-left">
                                                 <p class="text-xs text-gray-500 dark:text-gray-400">Total Amount</p>
                                                 <p class="text-2xl font-bold text-gray-900 dark:text-white">
                                                     ${{ number_format($label['stripe_amount_paid'] ?? 0, 2) }}
@@ -186,6 +210,7 @@
                                             </div>
                                         </div>
                                     @endif
+
 
                                     <!-- Collapse Toggle Button -->
                                     <button @click="open = !open"
@@ -271,12 +296,13 @@
                                         <div class="text-gray-600 dark:text-gray-400 space-y-1">
                                             <div class="text-xs text-gray-500 dark:text-gray-500">Name</div>
                                             <p class="font-medium">{{ $shipTo['name'] ?? 'N/A' }}</p>
-                                            
+
                                             @if (!empty($shipTo['company_name']))
-                                                <div class="text-xs text-gray-500 dark:text-gray-500 mt-2">Company</div>
+                                                <div class="text-xs text-gray-500 dark:text-gray-500 mt-2">Company
+                                                </div>
                                                 <p>{{ $shipTo['company_name'] }}</p>
                                             @endif
-                                            
+
                                             <div class="text-xs text-gray-500 dark:text-gray-500 mt-2">Address</div>
                                             <p>
                                                 {{ $shipTo['address_line1'] ?? 'N/A' }}
@@ -292,14 +318,15 @@
                                                 {{ $shipTo['postal_code'] ?? '' }},
                                                 {{ $label['ship_to_address_country_full_name'] ?? ($shipTo['country_code'] ?? 'United States') }}
                                             </p>
-                                            
-                                            @if (isset($shipTo['address_residential_indicator']) &&
-                                                    strtolower($shipTo['address_residential_indicator']) === 'yes')
-                                                <span class="inline-block mt-2 px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded">
+
+                                            @if (isset($shipTo['address_residential_indicator']) && strtolower($shipTo['address_residential_indicator']) === 'yes')
+                                                <span
+                                                    class="inline-block mt-2 px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded">
                                                     Residential Address
                                                 </span>
                                             @else
-                                                <span class="inline-block mt-2 px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200 rounded">
+                                                <span
+                                                    class="inline-block mt-2 px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200 rounded">
                                                     Business Address
                                                 </span>
                                             @endif

@@ -344,6 +344,25 @@
                             <td class="tracking-highlight">{{ $trackingNumber }}</td>
                         </tr>
                     @endif
+
+                    @if (!empty($estimated_delivery_date))
+                        <tr>
+                            <td class="muted">Estimated Delivery</td>
+                            <td class="value">
+                                {{ \Carbon\Carbon::parse($estimated_delivery_date)->format('l m/d') }} by
+                                {{ \Carbon\Carbon::parse($estimated_delivery_date)->format('h:i A') }}
+                            </td>
+                        </tr>
+                    @elseif (!empty($carrier_delivery_days))
+                        <tr>
+                            <td class="muted">Estimated Delivery</td>
+                            <td class="value">
+                                {{ $carrier_delivery_days }}
+                            </td>
+                        </tr>
+                    @endif
+
+
                     @if ($selectedRate)
                         <tr>
                             <td class="muted">Carrier / Service</td>
@@ -500,10 +519,7 @@
                         {{ $selectedPackage['name'] ?? 'Package / Box' }}
                     </span>
                 </div>
-                @if (
-                    !empty($package) &&
-                        isset($package['insured_value']) &&
-                        $package['insured_value'] > 100)
+                @if (!empty($package) && isset($package['insured_value']) && $package['insured_value'] > 100)
                     <div>
                         <span class="muted">
                             Declared Value:

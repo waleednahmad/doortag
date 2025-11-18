@@ -800,11 +800,7 @@
                                                             @endif
                                                         </p>
                                                     @endif
-                                                    {{-- @if (isset($rate['zone']))
-                                                        <p class="text-xs sm:text-sm text-blue-600 dark:text-blue-400">
-                                                            Zone: {{ $rate['zone'] }}
-                                                        </p>
-                                                    @endif --}}
+
                                                 </div>
                                             </div>
 
@@ -1138,9 +1134,23 @@
                                                         class="border-t border-indigo-200 dark:border-indigo-700 pt-4">
                                                         <p
                                                             class="text-xs font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider mb-2">
-                                                            Estimated Delivery</p>
+                                                            Estimated Delivery
+                                                        </p>
                                                         <p class="text-base font-medium text-gray-900 dark:text-white">
-                                                            {{ \Carbon\Carbon::parse($selectedRate['estimated_delivery_date'])->format('F d, Y') }}
+                                                            {{ \Carbon\Carbon::parse($selectedRate['estimated_delivery_date'])->format('l m/d') }}
+                                                            by
+                                                            {{ \Carbon\Carbon::parse($selectedRate['estimated_delivery_date'])->format('h:i A') }}
+                                                        </p>
+                                                    </div>
+                                                @elseif (!empty($selectedRate['carrier_delivery_days']))
+                                                    <div
+                                                        class="border-t border-indigo-200 dark:border-indigo-700 pt-4">
+                                                        <p
+                                                            class="text-xs font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider mb-2">
+                                                            Estimated Delivery
+                                                        </p>
+                                                        <p class="text-base font-medium text-gray-900 dark:text-white">
+                                                            {{ $selectedRate['carrier_delivery_days'] }}
                                                         </p>
                                                     </div>
                                                 @endif

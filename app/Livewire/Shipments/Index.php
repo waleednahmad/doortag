@@ -62,6 +62,8 @@ class Index extends Component
                     $label['signature'] = $shipment->signature_path;
                     $label['ship_to_address_country_full_name'] = $requestData['ship_to_address_country_full_name'] ?? null;
                     $label['stripe_amount_paid'] = $shipment->stripe_amount_paid;
+                    $label['carrier_delivery_days'] = $shipment->carrier_delivery_days;
+                    $label['estimated_delivery_date'] = $shipment->estimated_delivery_date;
                 } else {
                     $label['origin_total'] = null;
                     $label['customer_total'] = null;
