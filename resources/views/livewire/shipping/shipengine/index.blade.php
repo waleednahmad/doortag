@@ -1530,11 +1530,6 @@
                                                             Processing Payment...
                                                         @endif
                                                     </h4>
-                                                    <p class="text-yellow-700 dark:text-yellow-200 text-sm">
-                                                        Please present your test card to the S700 reader.
-                                                        <strong>The amount should now be visible on your reader
-                                                            screen.</strong>
-                                                    </p>
                                                     @if ($paymentRetryCount > 0)
                                                         <p class="text-yellow-600 dark:text-yellow-300 text-xs mt-1">
                                                             Previous attempt failed - trying again now

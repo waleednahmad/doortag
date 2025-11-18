@@ -44,36 +44,37 @@ class ShipmentController
                 $logoBase64 = 'data:image/png;base64,' . base64_encode(file_get_contents($logoPath));
             }
 
-            $signatureBase64 = '';
-            if ($shipment->signature_path && file_exists($shipment->signature_path)) {
-                $signaturePath = $shipment->signature_path;
-                $fullSignaturePath = $signaturePath;
+            // $signatureBase64 = '';
+            // if ($shipment->signature_path && file_exists($shipment->signature_path)) {
 
-                // Handle different path formats - signature_path stored as "storage/signatures/2025/11/16/uuid.png"
-                // Files are actually in storage/app/public/signatures/
-                if (strpos($signaturePath, 'storage/') === 0) {
-                    // Remove 'storage/' prefix and look in storage/app/public
-                    $cleanPath = str_replace('storage/', '', $signaturePath);
-                    $fullSignaturePath = storage_path('app/public/' . $cleanPath);
-                } elseif (strpos($signaturePath, 'signatures/') === 0) {
-                    // Path is relative to storage/app/public
-                    $fullSignaturePath = storage_path('app/public/' . $signaturePath);
-                } else {
-                    // Assume it's relative to storage/app/public
-                    $fullSignaturePath = storage_path('app/public/' . $signaturePath);
-                }
+            //     $signaturePath = $shipment->signature_path;
+            //     $fullSignaturePath = $signaturePath;
 
-                if (file_exists($fullSignaturePath)) {
-                    $signatureBase64 = 'data:image/png;base64,' . base64_encode(file_get_contents($fullSignaturePath));
-                } else {
-                    Log::warning('Signature file not found: ' . $fullSignaturePath . ' (original: ' . $signaturePath . ')');
-                }
-            }else {
-                $blankSignaturePath = public_path('assets/images/signature-blank.png');
-                if (file_exists($blankSignaturePath)) {
-                    $signatureBase64 = 'data:image/png;base64,' . base64_encode(file_get_contents($blankSignaturePath));
-                }
-            }
+            //     // Handle different path formats - signature_path stored as "storage/signatures/2025/11/16/uuid.png"
+            //     // Files are actually in storage/app/public/signatures/
+            //     if (strpos($signaturePath, 'storage/') === 0) {
+            //         // Remove 'storage/' prefix and look in storage/app/public
+            //         $cleanPath = str_replace('storage/', '', $signaturePath);
+            //         $fullSignaturePath = storage_path('app/public/' . $cleanPath);
+            //     } elseif (strpos($signaturePath, 'signatures/') === 0) {
+            //         // Path is relative to storage/app/public
+            //         $fullSignaturePath = storage_path('app/public/' . $signaturePath);
+            //     } else {
+            //         // Assume it's relative to storage/app/public
+            //         $fullSignaturePath = storage_path('app/public/' . $signaturePath);
+            //     }
+
+            //     if (file_exists($fullSignaturePath)) {
+            //         $signatureBase64 = 'data:image/png;base64,' . base64_encode(file_get_contents($fullSignaturePath));
+            //     } else {
+            //         Log::warning('Signature file not found: ' . $fullSignaturePath . ' (original: ' . $signaturePath . ')');
+            //     }
+            // }else {
+            //     $blankSignaturePath = public_path('assets/images/signature-blank.png');
+            //     if (file_exists($blankSignaturePath)) {
+            //         $signatureBase64 = 'data:image/png;base64,' . base64_encode(file_get_contents($blankSignaturePath));
+            //     }
+            // }
 
             // Extract shipment details from request data (which has all the data we sent)
             $shipFromAddress = is_array($shipmentData['ship_from'] ?? null) ? $shipmentData['ship_from'] : [];
@@ -131,7 +132,7 @@ class ShipmentController
                 'origin_total' => $shipment->origin_total,
                 'logoBase64' => $logoBase64,
                 'trackingNumber' => $tracking,
-                'signatureBase64' => $signatureBase64,
+                'signatureBase64' => ($shipment->signature_path && file_exists($shipment->signature_path)) ? asset($shipment->signature_path) : asset('assets/images/signature-blank.png'),
                 'ship_to_address_country_full_name' => $requestData['ship_to_address_country_full_name'] ?? ($shipToAddress['country_code'] ?? ''),
                 'orderNumber' => $shipment->id,
                 'paymentNumber' => $shipment->stripe_payment_intent_id,
