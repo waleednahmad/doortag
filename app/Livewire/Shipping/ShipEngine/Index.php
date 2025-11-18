@@ -676,7 +676,6 @@ class Index extends Component
             return;
         }
         $this->selectedRate = collect($this->rates)->firstWhere('rate_id', $rateId);
-        info($this->selectedRate);
         $this->toast()->info('Selected rate: ' . ($this->selectedRate['service_type'] ?? 'N/A'))->send();
 
         $shippingAmount = (float) $this->selectedRate['shipping_amount']['amount'];
