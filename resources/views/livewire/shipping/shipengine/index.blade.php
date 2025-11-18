@@ -1081,7 +1081,7 @@
                                                         <span
                                                             class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300">
                                                             <i class="fas fa-shield-alt mr-1"></i>
-                                                            Insured:
+                                                            Declared Value:
                                                             ${{ number_format($package['insured_value'], 2) }}
                                                         </span>
                                                     </div>

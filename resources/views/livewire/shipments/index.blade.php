@@ -64,7 +64,7 @@
             </div>
 
             <div class="space-y-4">
-                @foreach ($this->labels as $label)
+                @foreach ($this->labels as $index => $label)
                     @php
                         $package = $label['packages'][0] ?? null;
                         $shipTo = $label['ship_to'] ?? [];
@@ -74,34 +74,55 @@
                                 'customer_total' => $label['customer_total'] ?? 0,
                                 'end_user_total' => $label['end_user_total'] ?? 0,
                             ] ?? [];
+                        $isVoided = $label['status'] === 'voided';
+                        $orderNumber = $loop->iteration + $this->perPage * ($this->currentPage - 1);
                     @endphp
 
-                    <div
+                    <div x-data="{ open: false }"
                         class="border rounded-lg overflow-hidden hover:shadow-md transition-all duration-300 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600">
                         <!-- Main Shipment Content -->
-                        <div class="p-4 sm:p-6 cursor-pointer">
+                        <div class="p-4 sm:p-6">
                             <!-- Header Row -->
                             <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-4">
                                 <!-- Left: Shipment Info -->
                                 <div class="flex-1 mb-3 lg:mb-0">
                                     <div class="flex flex-col sm:flex-row sm:items-center sm:gap-4">
-                                        <!-- Tracking Number -->
+                                        <!-- Order Number Counter -->
                                         <div class="mb-2 sm:mb-0">
                                             <span
-                                                class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 cursor-pointer hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
-                                                onclick="copyTrackingNumber('{{ $label['tracking_number'] ?? 'N/A' }}')"
-                                                title="Click to copy tracking number">
-                                                <i class="fas fa-truck mr-2"></i>
-                                                {{ $label['tracking_number'] ?? 'N/A' }}
-                                                <i class="fas fa-copy ml-2 text-xs opacity-70"></i>
+                                                class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200">
+                                                <i class="fas fa-hashtag mr-2"></i>
+                                                {{ $orderNumber }}
                                             </span>
                                         </div>
+
+                                        <!-- Database ID -->
+                                        <div class="mb-2 sm:mb-0">
+                                            <span
+                                                class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200">
+                                                <i class="fas fa-database mr-2"></i>
+                                                Order: {{ $label['id'] ?? 'N/A' }}
+                                            </span>
+                                        </div>
+
+                                        <!-- Tracking Number (Hidden if voided) -->
+                                        @if (!$isVoided)
+                                            <div class="mb-2 sm:mb-0">
+                                                <span
+                                                    class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 cursor-pointer hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
+                                                    onclick="copyTrackingNumber('{{ $label['tracking_number'] ?? 'N/A' }}')"
+                                                    title="Click to copy tracking number">
+                                                    <i class="fas fa-truck mr-2"></i>
+                                                    {{ $label['tracking_number'] ?? 'N/A' }}
+                                                    <i class="fas fa-copy ml-2 text-xs opacity-70"></i>
+                                                </span>
+                                            </div>
+                                        @endif
 
                                         <!-- Status Badge -->
                                         <div class="mb-2 sm:mb-0">
                                             @php
                                                 $status = $label['status'] ?? 'unknown';
-                                                $trackingStatus = $label['tracking_status'] ?? 'unknown';
                                                 $badgeClass = match ($status) {
                                                     'completed'
                                                         => 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
@@ -121,36 +142,66 @@
                                             </span>
                                         </div>
 
-                                        <!-- Tracking Status -->
-                                        @if ($trackingStatus !== 'unknown')
-                                            <div class="mb-2 sm:mb-0">
-                                                @php
-                                                    $trackingBadgeClass = match ($trackingStatus) {
-                                                        'delivered'
-                                                            => 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-                                                        'in_transit'
-                                                            => 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-                                                        'out_for_delivery'
-                                                            => 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
-                                                        'exception'
-                                                            => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
-                                                        default
-                                                            => 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200',
-                                                    };
-                                                @endphp
-                                                <span
-                                                    class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {{ $trackingBadgeClass }}">
-                                                    {{ ucwords(str_replace('_', ' ', $trackingStatus)) }}
-                                                </span>
-                                            </div>
+                                        <!-- Tracking Status (Hidden if voided) -->
+                                        @if (!$isVoided)
+                                            @php
+                                                $trackingStatus = $label['tracking_status'] ?? 'unknown';
+                                            @endphp
+                                            @if ($trackingStatus !== 'unknown')
+                                                <div class="mb-2 sm:mb-0">
+                                                    @php
+                                                        $trackingBadgeClass = match ($trackingStatus) {
+                                                            'delivered'
+                                                                => 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+                                                            'in_transit'
+                                                                => 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+                                                            'out_for_delivery'
+                                                                => 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
+                                                            'exception'
+                                                                => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+                                                            default
+                                                                => 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200',
+                                                        };
+                                                    @endphp
+                                                    <span
+                                                        class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {{ $trackingBadgeClass }}">
+                                                        {{ ucwords(str_replace('_', ' ', $trackingStatus)) }}
+                                                    </span>
+                                                </div>
+                                            @endif
                                         @endif
                                     </div>
                                 </div>
 
-                                <!-- Right: Actions -->
+                                <!-- Right: Amount and Actions -->
                                 <div class="flex flex-col sm:flex-row sm:items-center sm:gap-4 lg:justify-end">
-                                    <!-- Action Buttons -->
-                                    <div class="flex gap-2 justify-end">
+                                    <!-- Amount Display -->
+                                    @if (!empty($cost))
+                                        <div class="mb-2 sm:mb-0">
+                                            <div class="text-right">
+                                                <p class="text-xs text-gray-500 dark:text-gray-400">Total Amount</p>
+                                                <p class="text-2xl font-bold text-gray-900 dark:text-white">
+                                                    ${{ number_format($label['stripe_amount_paid'] ?? 0, 2) }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    @endif
+
+                                    <!-- Collapse Toggle Button -->
+                                    <button @click="open = !open"
+                                        class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600"
+                                        title="Toggle Details">
+                                        <i class="fas mr-2" :class="open ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                                        <span x-text="open ? 'Hide Details' : 'Show Details'"></span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Collapsible Details Section -->
+                            <div x-show="open" x-collapse>
+                                <!-- Action Buttons -->
+                                <div class="mb-4 pb-4 border-b border-gray-200 dark:border-gray-600">
+                                    <div class="flex flex-wrap gap-2">
                                         {{-- void a label --}}
                                         @if ($label['status'] != 'voided')
                                             <x-button wire:click="voidLabel('{{ $label['label_id'] ?? '' }}' )"
@@ -163,7 +214,7 @@
                                             </x-button>
                                         @endif
 
-                                        @if (!empty($label['tracking_url']))
+                                        @if (!empty($label['tracking_url']) && !$isVoided)
                                             <button wire:click="redirectToTracking('{{ $label['tracking_url'] }}')"
                                                 class="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                                                 title="Track Shipment">
@@ -172,13 +223,13 @@
                                             </button>
                                         @endif
 
-                                        <button wire:click="downloadShipmentDetails('{{ $label['label_id'] ?? '' }}')"
+                                        <a href="{{ route('shipments.receipt', $label['label_id']) }}" target="_blank"
                                             wire:loading.attr="disabled"
                                             class="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-teal-600 border border-transparent rounded-md hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                                            title="Download Shipment Details PDF">
-                                            <i class="fas fa-file-download mr-1"></i>
-                                            Details
-                                        </button>
+                                            title="Print Receipt">
+                                            <i class="fas fa-print mr-1"></i>
+                                            Print Receipt
+                                        </a>
 
                                         @if (isset($label['label_download']['png']))
                                             <button
@@ -186,7 +237,7 @@
                                                 class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600"
                                                 title="View PNG Label">
                                                 <i class="fas fa-image mr-1"></i>
-                                                PNG
+                                                Label PNG
                                             </button>
                                         @endif
 
@@ -196,7 +247,7 @@
                                                 class="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                                                 title="View PDF Label">
                                                 <i class="fas fa-file-pdf mr-1"></i>
-                                                PDF
+                                                Label PDF
                                             </button>
                                         @endif
 
@@ -209,39 +260,49 @@
                                                 Form
                                             </button>
                                         @endif
-
-                                        @if (!empty($label['signature']) && file_exists(public_path($label['signature'])))
-                                            <button onclick="window.open('{{ asset($label['signature']) }}', '_blank')"
-                                                class="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-purple-600 border border-transparent rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
-                                                title="Download Signature">
-                                                <i class="fas fa-signature mr-1"></i>
-                                                Signature
-                                            </button>
-                                        @endif
                                     </div>
                                 </div>
-                            </div>
 
-                            <!-- Shipment Details -->
-                            <div class="border-t border-gray-200 dark:border-gray-600 pt-4">
+                                <!-- Shipment Details -->
                                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
                                     <!-- Ship To -->
                                     <div>
                                         <h4 class="font-medium text-gray-900 dark:text-white mb-2">Ship To</h4>
-                                        <div class="text-gray-600 dark:text-gray-400">
+                                        <div class="text-gray-600 dark:text-gray-400 space-y-1">
+                                            <div class="text-xs text-gray-500 dark:text-gray-500">Name</div>
                                             <p class="font-medium">{{ $shipTo['name'] ?? 'N/A' }}</p>
+                                            
                                             @if (!empty($shipTo['company_name']))
+                                                <div class="text-xs text-gray-500 dark:text-gray-500 mt-2">Company</div>
                                                 <p>{{ $shipTo['company_name'] }}</p>
                                             @endif
-                                            <p>{{ $shipTo['address_line1'] ?? '' }}</p>
-                                            @if (!empty($shipTo['address_line2']))
-                                                <p>{{ $shipTo['address_line2'] }}</p>
-                                            @endif
-                                            <p>{{ $shipTo['city_locality'] ?? '' }},
-                                                {{ $shipTo['state_province'] ?? '' }}
-                                                {{ $shipTo['postal_code'] ?? '' }},
-                                                {{ $label['ship_to_address_country_full_name'] ?? $shipTo['country_code'] }}
+                                            
+                                            <div class="text-xs text-gray-500 dark:text-gray-500 mt-2">Address</div>
+                                            <p>
+                                                {{ $shipTo['address_line1'] ?? 'N/A' }}
+                                                @if (!empty($shipTo['address_line2']))
+                                                    {{ $shipTo['address_line2'] }}
+                                                @endif
                                             </p>
+                                            <p>
+                                                {{ $shipTo['city_locality'] ? $shipTo['city_locality'] . ', ' : '' }}
+                                                @if (!empty($shipTo['state_province']))
+                                                    {{ $shipTo['state_province'] }}
+                                                @endif
+                                                {{ $shipTo['postal_code'] ?? '' }},
+                                                {{ $label['ship_to_address_country_full_name'] ?? ($shipTo['country_code'] ?? 'United States') }}
+                                            </p>
+                                            
+                                            @if (isset($shipTo['address_residential_indicator']) &&
+                                                    strtolower($shipTo['address_residential_indicator']) === 'yes')
+                                                <span class="inline-block mt-2 px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded">
+                                                    Residential Address
+                                                </span>
+                                            @else
+                                                <span class="inline-block mt-2 px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200 rounded">
+                                                    Business Address
+                                                </span>
+                                            @endif
                                         </div>
                                     </div>
 
@@ -281,39 +342,10 @@
                                                 {{ isset($label['ship_date']) ? \Carbon\Carbon::parse($label['ship_date'])->format('M j, Y') : 'N/A' }}
                                             </p>
                                             <p><span class="font-medium">Created:</span>
-                                                {{ isset($label['created_at']) ? \Carbon\Carbon::parse($label['created_at'])->format('M j, Y g:i A') : 'N/A' }}
+                                                {{ isset($label['created_at']) ? \Carbon\Carbon::parse($label['created_at'])->setTimezone('America/New_York')->format('M j, Y g:i A') : 'N/A' }}
                                             </p>
                                         </div>
                                     </div>
-
-                                    <!-- Cost Info -->
-                                    @if (!empty($cost))
-                                        <div>
-                                            <h4 class="font-medium text-gray-900 dark:text-white mb-2">
-                                                Amount
-                                            </h4>
-                                            <div class="text-gray-600 dark:text-gray-400">
-                                                {{-- @auth('web')
-                                                    <p class="text-lg font-bold text-gray-900 dark:text-white">
-                                                        ${{ number_format($cost['origin_total'] ?? 0, 2) }}
-                                                    </p>
-                                                    @if ($cost['origin_total'] != $cost['end_user_total'] ?? 0)
-                                                        <p class="text-sm mt-1">
-                                                            <span class="font-medium">Sold for:</span>
-                                                            ${{ number_format($cost['end_user_total'] ?? 0, 2) }}
-                                                        </p>
-                                                    @endif
-                                                @else
-                                                    <p class="text-lg font-bold text-gray-900 dark:text-white">
-                                                        ${{ number_format($cost['end_user_total'] ?? 0, 2) }}
-                                                    </p>
-                                                    @endauth --}}
-                                                <p class="text-lg font-bold text-gray-900 dark:text-white">
-                                                    ${{ number_format($label['stripe_amount_paid'] ?? 0, 2) }}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -416,5 +448,13 @@
     window.addEventListener('redirect-to-tracking', event => {
         const url = event.detail.url;
         window.open(url, '_blank');
+    });
+
+    // Listen for open receipt event
+    window.addEventListener('open-receipt', event => {
+        const labelId = event.detail.labelId;
+        const receiptUrl = "{{ route('shipments.receipt', ['labelId' => ':labelId']) }}".replace(':labelId',
+            labelId);
+        window.open(receiptUrl, '_blank');
     });
 </script>

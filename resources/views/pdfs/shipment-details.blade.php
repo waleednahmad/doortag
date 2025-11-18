@@ -1,756 +1,593 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en">
 
 <head>
-    <meta charset="utf-8">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Shipment Receipt — Order #{{ !empty($orderNumber) ? str_pad($orderNumber, 6, '0', STR_PAD_LEFT) : '000000' }}
+    </title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --accent: #0b5ed7;
+            --muted: #666;
+            --border: #e6e6e6;
+            --pad: 8px;
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
+        html,
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            color: #1f2937;
+            margin: 0;
+            background: #fff;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            color: #111;
             font-size: 12px;
-            line-height: 1.6;
         }
 
-        .container {
-            max-width: 100%;
-            padding: 20px;
+        .page {
+            max-width: 8.5in;
+            margin: 12px auto;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
         }
 
-        /* Header with Logo */
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-            border-bottom: 2px solid #e5e7eb;
-            padding-bottom: 15px;
-        }
-
-        .logo {
-            max-height: 60px;
-            margin-bottom: 10px;
-        }
-
-        .header h1 {
-            font-size: 20px;
-            color: #1f2937;
-            margin-top: 10px;
-        }
-
-        .header-date {
-            color: #6b7280;
-            font-size: 11px;
-            margin-top: 5px;
-        }
-
-        /* Section Styling */
-        .section {
-            margin-bottom: 25px;
-            page-break-inside: avoid;
-        }
-
-        .section-title {
-            font-size: 14px;
-            font-weight: 600;
-            color: #1f2937;
-            margin-bottom: 12px;
-            padding-bottom: 8px;
-            border-bottom: 2px solid #dbeafe;
+        header {
             display: flex;
+            justify-content: space-between;
             align-items: center;
-        }
-
-        .section-title i {
-            margin-right: 8px;
-        }
-
-        .section-title.from {
-            border-bottom-color: #dbeafe;
-        }
-
-        .section-title.to {
-            border-bottom-color: #dcfce7;
-        }
-
-        .section-title.package {
-            border-bottom-color: #e9d5ff;
-        }
-
-        .section-title.label {
-            border-bottom-color: #e0e7ff;
-        }
-
-        .section-title.customs {
-            border-bottom-color: #fed7aa;
-        }
-
-        /* Grid Layout */
-        .grid {
-            display: table;
-            width: 100%;
             margin-bottom: 12px;
         }
 
-        .grid-col {
-            display: table-cell;
-            padding-right: 20px;
-            width: 50%;
+        header img {
+            height: 40px;
+        }
+
+        .header-right {
+            text-align: right;
+            font-size: 12px;
+            line-height: 1.3;
+        }
+
+        h1 {
+            margin: 0 0 12px 0;
+            font-size: 20px;
+        }
+
+        .summary {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .summary .left {
+            flex: 1 1 60%;
+        }
+
+        .summary .right {
+            width: 160px;
+            border: 1px solid var(--border);
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
+        .summary .right .muted {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        table.info,
+        table.items,
+        table.tax {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            margin-bottom: 12px;
+        }
+
+        table.info td,
+        table.items td,
+        table.items th,
+        table.tax td {
+            padding: 4px 6px;
             vertical-align: top;
         }
 
-        .grid-col:last-child {
-            padding-right: 0;
-        }
-
-        .grid-col-full {
-            display: table-cell;
-            width: 100%;
-            padding-right: 0;
-        }
-
-        /* Label & Value Styling */
-        .label {
-            font-size: 10px;
+        table.items th {
+            text-align: left;
+            border-bottom: 1px solid var(--border);
             font-weight: 600;
-            color: #6b7280;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 3px;
+        }
+
+        table.items td {
+            border-bottom: 1px solid var(--border);
+        }
+
+        .tracking-highlight {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .addresses {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .addr {
+            flex: 1;
+            border: 1px dashed var(--border);
+            padding: 8px;
+            border-radius: 6px;
+        }
+
+        .addr b {
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .addr .muted {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+
+        .addr .value {
+            font-weight: 600;
+            margin-top: 2px;
+        }
+
+        .package-box {
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 12px;
+            display: flex;
+            flex-wrap: wrap;
+            font-size: 13px;
+            gap: 8px;
+        }
+
+        .package-box b {
+            width: 100%;
+            margin-bottom: 6px;
+        }
+
+        .package-col {
+            flex: 1 1 45%;
+        }
+
+        .customs-box {
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 12px;
+            font-size: 13px;
+        }
+
+        .customs-box b {
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .customs-row {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+
+        .customs-col {
+            flex: 1 1 45%;
+        }
+
+        .cert-box {
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-top: 12px;
+            font-size: 12px;
+            line-height: 1.3;
+        }
+
+        .cert-text {
+            flex: 1;
+            padding-right: 10px;
+        }
+
+        .cert-signature {
+            text-align: right;
+        }
+
+        .cert-signature img {
+            width: 160px;
+            border-top: 1px solid var(--border);
+            padding-top: 4px;
+            margin-top: 8px;
+        }
+
+        .muted {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .mono {
+            font-family: 'Courier New', Courier, monospace;
         }
 
         .value {
-            font-size: 12px;
-            color: #1f2937;
-            font-weight: 500;
+            font-weight: 600;
         }
 
-        /* Address Box */
-        .address-box {
-            background-color: #f9fafb;
-            border: 1px solid #e5e7eb;
-            border-left: 4px solid #3b82f6;
-            padding: 10px;
-            margin-top: 8px;
-            border-radius: 4px;
-            font-size: 11px;
-        }
-
-        .address-line {
+        .charge-row {
+            display: flex;
+            justify-content: space-between;
             margin-bottom: 4px;
-            color: #1f2937;
         }
 
-        /* Badge Styling */
-        .badge {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 10px;
-            font-weight: 600;
-            margin-top: 5px;
-        }
-
-        .badge.residential {
-            background-color: #dbeafe;
-            color: #0c4a6e;
-        }
-
-        .badge.insured {
-            background-color: #e9d5ff;
-            color: #581c87;
-        }
-
-        .badge.residential.to {
-            background-color: #dcfce7;
-            color: #14532d;
-        }
-
-        /* Package Details */
-        .package-details {
-            background-color: #f3f4f6;
-            border: 1px solid #e5e7eb;
-            padding: 12px;
-            border-radius: 4px;
-            margin-top: 10px;
-        }
-
-        .detail-row {
-            display: table;
-            width: 100%;
-            margin-bottom: 8px;
-        }
-
-        .detail-row:last-child {
-            margin-bottom: 0;
-        }
-
-        .detail-label {
-            display: table-cell;
-            width: 40%;
-            font-weight: 600;
-            color: #4b5563;
-            font-size: 11px;
-        }
-
-        .detail-value {
-            display: table-cell;
-            width: 60%;
-            color: #1f2937;
-            font-size: 11px;
-        }
-
-        /* Shipping Label Details */
-        .label-details {
-            background-color: #f0f4ff;
-            border: 1px solid #c7d2fe;
-            border-left: 4px solid #4f46e5;
-            padding: 12px;
-            border-radius: 4px;
-            margin-top: 10px;
-        }
-
-
-        .price-container {
-            border-top: 2px solid #e5e7eb;
-            margin-top: 20px;
-            padding-top: 15px;
-            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-            border-radius: 8px;
-            padding: 20px 15px 15px;
-            border: 1px solid #e2e8f0;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-        }
-
-        .price-grid {
-            display: table;
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 10px 0;
-        }
-
-        .price-box {
-            display: table-cell;
-            width: 33.333%;
-            text-align: center;
-            background: white;
-            border: 1px solid #e2e8f0;
-            border-radius: 6px;
-            padding: 12px 8px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-            position: relative;
-        }
-
-        .price-box.total {
-            border-left: 4px solid #4f46e5;
-        }
-
-        .price-box.shipping {
-            border-left: 4px solid #10b981;
-        }
-
-        .price-box.packaging {
-            border-left: 4px solid #f59e0b;
-        }
-
-        .price-label {
-            font-size: 10px;
-            font-weight: 600;
-            color: #64748b;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 5px;
-            line-height: 1.2;
-        }
-
-
-        .price-value {
-            font-size: 14px;
-            font-weight: 700;
-            color: #1e293b;
-            font-family: 'Segoe UI', 'Arial', sans-serif;
-        }
-
-
-        .price-breakdown-title {
+        .charge-label {
+            color: #666;
             font-size: 12px;
+        }
+
+        .charge-value {
             font-weight: 600;
-            color: #374151;
-            margin-bottom: 10px;
-            text-align: center;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            font-size: 13px;
         }
 
-        /* Customs Section */
-        .customs-item {
-            border-left: 4px solid #f97316;
-            background-color: #fff7ed;
-            border: 1px solid #fed7aa;
-            border-left: 4px solid #f97316;
-            padding: 10px;
-            margin-bottom: 10px;
-            border-radius: 4px;
+        .charge-total {
+            border-top: 1px solid var(--border);
+            margin-top: 6px;
+            padding-top: 6px;
+            display: flex;
+            justify-content: space-between;
         }
 
-        .customs-item-grid {
-            display: table;
-            width: 100%;
+        .charge-total .charge-label {
+            color: #666;
+            font-size: 12px;
         }
 
-        .customs-item-col {
-            display: table-cell;
-            width: 50%;
-            padding-right: 10px;
-            vertical-align: top;
+        .charge-total .charge-value {
+            font-weight: 700;
+            font-size: 15px;
+        }
+
+        .residential-badge {
+            display: inline-block;
+            margin-top: 6px;
+            padding: 3px 8px;
             font-size: 10px;
+            border: 1px solid black;
         }
 
-        /* Signature Section */
-        .signature-section {
-            margin-top: 20px;
-            border-top: 1px solid #e5e7eb;
-            padding-top: 15px;
+        .no-print {
+            display: none;
         }
 
-        .checkboxes {
-            margin: 10px 0;
-            font-size: 10px;
-        }
+        @media print {
+            .no-print {
+                display: none;
+            }
 
-        .checkbox-item {
-            margin-bottom: 8px;
-            page-break-inside: avoid;
-        }
+            .page {
+                border: none;
+                margin: 0.2in;
+            }
 
-        .checkbox-label {
-            color: #1f2937;
-            line-height: 1.5;
-        }
-
-        /* Footer */
-        .footer {
-            text-align: center;
-            color: #9ca3af;
-            font-size: 9px;
-            margin-top: 30px;
-            border-top: 1px solid #e5e7eb;
-            padding-top: 10px;
-        }
-
-        /* Page Break */
-        .page-break {
-            page-break-after: always;
-        }
-
-        /* Empty space */
-        .space {
-            margin-bottom: 15px;
+            h1 {
+                font-size: 18px;
+            }
         }
     </style>
+    <script>
+        // Auto-print when page loads
+        window.onload = function() {
+            window.print();
+        };
+    </script>
 </head>
 
 <body>
-    <div class="container">
-        <!-- Header with Logo -->
-        <div class="header">
-            @if (!empty($logoBase64))
-                <img src="{{ $logoBase64 }}" alt="Company Logo" class="logo">
-            @endif
-            <h1>Shipment Details Review</h1>
-            <div class="header-date">Generated on {{ now()->format('F d, Y \a\t H:i A') }}</div>
-        </div>
+    <div class="page">
+        <!-- HEADER -->
+        <header>
+            <div>
+                @if (!empty($logoBase64))
+                    <img src="{{ $logoBase64 }}" alt="Logo">
+                @else
+                    <img src="https://doortag.com/assets/images/logo-black.png" alt="Logo">
+                @endif
+            </div>
+            <div class="header-right">
+                <div><strong>Phone:</strong> (813) 903-1774</div>
+                <div><strong>Email:</strong> support@doortag.com</div>
+            </div>
+        </header>
+        <h1>Shipment Receipt</h1>
 
-        <!-- Order and Payment Information -->
-        @if (!empty($orderNumber) || !empty($paymentNumber))
-            <div class="section">
-                <div class="section-title label">
-                    Order Information
-                </div>
-                <div class="label-details">
+        <!-- SUMMARY -->
+        <div class="summary">
+            <div class="left">
+                <table class="info">
                     @if (!empty($orderNumber))
-                        <div class="detail-row">
-                            <div class="detail-label">Order Number:</div>
-                            <div class="detail-value" style="font-weight: 700; color: #1f2937; font-size: 13px;">
-                                #{{ str_pad($orderNumber, 6, '0', STR_PAD_LEFT) }}
-                            </div>
-                        </div>
+                        <tr>
+                            <td class="muted">Order #</td>
+                            <td class="value mono">{{ str_pad($orderNumber, 6, '0', STR_PAD_LEFT) }}</td>
+                        </tr>
                     @endif
                     @if (!empty($paymentNumber))
-                        <div class="detail-row">
-                            <div class="detail-label">Payment Number:</div>
-                            <div class="detail-value"
-                                style="font-weight: 700; color: #1f2937; font-size: 11px; font-family: 'Courier New', monospace;">
-                                {{ $paymentNumber }}
-                            </div>
-                        </div>
+                        <tr>
+                            <td class="muted">Payment</td>
+                            <td class="value mono">{{ $paymentNumber }}</td>
+                        </tr>
                     @endif
-                </div>
-            </div>
-        @endif
-
-        <!-- Tracking Number Section -->
-        @if (!empty($trackingNumber))
-            <div class="section">
-                <div class="section-title label">
-                    Tracking Information
-                </div>
-                <div class="label-details">
-                    <div class="detail-row">
-                        <div class="detail-label">Tracking Number:</div>
-                        <div class="detail-value" style="font-weight: 700; color: #1f2937; font-size: 13px;">
-                            {{ $trackingNumber }}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        @endif
-
-        <!-- Shipping Label Details -->
-        @if ($selectedRate)
-            <div class="section">
-                <div class="section-title label">
-                    Shipping Label Details
-                </div>
-                <div class="label-details">
-                    <div class="detail-row">
-                        <div class="detail-label">Service Type:</div>
-                        <div class="detail-value">
-                            {{ ucwords(str_replace('_', ' ', $selectedRate['service_type'] ?? 'N/A')) }}
-                        </div>
-                    </div>
-
-                    <div class="detail-row">
-                        <div class="detail-label">Carrier:</div>
-                        <div class="detail-value">{{ strtoupper($selectedRate['carrier_code'] ?? 'N/A') }}</div>
-                    </div>
-
-                    @if (!empty($selectedRate['estimated_delivery_date']))
-                        <div class="detail-row">
-                            <div class="detail-label">Estimated Delivery:</div>
-                            <div class="detail-value">
-                                {{ \Carbon\Carbon::parse($selectedRate['estimated_delivery_date'])->format('F d, Y') }}
-                            </div>
-                        </div>
+                    @if (!empty($trackingNumber))
+                        <tr>
+                            <td class="muted">Tracking</td>
+                            <td class="tracking-highlight">{{ $trackingNumber }}</td>
+                        </tr>
                     @endif
-
-                    {{-- Price Breakdown --}}
-                    <div class="price-container">
-                        <div class="price-breakdown-title">Cost Breakdown</div>
-
-                        <div class="price-grid">
-                            @if ($packaging_amount > 0)
-                                {{-- Shipping Amount --}}
-                                <div class="price-box shipping">
-                                    <div class="price-label">Shipping</div>
-                                    <div class="price-value">
-                                        ${{ number_format(($stripe_amount_paid ?? 0) - ($packaging_amount ?? 0), 2) }}
-                                    </div>
-                                </div>
-
-                                {{-- Packaging Amount --}}
-                                <div class="price-box packaging">
-                                    <div class="price-label">Packaging</div>
-                                    <div class="price-value">
-                                        ${{ number_format($packaging_amount ?? 0, 2) }}
-                                    </div>
-                                </div>
-                            @endif
-
-                            {{-- Total Amount --}}
-                            <div class="price-box total">
-                                <div class="price-label">Total Paid</div>
-                                <div class="price-value">
-                                    ${{ number_format($stripe_amount_paid ?? 0, 2) }}
-                                </div>
-                            </div>
-                        </div>
+                    @if ($selectedRate)
+                        <tr>
+                            <td class="muted">Carrier / Service</td>
+                            <td>{{ strtoupper($selectedRate['carrier_code'] ?? 'N/A') }} —
+                                {{ ucwords(str_replace('_', ' ', $selectedRate['service_type'] ?? 'N/A')) }}</td>
+                        </tr>
+                    @endif
+                </table>
+            </div>
+            <div class="right">
+                <div class="muted">CHARGES</div>
+                <br />
+                @if ($packaging_amount > 0)
+                    <div class="charge-row">
+                        <div class="charge-label">Shipping</div>
+                        <div class="charge-value">
+                            ${{ number_format(($stripe_amount_paid ?? 0) - ($packaging_amount ?? 0), 2) }}</div>
                     </div>
-
+                    <div class="charge-row">
+                        <div class="charge-label">Packaging</div>
+                        <div class="charge-value">${{ number_format($packaging_amount ?? 0, 2) }}</div>
+                    </div>
+                @endif
+                <div class="charge-total">
+                    <div class="charge-label">Total Paid</div>
+                    <div class="charge-value">${{ number_format($stripe_amount_paid ?? 0, 2) }}</div>
                 </div>
             </div>
-        @endif
+        </div>
 
-
-        <!-- Ship From Section -->
-        @if (is_array($shipFromAddress) && !empty($shipFromAddress))
-            <div class="section">
-                <div class="section-title from">
-                    Ship From
-                </div>
-                <div class="grid">
-                    <div class="grid-col">
-                        <div class="label">Name</div>
-                        <div class="value">{{ $shipFromAddress['name'] ?? 'N/A' }}</div>
-                    </div>
-                    <div class="grid-col">
-                        <div class="label">Phone</div>
-                        <div class="value">{{ $shipFromAddress['phone'] ?? 'N/A' }}</div>
-                    </div>
-                </div>
-
-                @if (!empty($shipFromAddress['company_name']))
-                    <div class="grid">
-                        <div class="grid-col">
-                            <div class="label">Company</div>
-                            <div class="value">{{ $shipFromAddress['company_name'] }}</div>
-                        </div>
-                        @if (!empty($shipFromAddress['email']))
-                            <div class="grid-col">
-                                <div class="label">Email</div>
-                                <div class="value">{{ $shipFromAddress['email'] }}</div>
-                            </div>
+        <!-- ADDRESSES -->
+        <div class="addresses">
+            @if (is_array($shipFromAddress) && !empty($shipFromAddress))
+                <div class="addr">
+                    <b>From</b>
+                    <div class="muted">Name</div>
+                    <div class="value">{{ $shipFromAddress['name'] ?? 'N/A' }}</div>
+                    @if (!empty($shipFromAddress['company_name']))
+                        <div class="muted">Company</div>
+                        <div class="value">{{ $shipFromAddress['company_name'] }}</div>
+                    @else
+                        <div class="muted">Company</div>
+                        <div class="value">—</div>
+                    @endif
+                    @if (!empty($shipFromAddress['phone']))
+                        <div class="muted">Phone</div>
+                        <div class="value">{{ $shipFromAddress['phone'] }}</div>
+                    @else
+                        <div class="muted">Phone</div>
+                        <div class="value">—</div>
+                    @endif
+                    @if (!empty($shipFromAddress['email']))
+                        <div class="muted">Email</div>
+                        <div class="value">{{ $shipFromAddress['email'] }}</div>
+                    @else
+                        <div class="muted">Email</div>
+                        <div class="value">—</div>
+                    @endif
+                    <div class="muted">Address</div>
+                    <div class="value">
+                        {{ $shipFromAddress['address_line1'] ?? '' }}
+                        @if (!empty($shipFromAddress['address_line2']))
+                            {{ $shipFromAddress['address_line2'] }}
                         @endif
                     </div>
-                @elseif (!empty($shipFromAddress['email']))
-                    <div class="grid">
-                        <div class="grid-col">
-                            <div class="label">Email</div>
-                            <div class="value">{{ $shipFromAddress['email'] }}</div>
-                        </div>
+                    <div class="value">
+                        {{ $shipFromAddress['city_locality'] ? $shipFromAddress['city_locality'] . ', ' : '' }}
+                        @if (!empty($shipFromAddress['state_province']))
+                            {{ $shipFromAddress['state_province'] }}
+                        @endif
+                        {{ $shipFromAddress['postal_code'] ?? '' }}, United States
                     </div>
-                @endif
-
-                @if (!empty($shipFromAddress['address_line1']))
-                    <div style="margin-top: 10px;">
-                        <div class="label">Complete Address</div>
-                        <div class="address-box">
-                            <div class="address-line">
-                                {{ $shipFromAddress['address_line1'] ?? '' }}
-                                @if (!empty($shipFromAddress['address_line2']))
-                                    {{ $shipFromAddress['address_line2'] }}
-                                @endif
-                            </div>
-                            <div class="address-line">
-                                {{ $shipFromAddress['city_locality'] ? $shipFromAddress['city_locality'] . ', ' : '' }}
-                                @if (!empty($shipFromAddress['state_province']))
-                                    {{ $shipFromAddress['state_province'] ? $shipFromAddress['state_province'] : '' }}
-                                @endif
-                                {{ $shipFromAddress['postal_code'] ? ' ' . $shipFromAddress['postal_code'] : '' }},
-                                United States
-                            </div>
-                        </div>
-                    </div>
-                @endif
-
-                @if (!empty($shipFromAddress['address_residential_indicator']))
-                    <span class="badge residential">Residential Address</span>
-                @endif
-            </div>
-        @endif
-
-        <!-- Ship To Section -->
-        @if (is_array($shipToAddress) && !empty($shipToAddress))
-            <div class="section">
-                <div class="section-title to">
-                    Ship To
+                    @if (isset($shipFromAddress['address_residential_indicator']) &&
+                            strtolower($shipFromAddress['address_residential_indicator']) === 'yes')
+                        <div class="residential-badge">Residential Address</div>
+                    @else
+                        <div class="residential-badge">Business Address</div>
+                    @endif
                 </div>
-                <div class="grid">
-                    <div class="grid-col">
-                        <div class="label">Name</div>
-                        <div class="value">{{ $shipToAddress['name'] ?? 'N/A' }}</div>
-                    </div>
-                    <div class="grid-col">
-                        <div class="label">Phone</div>
-                        <div class="value">{{ $shipToAddress['phone'] ?? 'N/A' }}</div>
-                    </div>
-                </div>
+            @endif
 
-                @if (!empty($shipToAddress['company_name']))
-                    <div class="grid">
-                        <div class="grid-col">
-                            <div class="label">Company</div>
-                            <div class="value">{{ $shipToAddress['company_name'] }}</div>
-                        </div>
-                        @if (!empty($shipToAddress['email']))
-                            <div class="grid-col">
-                                <div class="label">Email</div>
-                                <div class="value">{{ $shipToAddress['email'] }}</div>
-                            </div>
+            @if (is_array($shipToAddress) && !empty($shipToAddress))
+                <div class="addr">
+                    <b>To</b>
+                    <div class="muted">Name</div>
+                    <div class="value">{{ $shipToAddress['name'] ?? 'N/A' }}</div>
+                    @if (!empty($shipToAddress['company_name']))
+                        <div class="muted">Company</div>
+                        <div class="value">{{ $shipToAddress['company_name'] }}</div>
+                    @else
+                        <div class="muted">Company</div>
+                        <div class="value">—</div>
+                    @endif
+                    @if (!empty($shipToAddress['phone']))
+                        <div class="muted">Phone</div>
+                        <div class="value">{{ $shipToAddress['phone'] }}</div>
+                    @else
+                        <div class="muted">Phone</div>
+                        <div class="value">—</div>
+                    @endif
+                    @if (!empty($shipToAddress['email']))
+                        <div class="muted">Email</div>
+                        <div class="value">{{ $shipToAddress['email'] }}</div>
+                    @else
+                        <div class="muted">Email</div>
+                        <div class="value">—</div>
+                    @endif
+                    <div class="muted">Address</div>
+                    <div class="value">
+                        {{ $shipToAddress['address_line1'] ?? 'N/A' }}
+                        @if (!empty($shipToAddress['address_line2']))
+                            {{ $shipToAddress['address_line2'] }}
                         @endif
                     </div>
-                @elseif (!empty($shipToAddress['email']))
-                    <div class="grid">
-                        <div class="grid-col">
-                            <div class="label">Email</div>
-                            <div class="value">{{ $shipToAddress['email'] }}</div>
-                        </div>
+                    <div class="value">
+                        {{ $shipToAddress['city_locality'] ? $shipToAddress['city_locality'] . ', ' : '' }}
+                        @if (!empty($shipToAddress['state_province']))
+                            {{ $shipToAddress['state_province'] }}
+                        @endif
+                        {{ $shipToAddress['postal_code'] ?? '' }},
+                        {{ $ship_to_address_country_full_name ?? 'United States' }}
                     </div>
-                @endif
-
-                <div style="margin-top: 10px;">
-                    <div class="label">Complete Address</div>
-                    <div class="address-box">
-                        <div class="address-line">
-                            {{ $shipToAddress['address_line1'] ?? 'N/A' }}
-                            @if (!empty($shipToAddress['address_line2']))
-                                {{ $shipToAddress['address_line2'] }}
-                            @endif
-                        </div>
-                        <div class="address-line">
-                            {{ $shipToAddress['city_locality'] ? $shipToAddress['city_locality'] . ', ' : '' }}
-                            @if (!empty($shipToAddress['state_province']))
-                                {{ $shipToAddress['state_province'] ? $shipToAddress['state_province'] : '' }}
-                            @endif
-                            @if (!empty($shipToAddress['postal_code']))
-                                {{ $shipToAddress['postal_code'] }},
-                                {{ $ship_to_address_country_full_name }}
-                            @endif
-                        </div>
-                    </div>
+                    @if (isset($shipToAddress['address_residential_indicator']) &&
+                            strtolower($shipToAddress['address_residential_indicator']) === 'yes')
+                        <div class="residential-badge">Residential Address</div>
+                    @else
+                        <div class="residential-badge">Business Address</div>
+                    @endif
                 </div>
+            @endif
+        </div>
 
-                @if (!empty($shipToAddress['address_residential_indicator']))
-                    <span class="badge residential to">Residential Address</span>
-                @endif
-            </div>
-        @endif
-
-        <!-- Package Details Section -->
-        <div class="section">
-            <div class="section-title package">
-                Package Details
-            </div>
-            <div class="package-details">
-                @php
-                    // Use passed selectedPackage or calculate from carrierPackaging
-                    if (empty($selectedPackage) || !is_array($selectedPackage)) {
-                        $selectedPackage = collect($carrierPackaging)->firstWhere('package_code', $selectedPackaging);
-                    }
-                    if (empty($selectedPackage)) {
-                        $selectedPackage = [
-                            'name' => ucfirst(str_replace('_', ' ', $selectedPackaging ?? 'Package')),
-                            'package_code' => $selectedPackaging ?? 'package',
-                        ];
-                    }
-                @endphp
-
-                <div class="detail-row">
-                    <div class="detail-label">Package Type:</div>
-                    <div class="detail-value">{{ $selectedPackage['name'] ?? 'N/A' }}</div>
+        <!-- PACKAGE DETAILS -->
+        <div class="package-box">
+            <b>Package Details</b>
+            @php
+                // Use passed selectedPackage or calculate from carrierPackaging
+                if (empty($selectedPackage) || !is_array($selectedPackage)) {
+                    $selectedPackage = collect($carrierPackaging)->firstWhere('package_code', $selectedPackaging);
+                }
+                if (empty($selectedPackage)) {
+                    $selectedPackage = [
+                        'name' => ucfirst(str_replace('_', ' ', $selectedPackaging ?? 'Package')),
+                        'package_code' => $selectedPackaging ?? 'package',
+                    ];
+                }
+            @endphp
+            <div class="package-col">
+                <div>
+                    <span class="muted">
+                        Type:
+                    </span>
+                    <span class="value">
+                        {{ $selectedPackage['name'] ?? 'Package / Box' }}
+                    </span>
                 </div>
-
-                <div class="detail-row">
-                    <div class="detail-label">Weight:</div>
-                    <div class="detail-value">{{ $package['weight'] ?? 'N/A' }} lbs</div>
-                </div>
-
-                @if (!empty($package['length']) && !empty($package['width']) && !empty($package['height']))
-                    <div class="detail-row">
-                        <div class="detail-label">Dimensions (inches):</div>
-                        <div class="detail-value">
-                            {{ $package['length'] }} × {{ $package['width'] }} × {{ $package['height'] }}
-                        </div>
+                @if (
+                    !empty($package) &&
+                        isset($package['insured_value']) &&
+                        $package['insured_value'] > 100)
+                    <div>
+                        <span class="muted">
+                            Declared Value:
+                        </span>
+                        <span class="value">
+                            ${{ number_format($package['insured_value'] ?? 0, 2) }}
+                        </span>
                     </div>
                 @endif
-
-                @if (!empty($package['insured_value']) && $isInsuranceChecked)
-                    <div class="detail-row">
-                        <div class="detail-label">Insurance:</div>
-                        <div class="detail-value">
-                            <span class="badge insured">🛡️ Insured:
-                                ${{ number_format($package['insured_value'], 2) }}</span>
-                        </div>
-                    </div>
-                @endif
-
                 @if (!empty($shipDate))
-                    <div class="detail-row">
-                        <div class="detail-label">Ship Date:</div>
-                        <div class="detail-value">
-                            {{ \Carbon\Carbon::parse($shipDate)->format('F d, Y') }}
-                        </div>
-                    </div>
+                    <div><span class="muted">Ship Date:</span> <span
+                            class="value">{{ \Carbon\Carbon::parse($shipDate)->format('M d, Y') }}</span></div>
+                @endif
+            </div>
+            <div class="package-col">
+                <div><span class="muted">Weight:</span> <span class="value">{{ $package['weight'] ?? 'N/A' }}
+                        lbs</span></div>
+                @if (!empty($package['length']) && !empty($package['width']) && !empty($package['height']))
+                    <div><span class="muted">Dimensions:</span> <span class="value">{{ $package['length'] }} ×
+                            {{ $package['width'] }} × {{ $package['height'] }} in</span></div>
                 @endif
             </div>
         </div>
 
-
-        <!-- Customs Section (International Only) -->
+        <!-- CUSTOMS INFORMATION -->
         @if (is_array($shipToAddress) && ($shipToAddress['country_code'] ?? 'US') != 'US' && !empty($customs['customs_items']))
-            <div class="section">
-                <div class="section-title customs">
-                    Customs Information
-                </div>
-
-                <div class="grid">
-                    <div class="grid-col">
-                        <div class="label">Contents Type</div>
-                        <div class="value">{{ ucfirst($customs['contents'] ?? 'N/A') }}</div>
+            <div class="customs-box">
+                <b>Customs Information</b>
+                <!-- Contents Type & Non-Delivery Action -->
+                <div class="customs-row">
+                    <div class="customs-col">
+                        <span class="muted">Contents Type:</span>
+                        <span class="value">{{ ucfirst($customs['contents'] ?? 'Merchandise') }}</span>
                     </div>
-                    <div class="grid-col">
-                        <div class="label">Non-Delivery Action</div>
-                        <div class="value">{{ ucfirst(str_replace('_', ' ', $customs['non_delivery'] ?? 'N/A')) }}
-                        </div>
+                    <div class="customs-col">
+                        <span class="muted">Non-Delivery Action:</span>
+                        <span
+                            class="value">{{ ucfirst(str_replace('_', ' ', $customs['non_delivery'] ?? 'Return to Sender')) }}</span>
                     </div>
                 </div>
-
-                @if (!empty($customs['signer']))
-                    <div class="grid">
-                        <div class="grid-col-full">
-                            <div class="label">Signed By</div>
-                            <div class="value">{{ $customs['signer'] }}</div>
-                        </div>
-                    </div>
-                @endif
-
-                <div class="space"></div>
-                <div class="label">Items ({{ count($customs['customs_items']) }})</div>
-
-                @foreach ($customs['customs_items'] as $itemIndex => $item)
-                    @if (!empty($item['description']))
-                        <div class="customs-item">
-                            <div class="detail-row">
-                                <div class="detail-label">Description:</div>
-                                <div class="detail-value">{{ $item['description'] ?? 'N/A' }}</div>
-                            </div>
-                            <div class="detail-row">
-                                <div class="detail-label">Quantity:</div>
-                                <div class="detail-value">{{ $item['quantity'] ?? 'N/A' }}</div>
-                            </div>
-                            <div class="detail-row">
-                                <div class="detail-label">Value:</div>
-                                <div class="detail-value">
-                                    ${{ number_format($item['value']['amount'] ?? 0, 2) }}
-                                    {{ strtoupper($item['value']['currency'] ?? 'USD') }}
-                                </div>
-                            </div>
-                            <div class="detail-row">
-                                <div class="detail-label">Weight:</div>
-                                <div class="detail-value">
-                                    {{ $item['weight']['value'] ?? 'N/A' }} {{ $item['weight']['unit'] ?? 'lbs' }}
-                                </div>
-                            </div>
-                            @if (!empty($item['harmonized_tariff_code']))
-                                <div class="detail-row">
-                                    <div class="detail-label">HS Code:</div>
-                                    <div class="detail-value">{{ $item['harmonized_tariff_code'] }}</div>
-                                </div>
+                <!-- Items Table -->
+                <table class="items">
+                    <thead>
+                        <tr>
+                            <th>Description</th>
+                            <th>Qty</th>
+                            <th>Value</th>
+                            <th>Weight</th>
+                            <th>HS Code</th>
+                            <th>Origin</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($customs['customs_items'] as $item)
+                            @if (!empty($item['description']))
+                                <tr>
+                                    <td>{{ $item['description'] ?? 'N/A' }}</td>
+                                    <td>{{ $item['quantity'] ?? 'N/A' }}</td>
+                                    <td>${{ number_format($item['value']['amount'] ?? 0, 2) }}</td>
+                                    <td>{{ $item['weight']['value'] ?? 'N/A' }} {{ $item['weight']['unit'] ?? 'lb' }}
+                                    </td>
+                                    <td>{{ $item['harmonized_tariff_code'] ?? '—' }}</td>
+                                    <td>{{ $item['country_of_origin'] ?? 'N/A' }}</td>
+                                </tr>
                             @endif
-                            <div class="detail-row">
-                                <div class="detail-label">Country of Origin:</div>
-                                <div class="detail-value">{{ $item['country_of_origin'] ?? 'N/A' }}</div>
-                            </div>
-                        </div>
-                    @endif
-                @endforeach
-
+                        @endforeach
+                    </tbody>
+                </table>
+                <!-- International Tax IDs -->
                 @if (!empty($tax_identifiers) && count($tax_identifiers) > 0)
-                    <div style="margin-top: 10px;">
-                        <div class="label">Tax Identifiers</div>
+                    <div class="customs-row">
                         @foreach ($tax_identifiers as $identifier)
                             @if (!empty($identifier['value']))
-                                <div
-                                    style="background-color: #f9fafb; border: 1px solid #e5e7eb; padding: 8px; margin-top: 5px; border-radius: 4px;">
-                                    <div class="label" style="margin-bottom: 2px;">
-                                        {{ ucfirst(str_replace('_', ' ', $identifier['taxable_entity_type'])) }} ID
+                                @if ($identifier['taxable_entity_type'] == 'shipper')
+                                    <div class="customs-col">
+                                        <span class="muted">Sender Tax ID:</span>
+                                        <span class="value mono">{{ $identifier['value'] }}</span>
                                     </div>
-                                    <div class="value" style="font-family: 'Courier New', monospace;">
-                                        {{ $identifier['value'] }}</div>
-                                </div>
+                                @elseif ($identifier['taxable_entity_type'] == 'recipient')
+                                    <div class="customs-col">
+                                        <span class="muted">Recipient Tax ID:</span>
+                                        <span class="value mono">{{ $identifier['value'] }}</span>
+                                    </div>
+                                @endif
                             @endif
                         @endforeach
                     </div>
@@ -758,44 +595,26 @@
             </div>
         @endif
 
-
-
-        <!-- Signature Section -->
-        <div class="signature-section">
-            <div class="section-title">
-                Certification & Signature
-            </div>
-            <div class="checkboxes">
-                <div class="checkbox-item">
-                    I certify that the shipment does not contain any undeclared hazardous materials
-                    (perfume, nail polish, hair spray, dry ice, lithium batteries, firearms, lighters, fuels, etc.) or
-                    any matter prohibited by law or postal regulation.
-                </div>
-
-                @if ($shipToAddress['country_code'] != 'US')
-                    <div class="checkbox-item">
-                        I hereby certify that the information on this invoice is true and correct and
-                        the contents and value of this shipment is as stated above.
-                    </div>
+        <!-- CERTIFICATION & SIGNATURE -->
+        <div class="cert-box">
+            <div class="cert-text">
+                <div>I certify that the shipment does not contain any undeclared hazardous materials or any matter
+                    prohibited by law or postal regulation.</div>
+                @if (is_array($shipToAddress) && ($shipToAddress['country_code'] ?? 'US') != 'US')
+                    <div style="margin-top:6px;">I hereby certify that the information on this invoice is true and
+                        correct and the contents and value of this shipment are as stated above.</div>
                 @endif
             </div>
-
             @if (!empty($signatureBase64))
-                <div style="margin-top: 20px; border-top: 1px solid #e5e7eb; padding-top: 15px;">
-                    <div class="label">Signature on File</div>
-                    <div style="margin-top: 10px;">
-                        <img src="{{ $signatureBase64 }}" alt="Customer Signature"
-                            style="max-width: 200px; height: auto; border: 1px solid #d1d5db; padding: 5px;">
-                    </div>
+                <div class="cert-signature">
+                    <div style="margin-bottom:4px; font-size:12px; color:#666;">Signature</div>
+                    <img src="{{ $signatureBase64 }}" alt="Signature">
                 </div>
             @endif
         </div>
 
-        <!-- Footer -->
-        <div class="footer">
-            <p>This document was generated automatically. Please retain for your records.</p>
-            <p>Generated at {{ now()->format('Y-m-d H:i:s') }}</p>
-        </div>
+        <div class="muted" style="margin-top:12px; font-size:12px; clear:both;">Issued on:
+            {{ now()->format('Y-m-d H:i:s') }}</div>
     </div>
 </body>
 

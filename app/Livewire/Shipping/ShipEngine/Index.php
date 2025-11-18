@@ -813,7 +813,7 @@ class Index extends Component
     {
         // Validate signature and certifications
         $this->validate([
-            'signature' => 'required|string',
+            'signature' => 'nullable|string',
             'certifyHazardousMaterials' => 'accepted',
             'certifyInvoiceAccuracy' => $this->shipToAddress['country_code'] != 'US' ? 'accepted' : 'nullable',
         ], [
@@ -1068,7 +1068,11 @@ class Index extends Component
 
             if ($response['status'] == 'completed') {
                 // Save signature as PNG file
-                $signaturePath = $this->saveSignature($this->signature);
+                if ($this->signature) {
+                    $signaturePath = $this->saveSignature($this->signature);
+                } else {
+                    $signaturePath = null;
+                }
 
                 // Calculate total with packaging for storage
                 $totalWithPackaging = 0;
@@ -1118,22 +1122,24 @@ class Index extends Component
 
                 // Add PDF Shipment Details button - pass the shipment record
                 $printReceiptButton = '
-                <div>
-                <button onclick="downloadPDF(\'' . $trackingNumber . '\', \'' . $signaturePath . '\')" class="block w-full items-center px-3 py-2 ml-2 text-sm font-medium text-white bg-purple-600 border border-transparent rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500" title="Download Shipment Details PDF">
+                <div class="mt-4">
+                <a  
+                    href="' . route('shipments.receipt', $response['label_id']) . '" target="_blank"
+                class="block w-full items-center px-3 py-2 ml-2 text-sm font-medium text-white bg-purple-600 border border-transparent rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500" title="Download Shipment Details PDF">
                 <i class="fas fa-file-download mr-1"></i>
                 Print Receipt
-                </button>
+                </a>
                     </div>
                 ';
 
                 // Check for PNG label
                 if (isset($response['label_download']['png'])) {
-                    $downloadButtons .= '<button onclick="window.open(\'' . $response['label_download']['png'] . '\', \'_blank\')" class="inline-flex items-center px-3 py-2 ml-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" title="View PNG Label"><i class="fas fa-image mr-1"></i>PNG</button>';
+                    $downloadButtons .= '<button onclick="window.open(\'' . $response['label_download']['png'] . '\', \'_blank\')" class="inline-flex items-center px-3 py-2 ml-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" title="View PNG Label"><i class="fas fa-image mr-1"></i>Label PNG</button>';
                 }
 
                 // Check for PDF label
                 if (isset($response['label_download']['pdf'])) {
-                    $downloadButtons .= '<button onclick="window.open(\'' . $response['label_download']['pdf'] . '\', \'_blank\')" class="inline-flex items-center px-3 py-2 ml-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" title="View PDF Label"><i class="fas fa-file-pdf mr-1"></i>PDF</button>';
+                    $downloadButtons .= '<button onclick="window.open(\'' . $response['label_download']['pdf'] . '\', \'_blank\')" class="inline-flex items-center px-3 py-2 ml-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" title="View PDF Label"><i class="fas fa-file-pdf mr-1"></i>Label PDF</button>';
                 }
 
                 // Check for Form download

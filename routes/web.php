@@ -34,6 +34,7 @@ Route::middleware(['auth:web,customer'])->group(function () {
     })->name('shipping.fedex.index');
     Route::get('/shipping', ShipEngineShippingIndex::class)->name('shipping.shipengine.index');
     Route::get('/shipments', ShipmentsIndex::class)->name('shipments.index');
+    Route::get('/shipments/receipt/{labelId}', [App\Http\Controllers\ShipmentController::class, 'showReceipt'])->name('shipments.receipt');
     Route::get('/rates', EstimateRatesIndex::class)->name('rates.index');
 });
 

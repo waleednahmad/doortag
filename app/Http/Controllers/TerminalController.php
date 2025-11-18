@@ -8,6 +8,8 @@ use Illuminate\Validation\Rules\In;
 use Stripe\Exception\InvalidRequestException;
 use Stripe\StripeClient;
 
+use function Laravel\Prompts\info;
+
 class TerminalController
 {
     private $stripe;
@@ -112,7 +114,7 @@ class TerminalController
             // Set test mode if requested
             $testMode = $request->input('test_mode', false);
             $this->setTestMode($testMode);
-            
+
             $intent = $this->stripe->paymentIntents->create([
                 'amount' => $request->input('amount', 2000),
                 'currency' => 'usd',
@@ -271,10 +273,10 @@ class TerminalController
         try {
             // Always use test mode for now as requested
             $this->setTestMode(false);
-            
+
             $amount = $request->input('amount'); // Amount in cents
             $description = $request->input('description', 'Shipping Label Payment');
-            
+
             info('Creating shipping payment intent', [
                 'amount' => $amount,
                 'description' => $description,
@@ -285,7 +287,7 @@ class TerminalController
             if (!$amount || $amount < 50) {
                 throw new \Exception('Invalid amount. Minimum amount is $0.50');
             }
-            
+
             $intent = $this->stripe->paymentIntents->create([
                 'amount' => $amount,
                 'currency' => 'usd',
@@ -319,10 +321,10 @@ class TerminalController
         try {
             // Always use test mode for now
             $this->setTestMode(false);
-            
+
             $readerId = $request->input('reader_id');
             $paymentIntentId = $request->input('payment_intent_id');
-            
+
             info('Processing shipping payment on reader', [
                 'reader_id' => $readerId,
                 'payment_intent_id' => $paymentIntentId
@@ -332,11 +334,11 @@ class TerminalController
             if (!$readerId) {
                 throw new \Exception('Reader ID is required');
             }
-            
+
             if (!$paymentIntentId) {
                 throw new \Exception('Payment Intent ID is required');
             }
-            
+
             $reader = $this->stripe->terminal->readers->processPaymentIntent(
                 $readerId,
                 ['payment_intent' => $paymentIntentId]
@@ -363,7 +365,7 @@ class TerminalController
         try {
             // Always use test mode for now
             $this->setTestMode(false);
-            
+
             $intent = $this->stripe->paymentIntents->retrieve(
                 $request->input('payment_intent_id')
             );
@@ -428,33 +430,27 @@ class TerminalController
             $reason = $request->input('reason', 'requested_by_customer');
             $metadata = $request->input('metadata', []);
 
-            Log::info('Processing refund', [
-                'payment_intent_id' => $paymentIntentId,
-                'amount' => $amount,
-                'reason' => $reason
-            ]);
-
             // Get the payment intent to find the charge
             $paymentIntent = $this->stripe->paymentIntents->retrieve($paymentIntentId);
-            
+
             if (!$paymentIntent) {
                 return response()->json(['error' => 'Payment intent not found'], 404);
             }
 
             if ($paymentIntent->status !== 'succeeded') {
-                return response()->json(['error' => 'Payment intent must be succeeded to refund'], 400);
+                return response()->json(['error' => 'Payment intent must be succeeded to refund. Current status: ' . $paymentIntent->status], 400);
             }
 
-            $charges = $paymentIntent->charges->data;
-            if (empty($charges)) {
-                return response()->json(['error' => 'No charges found for this payment intent'], 400);
-            }
+            // Get the charge ID from latest_charge property
+            $chargeId = $paymentIntent->latest_charge ?? null;
 
-            $charge = $charges[0]; // Get the first (and usually only) charge
+            if (!$chargeId) {
+                return response()->json(['error' => 'No charge found for this payment intent'], 400);
+            }
 
             // Create refund parameters
             $refundParams = [
-                'charge' => $charge->id,
+                'charge' => $chargeId,
                 'reason' => $reason,
                 'metadata' => array_merge($metadata, [
                     'payment_intent_id' => $paymentIntentId,
@@ -471,13 +467,6 @@ class TerminalController
             // Create the refund
             $refund = $this->stripe->refunds->create($refundParams);
 
-            Log::info('Refund created successfully', [
-                'refund_id' => $refund->id,
-                'amount' => $refund->amount / 100,
-                'status' => $refund->status,
-                'charge_id' => $refund->charge
-            ]);
-
             return response()->json([
                 'success' => true,
                 'refund' => $refund,
@@ -486,7 +475,6 @@ class TerminalController
                 'status' => $refund->status,
                 'reason' => $refund->reason
             ]);
-
         } catch (InvalidRequestException $e) {
             Log::error('Stripe refund validation error: ' . $e->getMessage());
             return response()->json(['error' => 'Refund validation error: ' . $e->getMessage()], 400);
