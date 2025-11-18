@@ -4,7 +4,7 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInit6e3d3d878931ea29ba2b3eca9e319988
+class ComposerStaticInit5eb3581439350a8a44a6fc711a8d8790
 {
     public static $files = array (
         '6e3fae29631ef280660b3cdad06f25a8' => __DIR__ . '/..' . '/symfony/deprecation-contracts/function.php',
@@ -234,8 +234,8 @@ class ComposerStaticInit6e3d3d878931ea29ba2b3eca9e319988
         'phpDocumentor\\Reflection\\' => 
         array (
             0 => __DIR__ . '/..' . '/phpdocumentor/reflection-common/src',
-            1 => __DIR__ . '/..' . '/phpdocumentor/reflection-docblock/src',
-            2 => __DIR__ . '/..' . '/phpdocumentor/type-resolver/src',
+            1 => __DIR__ . '/..' . '/phpdocumentor/type-resolver/src',
+            2 => __DIR__ . '/..' . '/phpdocumentor/reflection-docblock/src',
         ),
         'iamcal\\' => 
         array (
@@ -419,8 +419,8 @@ class ComposerStaticInit6e3d3d878931ea29ba2b3eca9e319988
         ),
         'Psr\\Http\\Message\\' => 
         array (
-            0 => __DIR__ . '/..' . '/psr/http-factory/src',
-            1 => __DIR__ . '/..' . '/psr/http-message/src',
+            0 => __DIR__ . '/..' . '/psr/http-message/src',
+            1 => __DIR__ . '/..' . '/psr/http-factory/src',
         ),
         'Psr\\Http\\Client\\' => 
         array (
@@ -484,8 +484,8 @@ class ComposerStaticInit6e3d3d878931ea29ba2b3eca9e319988
         ),
         'Nette\\' => 
         array (
-            0 => __DIR__ . '/..' . '/nette/schema/src',
-            1 => __DIR__ . '/..' . '/nette/utils/src',
+            0 => __DIR__ . '/..' . '/nette/utils/src',
+            1 => __DIR__ . '/..' . '/nette/schema/src',
         ),
         'Monolog\\' => 
         array (
@@ -505,8 +505,8 @@ class ComposerStaticInit6e3d3d878931ea29ba2b3eca9e319988
         ),
         'League\\Uri\\' => 
         array (
-            0 => __DIR__ . '/..' . '/league/uri',
-            1 => __DIR__ . '/..' . '/league/uri-interfaces',
+            0 => __DIR__ . '/..' . '/league/uri-interfaces',
+            1 => __DIR__ . '/..' . '/league/uri',
         ),
         'League\\MimeTypeDetection\\' => 
         array (
@@ -690,6 +690,7 @@ class ComposerStaticInit6e3d3d878931ea29ba2b3eca9e319988
     public static $classMap = array (
         'App\\Http\\Controllers\\Auth\\AuthenticatedSessionController' => __DIR__ . '/../..' . '/app/Http/Controllers/Auth/AuthenticatedSessionController.php',
         'App\\Http\\Controllers\\Auth\\RegisteredUserController' => __DIR__ . '/../..' . '/app/Http/Controllers/Auth/RegisteredUserController.php',
+        'App\\Http\\Controllers\\ShipmentController' => __DIR__ . '/../..' . '/app/Http/Controllers/ShipmentController.php',
         'App\\Http\\Controllers\\TerminalController' => __DIR__ . '/../..' . '/app/Http/Controllers/TerminalController.php',
         'App\\Http\\Middleware\\AuthMultiGuard' => __DIR__ . '/../..' . '/app/Http/Middleware/AuthMultiGuard.php',
         'App\\Http\\Requests\\Auth\\LoginRequest' => __DIR__ . '/../..' . '/app/Http/Requests/Auth/LoginRequest.php',
@@ -9005,9 +9006,9 @@ class ComposerStaticInit6e3d3d878931ea29ba2b3eca9e319988
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->prefixLengthsPsr4 = ComposerStaticInit6e3d3d878931ea29ba2b3eca9e319988::$prefixLengthsPsr4;
-            $loader->prefixDirsPsr4 = ComposerStaticInit6e3d3d878931ea29ba2b3eca9e319988::$prefixDirsPsr4;
-            $loader->classMap = ComposerStaticInit6e3d3d878931ea29ba2b3eca9e319988::$classMap;
+            $loader->prefixLengthsPsr4 = ComposerStaticInit5eb3581439350a8a44a6fc711a8d8790::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInit5eb3581439350a8a44a6fc711a8d8790::$prefixDirsPsr4;
+            $loader->classMap = ComposerStaticInit5eb3581439350a8a44a6fc711a8d8790::$classMap;
 
         }, null, ClassLoader::class);
     }

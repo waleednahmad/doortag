@@ -8,6 +8,7 @@ $baseDir = dirname($vendorDir);
 return array(
     'App\\Http\\Controllers\\Auth\\AuthenticatedSessionController' => $baseDir . '/app/Http/Controllers/Auth/AuthenticatedSessionController.php',
     'App\\Http\\Controllers\\Auth\\RegisteredUserController' => $baseDir . '/app/Http/Controllers/Auth/RegisteredUserController.php',
+    'App\\Http\\Controllers\\ShipmentController' => $baseDir . '/app/Http/Controllers/ShipmentController.php',
     'App\\Http\\Controllers\\TerminalController' => $baseDir . '/app/Http/Controllers/TerminalController.php',
     'App\\Http\\Middleware\\AuthMultiGuard' => $baseDir . '/app/Http/Middleware/AuthMultiGuard.php',
     'App\\Http\\Requests\\Auth\\LoginRequest' => $baseDir . '/app/Http/Requests/Auth/LoginRequest.php',

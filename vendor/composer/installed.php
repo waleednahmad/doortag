@@ -3,7 +3,7 @@
         'name' => 'tallstackui/starter-kit',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => 'ff2ada52ee88dacdd20d12a27f8ebc653674c579',
+        'reference' => '12ea30dc7722bf99ad9efac54d0d05e84d69159c',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -1550,7 +1550,7 @@
         'tallstackui/starter-kit' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => 'ff2ada52ee88dacdd20d12a27f8ebc653674c579',
+            'reference' => '12ea30dc7722bf99ad9efac54d0d05e84d69159c',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
