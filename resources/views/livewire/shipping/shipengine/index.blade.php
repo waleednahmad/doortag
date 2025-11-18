@@ -1350,20 +1350,9 @@
                                         @endif
                                     </div>
 
-                                    {{-- Signature - Only show when certifications are complete --}}
+                                    {{-- Hybrid Signature - Wacom STU-500 + Browser Fallback --}}
                                     @if ($this->certificationsCompleted)
-                                        <div class="mt-6" x-data="{ signatureReady: false }" x-init="setTimeout(() => {
-                                            // Force a reflow to ensure DOM is ready
-                                            document.body.offsetHeight;
-                                            // Wait additional time for canvas initialization
-                                            setTimeout(() => {
-                                                signatureReady = true;
-                                                // Trigger window resize to help signature component initialize
-                                                $nextTick(() => {
-                                                    window.dispatchEvent(new Event('resize'));
-                                                });
-                                            }, 200);
-                                        }, 600)"
+                                        <div class="mt-6" x-data="hybridSignature()" x-init="initSignature()"
                                             wire:key="signature-{{ $certifyHazardousMaterials }}-{{ $certifyInvoiceAccuracy }}">
                                             <h3
                                                 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
@@ -1371,20 +1360,92 @@
                                                 Signature Confirmation
                                             </h3>
 
-                                            <div x-show="signatureReady" x-transition>
-                                                <x-signature wire:model="signature" label="Sign Below"
-                                                    id="modal-signature" hint="Please sign in the box below" clearable
-                                                    exportable color="#000000" background="#ffffff"
-                                                    :height="200" />
+                                            <!-- Signature Method Selector -->
+                                            <div class="mb-4 flex gap-4">
+                                                <label class="flex items-center cursor-pointer">
+                                                    <input type="radio" x-model="signatureMethod" value="wacom" :disabled="!wacomAvailable" class="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500">
+                                                    <span :class="wacomAvailable ? 'text-gray-900 dark:text-white' : 'text-gray-400'">
+                                                        <i class="fas fa-tablet-alt mr-1"></i>
+                                                        Wacom STU-500
+                                                        <span x-show="wacomAvailable" class="text-green-600 font-medium">(Connected)</span>
+                                                        <span x-show="!wacomAvailable" class="text-red-600">(Not Available)</span>
+                                                    </span>
+                                                </label>
+                                                <label class="flex items-center cursor-pointer">
+                                                    <input type="radio" x-model="signatureMethod" value="browser" class="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500">
+                                                    <span class="text-gray-900 dark:text-white">
+                                                        <i class="fas fa-mouse-pointer mr-1"></i>
+                                                        Browser Signature
+                                                    </span>
+                                                </label>
                                             </div>
 
-                                            <div x-show="!signatureReady"
-                                                class="flex items-center justify-center py-12">
-                                                <div
-                                                    class="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-600">
+                                            <!-- Wacom Signature -->
+                                            <div x-show="signatureMethod === 'wacom'" x-transition class="space-y-4">
+                                                <!-- Wacom Status Display -->
+                                                <div class="p-3 rounded-lg" :class="padConnected ? 'bg-green-50 border border-green-200 dark:bg-green-900/20 dark:border-green-700' : 'bg-red-50 border border-red-200 dark:bg-red-900/20 dark:border-red-700'">
+                                                    <div class="flex items-center">
+                                                        <i :class="padConnected ? 'fas fa-check-circle text-green-600' : 'fas fa-exclamation-circle text-red-600'" class="mr-2"></i>
+                                                        <span x-text="padStatus" class="text-sm font-medium"></span>
+                                                    </div>
                                                 </div>
-                                                <span class="ml-3 text-gray-600">Initializing signature pad...</span>
+
+                                                <!-- Signature Display Area -->
+                                                <div class="border-2 border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-800 min-h-[200px] flex items-center justify-center">
+                                                    <div x-show="!signatureData" class="text-center text-gray-500 dark:text-gray-400">
+                                                        <i class="fas fa-pen-nib text-3xl mb-2"></i>
+                                                        <p x-text="padConnected ? 'Please sign on the Wacom STU-500 pad' : 'Connecting to signature pad...'"></p>
+                                                    </div>
+                                                    
+                                                    <!-- Signature Preview -->
+                                                    <div x-show="signatureData" class="w-full h-full">
+                                                        <img :src="signatureData" alt="Signature" class="max-w-full max-h-full mx-auto border rounded">
+                                                    </div>
+                                                </div>
+
+                                                <!-- Action Buttons -->
+                                                <div class="flex gap-3">
+                                                    <button @click="clearSignature()" x-show="signatureData" 
+                                                            class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded transition-colors">
+                                                        <i class="fas fa-eraser mr-1"></i>
+                                                        Clear Signature
+                                                    </button>
+                                                    <button @click="captureSignature()" :disabled="!padConnected"
+                                                            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded transition-colors">
+                                                        <i class="fas fa-capture mr-1"></i>
+                                                        Capture Signature
+                                                    </button>
+                                                </div>
                                             </div>
+
+                                            <!-- Browser Signature (Original TallStackUI) -->
+                                            <div x-show="signatureMethod === 'browser'" x-transition>
+                                                <div x-data="{ signatureReady: false }" x-init="setTimeout(() => {
+                                                    document.body.offsetHeight;
+                                                    setTimeout(() => {
+                                                        signatureReady = true;
+                                                        $nextTick(() => {
+                                                            window.dispatchEvent(new Event('resize'));
+                                                        });
+                                                    }, 200);
+                                                }, 300)">
+                                                    <div x-show="signatureReady" x-transition>
+                                                        <x-signature wire:model="signature" label="Sign Below"
+                                                            id="modal-signature" hint="Please sign in the box below" clearable
+                                                            exportable color="#000000" background="#ffffff"
+                                                            :height="200" />
+                                                    </div>
+
+                                                    <div x-show="!signatureReady"
+                                                        class="flex items-center justify-center py-12">
+                                                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-600"></div>
+                                                        <span class="ml-3 text-gray-600 dark:text-gray-400">Initializing signature pad...</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Hidden input to store signature data for Livewire -->
+                                            <input type="hidden" wire:model="signature" x-ref="signatureInput">
                                         </div>
                                     @else
                                         <div
@@ -1835,5 +1896,207 @@
                 clearInterval(paymentPollInterval);
             }
         });
+    </script>
+
+    <!-- Wacom STU SDK -->
+    <script src="{{ asset('js/wacom-stu-sdk.js') }}"></script>
+
+    <script>
+    // Hybrid Signature Component
+    function hybridSignature() {
+        return {
+            signatureMethod: 'browser', // Default to browser
+            wacomAvailable: false,
+            padConnected: false,
+            padStatus: 'Checking for Wacom STU-500...',
+            signatureData: null,
+            tablet: null,
+            
+            async initSignature() {
+                // Try to initialize Wacom first
+                await this.initWacomPad();
+                
+                // Set default method based on Wacom availability
+                if (this.wacomAvailable) {
+                    this.signatureMethod = 'wacom';
+                } else {
+                    this.signatureMethod = 'browser';
+                }
+            },
+            
+            async initWacomPad() {
+                try {
+                    // Check if Wacom STU SDK is loaded
+                    if (typeof Module !== 'undefined' && Module.STU) {
+                        this.tablet = new Module.STU.Tablet();
+                        
+                        // Try to connect to the first available STU device
+                        const devices = await this.tablet.getDevices();
+                        
+                        if (devices.length > 0) {
+                            await this.tablet.connect(devices[0]);
+                            this.padConnected = true;
+                            this.wacomAvailable = true;
+                            this.padStatus = 'Wacom STU-500 Connected and Ready';
+                            
+                            // Set up the tablet for signature capture
+                            this.setupTablet();
+                            
+                            console.log('Wacom STU-500 successfully connected');
+                        } else {
+                            this.wacomAvailable = false;
+                            this.padStatus = 'No Wacom STU-500 device found. Using browser signature.';
+                            console.warn('No Wacom devices found');
+                        }
+                    } else {
+                        this.wacomAvailable = false;
+                        this.padStatus = 'Wacom SDK not loaded. Using browser signature.';
+                        console.warn('Wacom STU SDK not available');
+                    }
+                } catch (error) {
+                    console.error('Wacom initialization error:', error);
+                    this.wacomAvailable = false;
+                    this.padConnected = false;
+                    this.padStatus = 'Connection failed: ' + error.message + '. Using browser signature.';
+                }
+            },
+            
+            setupTablet() {
+                if (!this.tablet) return;
+                
+                try {
+                    // Clear the tablet display
+                    this.tablet.clearScreen();
+                    
+                    // Set up signature area with instructions
+                    const width = 640;  // STU-500 resolution
+                    const height = 480;
+                    
+                    // Display signature instructions on the tablet
+                    this.tablet.writeText(10, 10, "Shipping Label Signature", 18, 'bold');
+                    this.tablet.writeText(10, 40, "Please sign below:", 16);
+                    this.tablet.drawRectangle(10, 60, width-20, height-120, 2);
+                    this.tablet.writeText(10, height-50, "Press 'Capture Signature' when finished", 12);
+                    this.tablet.writeText(10, height-30, "or touch outside box to clear", 12);
+                    
+                    // Set up pen event handlers for real-time drawing
+                    this.tablet.onPenDown = (x, y, pressure) => {
+                        // Handle pen down events - start drawing
+                        this.tablet.beginPath();
+                        this.tablet.moveTo(x, y);
+                    };
+                    
+                    this.tablet.onPenMove = (x, y, pressure) => {
+                        // Handle pen move events for real-time drawing
+                        if (pressure > 0) {
+                            this.tablet.lineTo(x, y);
+                            this.tablet.stroke();
+                        }
+                    };
+                    
+                    this.tablet.onPenUp = (x, y, pressure) => {
+                        // Handle pen up events - end current stroke
+                        this.tablet.closePath();
+                    };
+                    
+                } catch (error) {
+                    console.error('Tablet setup error:', error);
+                    this.padStatus = 'Setup failed: ' + error.message;
+                }
+            },
+            
+            async captureSignature() {
+                if (!this.tablet || !this.padConnected) {
+                    alert('Signature pad not connected');
+                    return;
+                }
+                
+                try {
+                    // Capture the signature from the tablet
+                    const signatureImage = await this.tablet.captureImage();
+                    
+                    // Convert to base64 for storage
+                    this.signatureData = 'data:image/png;base64,' + signatureImage;
+                    
+                    // Update the Livewire component
+                    this.$refs.signatureInput.value = this.signatureData;
+                    this.$refs.signatureInput.dispatchEvent(new Event('input'));
+                    
+                    console.log('Wacom signature successfully captured');
+                    
+                    // Clear the tablet for next use
+                    this.tablet.clearScreen();
+                    this.setupTablet();
+                    
+                } catch (error) {
+                    console.error('Signature capture error:', error);
+                    alert('Failed to capture signature: ' + error.message);
+                }
+            },
+            
+            clearSignature() {
+                this.signatureData = null;
+                if (this.$refs.signatureInput) {
+                    this.$refs.signatureInput.value = '';
+                    this.$refs.signatureInput.dispatchEvent(new Event('input'));
+                }
+                
+                if (this.tablet && this.padConnected) {
+                    this.tablet.clearScreen();
+                    this.setupTablet();
+                }
+                
+                // Also clear browser signature if active
+                if (this.signatureMethod === 'browser') {
+                    // Trigger clear on TallStackUI signature component
+                    const signatureComponent = document.querySelector('#modal-signature');
+                    if (signatureComponent) {
+                        const clearButton = signatureComponent.querySelector('[data-clear]');
+                        if (clearButton) {
+                            clearButton.click();
+                        }
+                    }
+                }
+            },
+            
+            // Watch for signature method changes
+            init() {
+                this.$watch('signatureMethod', (newMethod) => {
+                    if (newMethod === 'wacom' && !this.wacomAvailable) {
+                        // Fallback to browser if Wacom not available
+                        this.signatureMethod = 'browser';
+                        alert('Wacom STU-500 not available. Using browser signature.');
+                    }
+                    
+                    // Clear any existing signature when switching methods
+                    this.clearSignature();
+                });
+            }
+        }
+    }
+
+    // Initialize when modal opens
+    document.addEventListener('livewire:init', () => {
+        Livewire.on('modal-opened', (modalName) => {
+            if (modalName === 'showModal') {
+                // Give time for the modal to render
+                setTimeout(() => {
+                    const hybridComponent = document.querySelector('[x-data*="hybridSignature"]');
+                    if (hybridComponent && hybridComponent._x_dataStack) {
+                        hybridComponent._x_dataStack[0].initSignature();
+                    }
+                }, 500);
+            }
+        });
+    });
+
+    // Handle window resize for both signature methods
+    window.addEventListener('resize', () => {
+        // Trigger resize for TallStackUI signature component
+        setTimeout(() => {
+            const event = new Event('resize');
+            window.dispatchEvent(event);
+        }, 100);
+    });
     </script>
 </div>
