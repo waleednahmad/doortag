@@ -679,10 +679,14 @@ namespace App\Models {
      * @property string $shipment_data
      * @property int|null $customer_id
      * @property int|null $user_id
+     * @property string|null $estimated_delivery_date
+     * @property string|null $carrier_delivery_days
      * @property string|null $label_id
      * @property int $id
      * @method static \Illuminate\Database\Eloquent\Builder<Shipment>|Shipment whereId($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Shipment>|Shipment whereLabelId($value)
+     * @method static \Illuminate\Database\Eloquent\Builder<Shipment>|Shipment whereCarrierDeliveryDays($value)
+     * @method static \Illuminate\Database\Eloquent\Builder<Shipment>|Shipment whereEstimatedDeliveryDate($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Shipment>|Shipment whereUserId($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Shipment>|Shipment whereCustomerId($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Shipment>|Shipment whereShipmentData($value)
