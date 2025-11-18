@@ -213,23 +213,76 @@
             margin-top: 10px;
         }
 
+
+        .price-container {
+            border-top: 2px solid #e5e7eb;
+            margin-top: 20px;
+            padding-top: 15px;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-radius: 8px;
+            padding: 20px 15px 15px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .price-grid {
+            display: table;
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 10px 0;
+        }
+
         .price-box {
-            border-top: 2px solid #c7d2fe;
-            margin-top: 10px;
-            padding-top: 10px;
-            text-align: right;
+            display: table-cell;
+            width: 33.333%;
+            text-align: center;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 12px 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            position: relative;
+        }
+
+        .price-box.total {
+            border-left: 4px solid #4f46e5;
+        }
+
+        .price-box.shipping {
+            border-left: 4px solid #10b981;
+        }
+
+        .price-box.packaging {
+            border-left: 4px solid #f59e0b;
         }
 
         .price-label {
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 600;
-            color: #4f46e5;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+            line-height: 1.2;
         }
 
+
         .price-value {
-            font-size: 16px;
+            font-size: 14px;
             font-weight: 700;
-            color: #4f46e5;
+            color: #1e293b;
+            font-family: 'Segoe UI', 'Arial', sans-serif;
+        }
+
+
+        .price-breakdown-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 10px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         /* Customs Section */
@@ -310,6 +363,117 @@
             <h1>Shipment Details Review</h1>
             <div class="header-date">Generated on {{ now()->format('F d, Y \a\t H:i A') }}</div>
         </div>
+
+        <!-- Order and Payment Information -->
+        @if (!empty($orderNumber) || !empty($paymentNumber))
+            <div class="section">
+                <div class="section-title label">
+                    Order Information
+                </div>
+                <div class="label-details">
+                    @if (!empty($orderNumber))
+                        <div class="detail-row">
+                            <div class="detail-label">Order Number:</div>
+                            <div class="detail-value" style="font-weight: 700; color: #1f2937; font-size: 13px;">
+                                #{{ str_pad($orderNumber, 6, '0', STR_PAD_LEFT) }}
+                            </div>
+                        </div>
+                    @endif
+                    @if (!empty($paymentNumber))
+                        <div class="detail-row">
+                            <div class="detail-label">Payment Number:</div>
+                            <div class="detail-value"
+                                style="font-weight: 700; color: #1f2937; font-size: 11px; font-family: 'Courier New', monospace;">
+                                {{ $paymentNumber }}
+                            </div>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        @endif
+
+        <!-- Tracking Number Section -->
+        @if (!empty($trackingNumber))
+            <div class="section">
+                <div class="section-title label">
+                    Tracking Information
+                </div>
+                <div class="label-details">
+                    <div class="detail-row">
+                        <div class="detail-label">Tracking Number:</div>
+                        <div class="detail-value" style="font-weight: 700; color: #1f2937; font-size: 13px;">
+                            {{ $trackingNumber }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        <!-- Shipping Label Details -->
+        @if ($selectedRate)
+            <div class="section">
+                <div class="section-title label">
+                    Shipping Label Details
+                </div>
+                <div class="label-details">
+                    <div class="detail-row">
+                        <div class="detail-label">Service Type:</div>
+                        <div class="detail-value">
+                            {{ ucwords(str_replace('_', ' ', $selectedRate['service_type'] ?? 'N/A')) }}
+                        </div>
+                    </div>
+
+                    <div class="detail-row">
+                        <div class="detail-label">Carrier:</div>
+                        <div class="detail-value">{{ strtoupper($selectedRate['carrier_code'] ?? 'N/A') }}</div>
+                    </div>
+
+                    @if (!empty($selectedRate['estimated_delivery_date']))
+                        <div class="detail-row">
+                            <div class="detail-label">Estimated Delivery:</div>
+                            <div class="detail-value">
+                                {{ \Carbon\Carbon::parse($selectedRate['estimated_delivery_date'])->format('F d, Y') }}
+                            </div>
+                        </div>
+                    @endif
+
+                    {{-- Price Breakdown --}}
+                    <div class="price-container">
+                        <div class="price-breakdown-title">Cost Breakdown</div>
+
+                        <div class="price-grid">
+                            @if ($packaging_amount > 0)
+                                {{-- Shipping Amount --}}
+                                <div class="price-box shipping">
+                                    <div class="price-label">Shipping</div>
+                                    <div class="price-value">
+                                        ${{ number_format(($stripe_amount_paid ?? 0) - ($packaging_amount ?? 0), 2) }}
+                                    </div>
+                                </div>
+
+                                {{-- Packaging Amount --}}
+                                <div class="price-box packaging">
+                                    <div class="price-label">Packaging</div>
+                                    <div class="price-value">
+                                        ${{ number_format($packaging_amount ?? 0, 2) }}
+                                    </div>
+                                </div>
+                            @endif
+
+                            {{-- Total Amount --}}
+                            <div class="price-box total">
+                                <div class="price-label">Total Paid</div>
+                                <div class="price-value">
+                                    ${{ number_format($stripe_amount_paid ?? 0, 2) }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        @endif
+
 
         <!-- Ship From Section -->
         @if (is_array($shipFromAddress) && !empty($shipFromAddress))
@@ -504,47 +668,6 @@
             </div>
         </div>
 
-        <!-- Shipping Label Details -->
-        @if ($selectedRate)
-            <div class="section">
-                <div class="section-title label">
-                    Shipping Label Details
-                </div>
-                <div class="label-details">
-                    <div class="detail-row">
-                        <div class="detail-label">Service Type:</div>
-                        <div class="detail-value">
-                            {{ ucwords(str_replace('_', ' ', $selectedRate['service_type'] ?? 'N/A')) }}
-                        </div>
-                    </div>
-
-                    <div class="detail-row">
-                        <div class="detail-label">Carrier:</div>
-                        <div class="detail-value">{{ strtoupper($selectedRate['carrier_code'] ?? 'N/A') }}</div>
-                    </div>
-
-                    @if (!empty($selectedRate['estimated_delivery_date']))
-                        <div class="detail-row">
-                            <div class="detail-label">Estimated Delivery:</div>
-                            <div class="detail-value">
-                                {{ \Carbon\Carbon::parse($selectedRate['estimated_delivery_date'])->format('F d, Y') }}
-                            </div>
-                        </div>
-                    @endif
-
-                    <div class="price-box">
-                        <div class="price-label">Total Cost:</div>
-                        <div class="price-value">
-                            @auth('customer')
-                                ${{ number_format($end_user_total ?? 0, 2) }}
-                            @else
-                                ${{ $selectedRate['calculated_amount'] ?? 'N/A' }}
-                            @endauth
-                        </div>
-                    </div>
-                </div>
-            </div>
-        @endif
 
         <!-- Customs Section (International Only) -->
         @if (is_array($shipToAddress) && ($shipToAddress['country_code'] ?? 'US') != 'US' && !empty($customs['customs_items']))
@@ -635,22 +758,7 @@
             </div>
         @endif
 
-        <!-- Tracking Number Section -->
-        @if (!empty($trackingNumber))
-            <div class="section">
-                <div class="section-title label">
-                    Tracking Information
-                </div>
-                <div class="label-details">
-                    <div class="detail-row">
-                        <div class="detail-label">Tracking Number:</div>
-                        <div class="detail-value" style="font-weight: 700; color: #1f2937; font-size: 13px;">
-                            {{ $trackingNumber }}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        @endif
+
 
         <!-- Signature Section -->
         <div class="signature-section">

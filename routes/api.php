@@ -19,3 +19,9 @@ Route::post('/terminal/simulate-payment', [TerminalController::class, 'simulateP
 Route::post('/terminal/capture-payment-intent', [TerminalController::class, 'capturePaymentIntent']);
 Route::post('/terminal/check-payment-status', [TerminalController::class, 'checkPaymentStatus']);
 Route::post('/terminal/cancel-payment', [TerminalController::class, 'cancelPayment']);
+
+// Shipping Payment Routes
+Route::post('/terminal/shipping/create-payment-intent', [TerminalController::class, 'createShippingPaymentIntent']);
+Route::post('/terminal/shipping/process-payment', [TerminalController::class, 'processShippingPayment']);
+Route::post('/terminal/shipping/verify-payment', [TerminalController::class, 'verifyShippingPayment']);
+Route::post('/terminal/refund-payment', [TerminalController::class, 'refundPayment'])->name('api.terminal.refund-payment');

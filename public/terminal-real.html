@@ -170,16 +170,27 @@
 </head>
 <body>
     <div class="container">
-        <h2>🔌 Stripe S700 Terminal <span class="mode-badge">REAL HARDWARE</span></h2>
-        <p class="subtitle">Connect and process payments with your physical S700 reader</p>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <div>
+                <h2 style="margin: 0;">🔌 Stripe S700 Terminal <span class="mode-badge" id="mode-badge">REAL HARDWARE</span></h2>
+                <p class="subtitle" style="margin: 5px 0 0 0;">Connect and process payments with your physical S700 reader</p>
+            </div>
+            <div style="text-align: right;">
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 600;">
+                    <input type="checkbox" id="test-mode-toggle" style="width: 20px; height: 20px; cursor: pointer;">
+                    <span>Test Mode</span>
+                </label>
+                <p style="font-size: 12px; color: #666; margin: 5px 0 0 0;">Use test cards with real reader</p>
+            </div>
+        </div>
         
-        <div class="info-box">
+        <div class="info-box" id="info-box">
             <h4>📋 Before You Start:</h4>
             <ul>
-                <li>Ensure your S700 reader is powered on and connected to the internet</li>
-                <li>Have your reader's registration code ready (found on the reader screen)</li>
-                <li>The reader will display payment amount and prompt customer to tap/insert card</li>
-                <li>No simulation needed - real card transactions only</li>
+                <li id="info-1">Ensure your S700 reader is powered on and connected to the internet</li>
+                <li id="info-2">Have your reader's registration code ready (found on the reader screen)</li>
+                <li id="info-3">The reader will display payment amount and prompt customer to tap/insert card</li>
+                <li id="info-4">No simulation needed - real card transactions only</li>
             </ul>
         </div>
 
@@ -259,6 +270,65 @@
         let paymentIntentId = null;
         let pollInterval = null;
         let availableReaders = [];
+        let testMode = false;
+
+        // Toggle test mode
+        document.getElementById('test-mode-toggle').addEventListener('change', function() {
+            testMode = this.checked;
+            updateUIForMode();
+            resetForm();
+        });
+
+        function updateUIForMode() {
+            const badge = document.getElementById('mode-badge');
+            const infoBox = document.getElementById('info-box');
+            
+            if (testMode) {
+                badge.textContent = 'TEST MODE (Real Reader + Test Cards)';
+                badge.style.background = '#6772e5';
+                infoBox.innerHTML = `
+                    <h4>🧪 Test Mode Active:</h4>
+                    <ul>
+                        <li>✅ Using your REAL S700 reader (serial: STR70Z1D525003251)</li>
+                        <li>💳 Use your Stripe TEST CARDS for payments</li>
+                        <li>🔒 Safe testing - no real charges will be made</li>
+                        <li>📊 Perfect for training and testing workflows</li>
+                        <li>⚡ Auto-capture enabled for faster testing</li>
+                    </ul>
+                `;
+            } else {
+                badge.textContent = 'LIVE MODE (Real Charges)';
+                badge.style.background = '#dc3545';
+                infoBox.innerHTML = `
+                    <h4>🚨 LIVE MODE - Real Payments:</h4>
+                    <ul>
+                        <li id="info-1">⚠️ REAL CHARGES will be made to customer cards</li>
+                        <li id="info-2">💰 Money will be transferred to your account</li>
+                        <li id="info-3">🏪 Use only for actual customer transactions</li>
+                        <li id="info-4">🔴 Switch to Test Mode for practice/testing</li>
+                    </ul>
+                `;
+            }
+        }
+
+        function resetForm() {
+            locationId = null;
+            readerId = null;
+            paymentIntentId = null;
+            document.getElementById('load-readers').disabled = false;
+            document.getElementById('create-location').disabled = false;
+            document.getElementById('register-reader').disabled = true;
+            document.getElementById('process-payment').disabled = true;
+            document.getElementById('capture-payment').disabled = true;
+            document.getElementById('cancel-payment').disabled = true;
+            document.getElementById('readers-list').style.display = 'none';
+            document.getElementById('register-section').style.display = 'none';
+            document.getElementById('waiting-reader').classList.remove('active');
+            if (pollInterval) clearInterval(pollInterval);
+            
+            const modeText = testMode ? 'TEST MODE (Safe for testing)' : 'LIVE MODE (Real charges)';
+            log('🔄 Switched to ' + modeText, 'info');
+        }
 
         // Update amount display
         document.getElementById('amount').addEventListener('input', function() {
@@ -431,7 +501,10 @@
                 const intentResponse = await fetch('/api/terminal/create-payment-intent', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ amount: parseInt(amount) })
+                    body: JSON.stringify({ 
+                        amount: parseInt(amount),
+                        test_mode: testMode
+                    })
                 });
                 const intentData = await intentResponse.json();
                 
@@ -462,11 +535,17 @@
                     btn.disabled = false;
                 } else {
                     log('✅ Payment sent to reader! Amount is now displayed on S700 screen.', 'success');
-                    log('⏳ Waiting for customer to tap or insert card...', 'warning');
+                    log('⏳ Waiting for customer to present card...', 'warning');
+                    
+                    if (testMode) {
+                        log('🧪 TEST MODE: Use your Stripe test card on the reader', 'info');
+                        log('💳 Test cards: 4242424242424242, 4000000000000002', 'info');
+                    } else {
+                        log('🚨 LIVE MODE: Real customer card will be charged', 'warning');
+                    }
+                    
                     document.getElementById('waiting-reader').classList.add('active');
                     document.getElementById('cancel-payment').disabled = false;
-                    
-                    // Start polling for payment status
                     startPolling();
                 }
             } catch (error) {

@@ -240,7 +240,7 @@
                                             <p>{{ $shipTo['city_locality'] ?? '' }},
                                                 {{ $shipTo['state_province'] ?? '' }}
                                                 {{ $shipTo['postal_code'] ?? '' }},
-                                            {{ $label['ship_to_address_country_full_name'] ?? $shipTo['country_code'] }}
+                                                {{ $label['ship_to_address_country_full_name'] ?? $shipTo['country_code'] }}
                                             </p>
                                         </div>
                                     </div>
@@ -289,10 +289,11 @@
                                     <!-- Cost Info -->
                                     @if (!empty($cost))
                                         <div>
-                                            <h4 class="font-medium text-gray-900 dark:text-white mb-2">Shipping Cost
+                                            <h4 class="font-medium text-gray-900 dark:text-white mb-2">
+                                                Amount
                                             </h4>
                                             <div class="text-gray-600 dark:text-gray-400">
-                                                @auth('web')
+                                                {{-- @auth('web')
                                                     <p class="text-lg font-bold text-gray-900 dark:text-white">
                                                         ${{ number_format($cost['origin_total'] ?? 0, 2) }}
                                                     </p>
@@ -306,7 +307,10 @@
                                                     <p class="text-lg font-bold text-gray-900 dark:text-white">
                                                         ${{ number_format($cost['end_user_total'] ?? 0, 2) }}
                                                     </p>
-                                                @endauth
+                                                    @endauth --}}
+                                                <p class="text-lg font-bold text-gray-900 dark:text-white">
+                                                    ${{ number_format($label['stripe_amount_paid'] ?? 0, 2) }}
+                                                </p>
                                             </div>
                                         </div>
                                     @endif

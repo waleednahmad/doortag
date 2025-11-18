@@ -3,16 +3,33 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rules\In;
 use Stripe\Exception\InvalidRequestException;
 use Stripe\StripeClient;
 
 class TerminalController
 {
     private $stripe;
+    private $testMode = false;
 
     public function __construct()
     {
+        // Default to live mode
         $this->stripe = new StripeClient(env('STRIPE_SECRET'));
+    }
+
+    /**
+     * Set test mode for this instance
+     */
+    private function setTestMode($testMode = false)
+    {
+        $this->testMode = $testMode;
+        if ($testMode) {
+            $this->stripe = new StripeClient(env('STRIPE_TEST_SECRET'));
+        } else {
+            $this->stripe = new StripeClient(env('STRIPE_SECRET'));
+        }
     }
 
     /**
@@ -21,6 +38,8 @@ class TerminalController
     public function listReaders()
     {
         try {
+            $this->setTestMode(false);
+
             $readers = $this->stripe->terminal->readers->all(['limit' => 100]);
             return response()->json($readers);
         } catch (\Throwable $e) {
@@ -90,6 +109,10 @@ class TerminalController
     public function createPaymentIntent(Request $request)
     {
         try {
+            // Set test mode if requested
+            $testMode = $request->input('test_mode', false);
+            $this->setTestMode($testMode);
+            
             $intent = $this->stripe->paymentIntents->create([
                 'amount' => $request->input('amount', 2000),
                 'currency' => 'usd',
@@ -235,6 +258,240 @@ class TerminalController
 
             return response()->json($reader);
         } catch (\Throwable $e) {
+            info('Cancel payment error: ' . $e->getMessage());
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Create Payment Intent for Shipping Cost
+     */
+    public function createShippingPaymentIntent(Request $request)
+    {
+        try {
+            // Always use test mode for now as requested
+            $this->setTestMode(false);
+            
+            $amount = $request->input('amount'); // Amount in cents
+            $description = $request->input('description', 'Shipping Label Payment');
+            
+            info('Creating shipping payment intent', [
+                'amount' => $amount,
+                'description' => $description,
+                'test_mode' => $this->testMode
+            ]);
+
+            // Validate amount
+            if (!$amount || $amount < 50) {
+                throw new \Exception('Invalid amount. Minimum amount is $0.50');
+            }
+            
+            $intent = $this->stripe->paymentIntents->create([
+                'amount' => $amount,
+                'currency' => 'usd',
+                'payment_method_types' => ['card_present'],
+                'capture_method' => 'automatic',
+                'description' => $description,
+                'metadata' => [
+                    'type' => 'shipping_payment',
+                    'service_type' => $request->input('service_type', ''),
+                    'carrier' => $request->input('carrier', ''),
+                ]
+            ]);
+
+            info('Payment intent created successfully', ['intent_id' => $intent->id]);
+
+            return response()->json($intent);
+        } catch (\Throwable $e) {
+            info('Create shipping payment intent error: ' . $e->getMessage(), [
+                'request_data' => $request->all(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Process Shipping Payment on Terminal
+     */
+    public function processShippingPayment(Request $request)
+    {
+        try {
+            // Always use test mode for now
+            $this->setTestMode(false);
+            
+            $readerId = $request->input('reader_id');
+            $paymentIntentId = $request->input('payment_intent_id');
+            
+            info('Processing shipping payment on reader', [
+                'reader_id' => $readerId,
+                'payment_intent_id' => $paymentIntentId
+            ]);
+
+            // Validate inputs
+            if (!$readerId) {
+                throw new \Exception('Reader ID is required');
+            }
+            
+            if (!$paymentIntentId) {
+                throw new \Exception('Payment Intent ID is required');
+            }
+            
+            $reader = $this->stripe->terminal->readers->processPaymentIntent(
+                $readerId,
+                ['payment_intent' => $paymentIntentId]
+            );
+
+            info('Payment processing started on reader', ['reader_action' => $reader->action ?? null]);
+
+            return response()->json($reader);
+        } catch (\Throwable $e) {
+            info('Process shipping payment error: ' . $e->getMessage(), [
+                'reader_id' => $request->input('reader_id'),
+                'payment_intent_id' => $request->input('payment_intent_id'),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Verify Payment Success and Return Details
+     */
+    public function verifyShippingPayment(Request $request)
+    {
+        try {
+            // Always use test mode for now
+            $this->setTestMode(false);
+            
+            $intent = $this->stripe->paymentIntents->retrieve(
+                $request->input('payment_intent_id')
+            );
+
+            // Log the actual status for debugging
+            Log::info('Payment Intent Status: ' . $intent->status, [
+                'payment_intent_id' => $intent->id,
+                'status' => $intent->status,
+                'amount' => $intent->amount,
+                'charges' => count($intent->charges->data ?? [])
+            ]);
+
+            if ($intent->status === 'succeeded') {
+                return response()->json([
+                    'success' => true,
+                    'payment_intent' => $intent,
+                    'status' => $intent->status,
+                    'amount_paid' => $intent->amount / 100,
+                    'payment_method_id' => $intent->payment_method,
+                    'charges' => $intent->charges->data ?? []
+                ]);
+            } elseif (in_array($intent->status, ['processing', 'requires_capture'])) {
+                // These are normal processing states - not failures
+                return response()->json([
+                    'success' => false,
+                    'status' => $intent->status,
+                    'payment_intent' => $intent,
+                    'message' => 'Payment is being processed on the reader'
+                ]);
+            } else {
+                // These could be actual failures or other states
+                return response()->json([
+                    'success' => false,
+                    'status' => $intent->status,
+                    'payment_intent' => $intent,
+                    'message' => 'Payment status: ' . $intent->status
+                ]);
+            }
+        } catch (\Throwable $e) {
+            Log::error('Verify shipping payment error: ' . $e->getMessage());
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Refund a payment intent
+     */
+    public function refundPayment(Request $request)
+    {
+        try {
+            $this->setTestMode(false);
+
+            $request->validate([
+                'payment_intent_id' => 'required|string',
+                'amount' => 'nullable|numeric|min:0.01',
+                'reason' => 'nullable|string|in:duplicate,fraudulent,requested_by_customer',
+                'metadata' => 'nullable|array'
+            ]);
+
+            $paymentIntentId = $request->input('payment_intent_id');
+            $amount = $request->input('amount'); // Amount in dollars, will be converted to cents
+            $reason = $request->input('reason', 'requested_by_customer');
+            $metadata = $request->input('metadata', []);
+
+            Log::info('Processing refund', [
+                'payment_intent_id' => $paymentIntentId,
+                'amount' => $amount,
+                'reason' => $reason
+            ]);
+
+            // Get the payment intent to find the charge
+            $paymentIntent = $this->stripe->paymentIntents->retrieve($paymentIntentId);
+            
+            if (!$paymentIntent) {
+                return response()->json(['error' => 'Payment intent not found'], 404);
+            }
+
+            if ($paymentIntent->status !== 'succeeded') {
+                return response()->json(['error' => 'Payment intent must be succeeded to refund'], 400);
+            }
+
+            $charges = $paymentIntent->charges->data;
+            if (empty($charges)) {
+                return response()->json(['error' => 'No charges found for this payment intent'], 400);
+            }
+
+            $charge = $charges[0]; // Get the first (and usually only) charge
+
+            // Create refund parameters
+            $refundParams = [
+                'charge' => $charge->id,
+                'reason' => $reason,
+                'metadata' => array_merge($metadata, [
+                    'payment_intent_id' => $paymentIntentId,
+                    'refunded_at' => now()->toISOString(),
+                    'source' => 'shipment_void'
+                ])
+            ];
+
+            // Add amount if specified (partial refund), otherwise full refund
+            if ($amount !== null) {
+                $refundParams['amount'] = (int) ($amount * 100); // Convert to cents
+            }
+
+            // Create the refund
+            $refund = $this->stripe->refunds->create($refundParams);
+
+            Log::info('Refund created successfully', [
+                'refund_id' => $refund->id,
+                'amount' => $refund->amount / 100,
+                'status' => $refund->status,
+                'charge_id' => $refund->charge
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'refund' => $refund,
+                'refund_id' => $refund->id,
+                'amount_refunded' => $refund->amount / 100,
+                'status' => $refund->status,
+                'reason' => $refund->reason
+            ]);
+
+        } catch (InvalidRequestException $e) {
+            Log::error('Stripe refund validation error: ' . $e->getMessage());
+            return response()->json(['error' => 'Refund validation error: ' . $e->getMessage()], 400);
+        } catch (\Throwable $e) {
+            Log::error('Refund processing error: ' . $e->getMessage());
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }

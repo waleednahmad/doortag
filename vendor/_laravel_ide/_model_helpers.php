@@ -661,6 +661,12 @@ namespace App\Models {
     /**
      * App\Models\Shipment
      *
+     * @property float|null $total_with_packaging
+     * @property float|null $packaging_amount
+     * @property string|null $stripe_payment_status
+     * @property decimal:2|null $stripe_amount_paid
+     * @property string|null $stripe_payment_intent_id
+     * @property array|null $stripe_response
      * @property string|null $ship_from
      * @property string|null $signature_path
      * @property string|null $voided_at
@@ -689,6 +695,12 @@ namespace App\Models {
      * @method static \Illuminate\Database\Eloquent\Builder<Shipment>|Shipment whereVoidedAt($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Shipment>|Shipment whereSignaturePath($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Shipment>|Shipment whereShipFrom($value)
+     * @method static \Illuminate\Database\Eloquent\Builder<Shipment>|Shipment whereStripeResponse($value)
+     * @method static \Illuminate\Database\Eloquent\Builder<Shipment>|Shipment whereStripePaymentIntentId($value)
+     * @method static \Illuminate\Database\Eloquent\Builder<Shipment>|Shipment whereStripeAmountPaid($value)
+     * @method static \Illuminate\Database\Eloquent\Builder<Shipment>|Shipment whereStripePaymentStatus($value)
+     * @method static \Illuminate\Database\Eloquent\Builder<Shipment>|Shipment wherePackagingAmount($value)
+     * @method static \Illuminate\Database\Eloquent\Builder<Shipment>|Shipment whereTotalWithPackaging($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Shipment>|Shipment newModelQuery()
      * @method static \Illuminate\Database\Eloquent\Builder<Shipment>|Shipment newQuery()
      * @method static \Illuminate\Database\Eloquent\Builder<Shipment>|Shipment query()

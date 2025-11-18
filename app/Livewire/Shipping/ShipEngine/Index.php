@@ -16,6 +16,7 @@ use TallStackUi\Traits\Interactions;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Http;
 
 class Index extends Component
 {
@@ -138,6 +139,25 @@ class Index extends Component
 
     public $showModal = false;
     public $signature;
+
+    // Payment-related properties
+    public $showPaymentModal = false;
+    public $paymentProcessing = false;
+    public $paymentRetryCount = 0;
+    public $maxRetryAttempts = 3;
+    public $paymentIntentId = null;
+    public $paymentSuccessful = false;
+    public $paymentError = null;
+    public $availableReaders = [];
+    public $selectedReaderId = null;
+
+    // Certification checkboxes
+    public $certifyHazardousMaterials = false;
+    public $certifyInvoiceAccuracy = false;
+
+    public $packagingAmount = 0;
+
+
 
     public function updated($name, $value)
     {
@@ -293,40 +313,40 @@ class Index extends Component
         // ];
 
         // Set default ship to address
-        // $this->shipToAddress = [
-        //     'name' => '',
-        //     'company_name' => '',
-        //     'phone' => '',
-        //     'email' => '',
-        //     'address_line1' => '',
-        //     'address_line2' => '',
-        //     'city_locality' => '',
-        //     "state_province" => "",
-        //     'postal_code' => '',
-        //     'country_code' => 'US',
-        //     'address_residential_indicator' => false
-        // ];
         $this->shipToAddress = [
             'name' => '',
             'company_name' => '',
             'phone' => '',
             'email' => '',
-            // 'address_line1' => '',
-            // 'address_line1' => '1600 Amphitheatre Pkwy',
-            "address_line1" => "Röntgenstr. 3",
+            'address_line1' => '',
             'address_line2' => '',
-            // 'city_locality' => '',
-            // 'city_locality' => 'mountain view',
-            "city_locality" => "Esslingen am Neckar",
-            // 'state_province' => 'CA',
+            'city_locality' => '',
             "state_province" => "",
-            // 'postal_code' => '',
-            // 'postal_code' => '94043',
-            "postal_code" => "73730",
-            // 'country_code' => 'US',
-            "country_code" => "DE",
-            'address_residential_indicator' => true
+            'postal_code' => '',
+            'country_code' => 'US',
+            'address_residential_indicator' => false
         ];
+        // $this->shipToAddress = [
+        //     'name' => '',
+        //     'company_name' => '',
+        //     'phone' => '',
+        //     'email' => '',
+        //     // 'address_line1' => '',
+        //     // 'address_line1' => '1600 Amphitheatre Pkwy',
+        //     "address_line1" => "Röntgenstr. 3",
+        //     'address_line2' => '',
+        //     // 'city_locality' => '',
+        //     // 'city_locality' => 'mountain view',
+        //     "city_locality" => "Esslingen am Neckar",
+        //     // 'state_province' => 'CA',
+        //     "state_province" => "",
+        //     // 'postal_code' => '',
+        //     // 'postal_code' => '94043',
+        //     "postal_code" => "73730",
+        //     // 'country_code' => 'US',
+        //     "country_code" => "DE",
+        //     'address_residential_indicator' => true
+        // ];
     }
 
     public function loadCarriers()
@@ -791,12 +811,15 @@ class Index extends Component
 
     public function createLabel()
     {
-        // Validate signature, it's required
-
+        // Validate signature and certifications
         $this->validate([
             'signature' => 'required|string',
+            'certifyHazardousMaterials' => 'accepted',
+            'certifyInvoiceAccuracy' => $this->shipToAddress['country_code'] != 'US' ? 'accepted' : 'nullable',
         ], [
             'signature.required' => 'Please provide a signature before creating the label.',
+            'certifyHazardousMaterials.accepted' => 'You must certify that the shipment does not contain hazardous materials.',
+            'certifyInvoiceAccuracy.accepted' => 'You must certify the accuracy of the invoice information.',
         ]);
 
         if (!$this->selectedRate) {
@@ -804,14 +827,228 @@ class Index extends Component
             return;
         }
 
-        // Save signature as PNG file
-        $signaturePath = $this->saveSignature($this->signature);
+        // Close the shipment details modal and show payment modal
+        $this->showModal = false;
+        $this->showPaymentModal();
+    }
 
-        if (!$signaturePath) {
-            $this->toast()->error('Failed to save signature. Please try again.')->send();
+    public function showPaymentModal()
+    {
+        // Reset payment state
+        $this->resetPaymentState();
+
+        // Load available readers
+        $this->loadReaders();
+
+        // Show payment modal
+        $this->showPaymentModal = true;
+    }
+
+    public function resetPaymentState()
+    {
+        $this->paymentProcessing = false;
+        $this->paymentRetryCount = 0;
+        $this->paymentIntentId = null;
+        $this->paymentSuccessful = false;
+        $this->paymentError = null;
+        $this->selectedReaderId = null;
+    }
+
+    public function loadReaders()
+    {
+        try {
+            $response = Http::get(url('/api/terminal/list-readers'));
+            $data = $response->json();
+
+            if (isset($data['error'])) {
+                $this->paymentError = 'Failed to load readers: ' . $data['error'];
+            } else {
+                $this->availableReaders = $data['data'] ?? [];
+
+                // Auto-select the first online reader if available
+                foreach ($this->availableReaders as $reader) {
+                    if ($reader['status'] === 'online') {
+                        $this->selectedReaderId = $reader['id'];
+                        break;
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            $this->paymentError = 'Failed to load readers: ' . $e->getMessage();
+        }
+    }
+
+    public function processPayment()
+    {
+        if (!$this->selectedReaderId) {
+            $this->toast()->error('Please select a reader first.')->send();
             return;
         }
 
+        $this->paymentProcessing = true;
+        $this->paymentError = null;
+
+        try {
+            // Calculate the correct amount based on user authentication type
+            $totalAmount = 0;
+
+            if (auth('customer')->check()) {
+                // For customers: use end_user_total (includes all margins) plus packaging
+                $shippingTotal = (float) str_replace(',', '', $this->end_user_total ?? 0);
+                $totalAmount = ($shippingTotal + ($this->packagingAmount ?? 0)) * 100;
+            } else {
+                // For web users: use origin_total (base shipping cost) plus packaging
+                $shippingTotal = (float) str_replace(',', '', $this->origin_total ?? 0);
+                $totalAmount = ($shippingTotal + ($this->packagingAmount ?? 0)) * 100;
+            }
+
+            // Fallback to manual calculation if no totals are set
+            if ($totalAmount <= 0) {
+                $shippingAmount = (float) $this->selectedRate['shipping_amount']['amount'];
+                $insuranceAmount = (float) ($this->selectedRate['insurance_amount']['amount'] ?? 0);
+                $confirmationAmount = (float) ($this->selectedRate['confirmation_amount']['amount'] ?? 0);
+                $otherAmount = (float) ($this->selectedRate['other_amount']['amount'] ?? 0);
+                $totalAmount = ($shippingAmount + $insuranceAmount + $confirmationAmount + $otherAmount + ($this->packagingAmount ?? 0)) * 100;
+            }
+
+
+            // Create Payment Intent
+            $intentResponse = Http::post(url('/api/terminal/shipping/create-payment-intent'), [
+                'amount' => $totalAmount,
+                'description' => 'Shipping Label - ' . ($this->selectedRate['service_type'] ?? 'Unknown'),
+                'service_type' => $this->selectedRate['service_type'] ?? 'Unknown',
+                'carrier' => $this->selectedRate['carrier_friendly_name'] ?? 'Unknown',
+            ]);
+            // Check if HTTP request was successful
+            if (!$intentResponse->successful()) {
+                throw new \Exception('Failed to create payment intent. HTTP Status: ' . $intentResponse->status());
+            }
+
+            $intentData = $intentResponse->json();
+
+            if (isset($intentData['error'])) {
+                throw new \Exception($intentData['error']);
+            }
+
+            if (!isset($intentData['id'])) {
+                throw new \Exception('Payment intent ID not returned from server');
+            }
+
+            $this->paymentIntentId = $intentData['id'];
+
+            // Process payment on reader
+            $processResponse = Http::post(url('/api/terminal/shipping/process-payment'), [
+                'reader_id' => $this->selectedReaderId,
+                'payment_intent_id' => $this->paymentIntentId,
+            ]);
+
+            // Check if HTTP request was successful
+            if (!$processResponse->successful()) {
+                throw new \Exception('Failed to process payment. HTTP Status: ' . $processResponse->status());
+            }
+
+            $processData = $processResponse->json();
+
+            if (isset($processData['error'])) {
+                throw new \Exception($processData['error']);
+            }
+
+            // Start polling for payment completion
+            $this->dispatch('payment-processing-started');
+        } catch (\Exception $e) {
+            info('Payment processing error: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+            $this->paymentError = $e->getMessage();
+            $this->paymentProcessing = false;
+            $this->dispatch('payment-failed');
+        }
+    }
+
+    public function pollPaymentStatus()
+    {
+        // This will be called by JavaScript polling
+        try {
+            $verifyResponse = Http::post(url('/api/terminal/shipping/verify-payment'), [
+                'payment_intent_id' => $this->paymentIntentId,
+            ]);
+
+            $verifyData = $verifyResponse->json();
+
+            if (isset($verifyData['error'])) {
+                throw new \Exception($verifyData['error']);
+            }
+
+            if ($verifyData['success']) {
+                $this->paymentSuccessful = true;
+                $this->paymentProcessing = false;
+                $this->dispatch('payment-completed');
+
+                // Store payment details and create the actual label
+                $this->createActualLabel($verifyData['payment_intent']);
+            } else {
+                // Check the payment intent status to handle declined/cancelled cards
+                $paymentIntent = $verifyData['payment_intent'] ?? null;
+                $status = $verifyData['status'] ?? ($paymentIntent['status'] ?? 'unknown');
+
+                // Only treat these as failures if they're explicitly failed states
+                // requires_payment_method is normal when waiting for card presentation
+                if (in_array($status, ['canceled', 'payment_failed'])) {
+                    $this->paymentProcessing = false;
+
+                    switch ($status) {
+                        case 'canceled':
+                            $this->paymentError = 'Payment was cancelled. Please try again.';
+                            break;
+                        case 'payment_failed':
+                            $this->paymentError = 'Payment failed. Please try again.';
+                            break;
+                        default:
+                            $this->paymentError = 'Payment was not successful. Please try again.';
+                    }
+
+                    $this->dispatch('payment-failed');
+                }
+                // Special handling for requires_payment_method after card interaction
+                elseif ($status === 'requires_payment_method' && isset($paymentIntent['last_payment_error'])) {
+                    // Only fail if there was actually an error (card declined, etc.)
+                    $this->paymentProcessing = false;
+                    $errorCode = $paymentIntent['last_payment_error']['code'] ?? 'unknown';
+                    $errorMessage = $paymentIntent['last_payment_error']['message'] ?? 'Payment was declined.';
+
+                    $this->paymentError = "Card declined: {$errorMessage}";
+                    $this->dispatch('payment-failed');
+                }
+                // For statuses like 'processing', 'requires_capture', 'requires_payment_method' (without error), continue polling
+            }
+        } catch (\Exception $e) {
+            // Only fail on actual errors, not on expected processing states
+            if (strpos($e->getMessage(), 'processing') === false) {
+                $this->paymentError = $e->getMessage();
+                $this->paymentProcessing = false;
+                $this->dispatch('payment-failed');
+            }
+        }
+    }
+
+    public function retryPayment()
+    {
+        if ($this->paymentRetryCount >= $this->maxRetryAttempts) {
+            $this->paymentError = 'Maximum retry attempts reached. Please try again later.';
+            return;
+        }
+
+        $this->paymentRetryCount++;
+
+        // Reset error state and immediately show processing again
+        $this->paymentError = null;
+        $this->paymentProcessing = true;
+
+        $this->processPayment();
+    }
+
+    public function createActualLabel($paymentIntentData)
+    {
         try {
             $this->loading = true;
             $shipEngine = new ShipEngineService();
@@ -830,6 +1067,17 @@ class Index extends Component
             }
 
             if ($response['status'] == 'completed') {
+                // Save signature as PNG file
+                $signaturePath = $this->saveSignature($this->signature);
+
+                // Calculate total with packaging for storage
+                $totalWithPackaging = 0;
+                if (auth('customer')->check()) {
+                    $totalWithPackaging = (float) str_replace(',', '', $this->end_user_total ?? 0) + ($this->packagingAmount ?? 0);
+                } else {
+                    $totalWithPackaging = (float) str_replace(',', '', $this->origin_total ?? 0) + ($this->packagingAmount ?? 0);
+                }
+
                 $shipmentRecord = Shipment::create([
                     'label_id' => $response['label_id'] ?? null,
                     'user_id' => auth('web')->check() ? auth('web')->id() : null,
@@ -841,13 +1089,24 @@ class Index extends Component
                     'origin_total' => $this->origin_total,
                     'customer_total' => $this->customer_total ?? null,
                     'end_user_total' => $this->end_user_total ?? null,
+                    // Store packaging information
+                    'packaging_amount' => $this->packagingAmount ?? 0,
+                    'total_with_packaging' => $totalWithPackaging,
+                    // Store Stripe payment information
+                    'stripe_response' => $paymentIntentData,
+                    'stripe_payment_intent_id' => $this->paymentIntentId,
+                    'stripe_amount_paid' => $paymentIntentData['amount'] / 100,
+                    'stripe_payment_status' => $paymentIntentData['status'],
                 ]);
 
                 // Store the shipment record for downloadPDF to use
                 $this->lastCreatedShipment = $shipmentRecord;
 
+                // Close payment modal and reset data
+                $this->showPaymentModal = false;
                 $this->resetData();
-                $successMessage = 'Label created successfully!';
+
+                $successMessage = 'Payment successful! Label created successfully!';
                 $trackingNumber = '';
                 if (isset($response['tracking_number'])) {
                     $trackingNumber = $response['tracking_number'];
@@ -858,7 +1117,14 @@ class Index extends Component
                 $downloadButtons = '';
 
                 // Add PDF Shipment Details button - pass the shipment record
-                $downloadButtons .= '<button onclick="downloadPDF(\'' . $trackingNumber . '\', \'' . $signaturePath . '\')" class="inline-flex items-center px-3 py-2 ml-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500" title="Download Shipment Details PDF"><i class="fas fa-file-download mr-1"></i>Shipment Details</button>';
+                $printReceiptButton = '
+                <div>
+                <button onclick="downloadPDF(\'' . $trackingNumber . '\', \'' . $signaturePath . '\')" class="block w-full items-center px-3 py-2 ml-2 text-sm font-medium text-white bg-purple-600 border border-transparent rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500" title="Download Shipment Details PDF">
+                <i class="fas fa-file-download mr-1"></i>
+                Print Receipt
+                </button>
+                    </div>
+                ';
 
                 // Check for PNG label
                 if (isset($response['label_download']['png'])) {
@@ -876,13 +1142,13 @@ class Index extends Component
                 }
 
                 if (!empty($downloadButtons)) {
-                    $successMessage .= '<div class="flex items-center justify-between mt-3">' . $downloadButtons . '</div>';
+                    $successMessage .= $printReceiptButton . '<div class="flex items-center justify-between mt-3">' . $downloadButtons . '</div>';
                 }
 
                 $this->dialog()->success($successMessage)->send();
             }
         } catch (\Exception $e) {
-            $this->dialog()->error('Failed to create label: ' . $e->getMessage())->send();
+            $this->dialog()->error('Failed to create label after successful payment: ' . $e->getMessage())->send();
         } finally {
             $this->loading = false;
         }
@@ -992,6 +1258,21 @@ class Index extends Component
         $this->selectedRate = null;
         $this->trackingResults = [];
         $this->signature = null;
+
+        // Reset payment-related properties
+        $this->showPaymentModal = false;
+        $this->paymentProcessing = false;
+        $this->paymentRetryCount = 0;
+        $this->paymentIntentId = null;
+        $this->paymentSuccessful = false;
+        $this->paymentError = null;
+        $this->availableReaders = [];
+        $this->selectedReaderId = null;
+
+        // Reset certification checkboxes
+        $this->certifyHazardousMaterials = false;
+        $this->certifyInvoiceAccuracy = false;
+
         $this->shipToAddress = [
             'name' => '',
             'company_name' => '',
@@ -1121,6 +1402,12 @@ class Index extends Component
                 'shipDate' => $shipmentData['ship_date'] ?? null,
                 'serviceCode' => $serviceCode,
                 'carrierCode' => $carrierCode,
+                'selectedRate' => [
+                    'service_type' => $serviceCode,
+                    'carrier_code' => $carrierCode,
+                    'estimated_delivery_date' => $trackingResponse['estimated_delivery_date'] ?? null,
+                    'calculated_amount' => $shipment->end_user_total ?? $shipment->customer_total ?? $shipment->origin_total ?? 0,
+                ],
                 'carrierPackaging' => [
                     [
                         'package_code' => $firstPackage['package_code'] ?? 'package',
@@ -1139,6 +1426,11 @@ class Index extends Component
                 'logoBase64' => $logoBase64,
                 'trackingNumber' => $tracking,
                 'signatureBase64' => $signatureBase64,
+                'ship_to_address_country_full_name' => $requestData['ship_to_address_country_full_name'] ?? ($shipToAddress['country_code'] ?? ''),
+                'orderNumber' => $shipment->id,
+                'paymentNumber' => $shipment->stripe_payment_intent_id,
+                'stripe_amount_paid' => $shipment->stripe_amount_paid,
+                'packaging_amount' => $shipment->packaging_amount,
             ];
 
             $pdf = Pdf::loadView('pdfs.shipment-details', $data)
@@ -1165,6 +1457,15 @@ class Index extends Component
     public function countries()
     {
         return Country::where('status', 1)->orderBy('label')->get();
+    }
+
+    #[Computed()]
+    public function certificationsCompleted()
+    {
+        $hazardousCompleted = $this->certifyHazardousMaterials;
+        $invoiceCompleted = $this->shipToAddress['country_code'] != 'US' ? $this->certifyInvoiceAccuracy : true;
+
+        return $hazardousCompleted && $invoiceCompleted;
     }
 
     public function render()

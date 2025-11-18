@@ -390,7 +390,7 @@
                                         Customs Information
                                     </h2>
                                     <div class="flex gap-2">
-                                        <x-button type="button" sm color="green" loading="addCustomsItem"
+                                        <x-button type="button" sm color="purple" loading="addCustomsItem"
                                             wire:click="addCustomsItem">
                                             <x-slot:left>
                                                 <i class="fas fa-plus mr-1"></i>
@@ -475,7 +475,7 @@
                                                                     placeholder="e.g., 6109.10.00" />
                                                             </div>
                                                             <div class="col-span-1 flex items-end">
-                                                                <x-button text="Search" color="green"
+                                                                <x-button text="Search" color="purple"
                                                                     href="https://uscensus.prod.3ceonline.com/ui/"
                                                                     target='_blank' size="sm" />
                                                             </div>
@@ -512,7 +512,6 @@
 
                     <!-- Action Buttons -->
                     <div class="flex flex-wrap gap-4 pt-4">
-
                         @if (isset($errors) && $errors->any())
                             <div class="w-full">
                                 <x-alert type="error" title="Please fix the errors below:">
@@ -524,14 +523,9 @@
                                 </x-alert>
                             </div>
                         @endif
-
-
-                        {{-- <x-button wire:click="validateAddresses" color="gray" wire:loading.attr="disabled">
-                            <span wire:loading.remove wire:target="validateAddresses">Validate Addresses</span>
-                            <span wire:loading wire:target="validateAddresses">Validating...</span>
-                        </x-button> --}}
-
-                        <x-button type="submit" wire:loading.attr="disabled"
+                    </div>
+                    <div class="flex items-end justify-end">
+                        <x-button type="submit" wire:loading.attr="disabled" color="green"
                             class="px-6 py-3 sm:px-8 sm:py-3 w-full sm:w-auto">
                             <span wire:loading.remove wire:target="getRates">Get Rates</span>
                             <span wire:loading wire:target="getRates">Getting Rates...</span>
@@ -860,12 +854,16 @@
                                 </div>
                             @endforeach
                         </div>
+                        {{-- Section for the $packagingAmount --}}
+                        <div class="mt-6 pt-4 border-t border-gray-200 dark:border-gray-600 flex justify-between">
+                            <div class="text-lg font-bold text-gray-900 dark:text-white">
+                                <x-number wire:model="packagingAmount" label="Packaging Amount" step="0.1"
+                                    min="0" required />
+                            </div>
+                        </div>
 
                         <div class="mt-6 pt-4 border-t border-gray-200 dark:border-gray-600 flex justify-between">
 
-                            <x-button wire:click="$toggle('showModal')" color="green" class="w-full sm:w-auto">
-                                Create Shipping Label
-                            </x-button>
 
                             <x-modal scrollable wire="showModal" size="4xl"
                                 x-on:open="$wire.set('signature', null); setTimeout(() => { window.dispatchEvent(new Event('resize')) }, 300), $focusOn('modal-signature')">
@@ -1150,12 +1148,13 @@
                                                 <!-- Price Breakdown -->
                                                 <div class="border-t border-indigo-200 dark:border-indigo-700 pt-4">
                                                     <div class="space-y-2">
-                                                        <!-- Total -->
+                                                        <!-- Shipping Amount -->
                                                         <div
                                                             class="flex justify-between items-center border-t border-indigo-200 dark:border-indigo-700 pt-3 mt-3">
                                                             <span
-                                                                class="text-sm font-semibold text-indigo-700 dark:text-indigo-300">Total
-                                                                Cost:</span>
+                                                                class="text-sm font-semibold text-indigo-700 dark:text-indigo-300">
+                                                                Shipping Amount:
+                                                            </span>
                                                             @auth('customer')
                                                                 <span
                                                                     class="text-lg font-bold text-indigo-700 dark:text-indigo-300">
@@ -1165,6 +1164,37 @@
                                                                 <span
                                                                     class="text-lg font-bold text-indigo-700 dark:text-indigo-300">
                                                                     ${{ $selectedRate['calculated_amount'] ?? 'N/A' }}
+                                                                </span>
+                                                            @endauth
+                                                        </div>
+                                                        <!-- Packaging Amount -->
+                                                        <div
+                                                            class="flex justify-between items-center border-t border-indigo-200 dark:border-indigo-700 pt-3 mt-3">
+                                                            <span
+                                                                class="text-sm font-semibold text-indigo-700 dark:text-indigo-300">
+                                                                Packaging Amount:
+                                                            </span>
+                                                            <span
+                                                                class="text-lg font-bold text-indigo-700 dark:text-indigo-300">
+                                                                ${{ number_format($packagingAmount ?? 0, 2) }}
+                                                            </span>
+                                                        </div>
+                                                        <!-- Total Amount -->
+                                                        <div
+                                                            class="flex justify-between items-center border-t border-indigo-200 dark:border-indigo-700 pt-3 mt-3">
+                                                            <span
+                                                                class="text-sm font-semibold text-indigo-700 dark:text-indigo-300">
+                                                                Total Amount:
+                                                            </span>
+                                                            @auth('customer')
+                                                                <span
+                                                                    class="text-lg font-bold text-indigo-700 dark:text-indigo-300">
+                                                                    ${{ number_format($end_user_total ?? 0, 2) + number_format($packagingAmount ?? 0, 2) }}
+                                                                </span>
+                                                            @else
+                                                                <span
+                                                                    class="text-lg font-bold text-indigo-700 dark:text-indigo-300">
+                                                                    ${{ number_format(($selectedRate['calculated_amount'] ?? 0) + ($packagingAmount ?? 0), 2) }}
                                                                 </span>
                                                             @endauth
                                                         </div>
@@ -1310,42 +1340,302 @@
                                     @endif
 
                                     <div class="flex flex-col gap-3 mt-3">
-                                        <x-checkbox checked disabled
+                                        <x-checkbox wire:model.live="certifyHazardousMaterials"
                                             label="I certify that the shipment does not contain any undeclared hazardous materials (perfume, nail polish, hair spray, dry ice, lithium batteries, firearms, lighters, fuels, etc.) or any matter prohibited by law or postal regulation." />
 
                                         @if ($shipToAddress['country_code'] != 'US')
-                                            <x-checkbox
+                                            <x-checkbox wire:model.live="certifyInvoiceAccuracy"
                                                 label="I hereby certify that the information on this invoice is true and correct and the contents and value of this shipment is as stated above."
-                                                required checked disabled />
+                                                required />
                                         @endif
                                     </div>
 
-                                    {{-- Siganture --}}
-                                    <div class="mt-6" x-data="{ signatureReady: false }" x-init="setTimeout(() => { signatureReady = true }, 400)">
-                                        <h3
-                                            class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
-                                            <i class="fas fa-signature mr-2 text-gray-600"></i>
-                                            Signature Confirmation
-                                        </h3>
+                                    {{-- Signature - Only show when certifications are complete --}}
+                                    @if ($this->certificationsCompleted)
+                                        <div class="mt-6" x-data="{ signatureReady: false }" x-init="setTimeout(() => {
+                                            // Force a reflow to ensure DOM is ready
+                                            document.body.offsetHeight;
+                                            // Wait additional time for canvas initialization
+                                            setTimeout(() => {
+                                                signatureReady = true;
+                                                // Trigger window resize to help signature component initialize
+                                                $nextTick(() => {
+                                                    window.dispatchEvent(new Event('resize'));
+                                                });
+                                            }, 200);
+                                        }, 600)"
+                                            wire:key="signature-{{ $certifyHazardousMaterials }}-{{ $certifyInvoiceAccuracy }}">
+                                            <h3
+                                                class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                                                <i class="fas fa-signature mr-2 text-gray-600"></i>
+                                                Signature Confirmation
+                                            </h3>
 
-                                        <div x-show="signatureReady">
-                                            <x-signature wire:model="signature" label="Sign Below"
-                                                id="modal-signature" hint="Please sign in the box below" clearable
-                                                exportable color="#000000" background="#ffffff" :height="200" />
+                                            <div x-show="signatureReady" x-transition>
+                                                <x-signature wire:model="signature" label="Sign Below"
+                                                    id="modal-signature" hint="Please sign in the box below" clearable
+                                                    exportable color="#000000" background="#ffffff"
+                                                    :height="200" />
+                                            </div>
+
+                                            <div x-show="!signatureReady"
+                                                class="flex items-center justify-center py-12">
+                                                <div
+                                                    class="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-600">
+                                                </div>
+                                                <span class="ml-3 text-gray-600">Initializing signature pad...</span>
+                                            </div>
                                         </div>
-                                    </div>
+                                    @else
+                                        <div
+                                            class="mt-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg">
+                                            <div class="flex items-center">
+                                                <i class="fas fa-info-circle text-yellow-500 mr-3"></i>
+                                                <div>
+                                                    <h4 class="text-yellow-800 dark:text-yellow-100 font-medium">
+                                                        Certification Required</h4>
+                                                    <p class="text-yellow-700 dark:text-yellow-200 text-sm">
+                                                        Please complete the certification requirements above to proceed
+                                                        with signing.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endif
                                 </div>
                                 <div class="mt-6 flex justify-end space-x-3">
-                                    <x-button wire:click="createLabel" color="blue" class="w-full sm:w-auto"
+                                    <x-button wire:click="createLabel" color="green" class="w-full sm:w-auto"
                                         loading="createLabel">
-                                        Create Label
+                                        Proceed To Payment
                                     </x-button>
                                 </div>
                             </x-modal>
-                            <x-button wire:click="backToCreateRatesPage" color="blue" class="w-full sm:w-auto"
+
+                            <!-- Payment Modal -->
+                            <x-modal wire="showPaymentModal" size="4xl" persistent>
+                                <x-slot:title>
+                                    💳 Payment for Shipping Label
+                                </x-slot:title>
+                                <div class="space-y-6">
+                                    <!-- Payment Summary -->
+                                    <div
+                                        class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-700">
+                                        <h3
+                                            class="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-3 flex items-center">
+                                            <i class="fas fa-receipt mr-2"></i>
+                                            Payment Summary
+                                        </h3>
+                                        @if ($selectedRate)
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                                <div>
+                                                    <p class="text-blue-700 dark:text-blue-300 font-medium">Service:
+                                                    </p>
+                                                    <p class="text-blue-900 dark:text-blue-100">
+                                                        {{ $selectedRate['service_type'] ?? 'N/A' }}</p>
+                                                </div>
+                                                <div>
+                                                    <p class="text-blue-700 dark:text-blue-300 font-medium">Carrier:
+                                                    </p>
+                                                    <p class="text-blue-900 dark:text-blue-100">
+                                                        {{ $selectedRate['carrier_friendly_name'] ?? 'N/A' }}</p>
+                                                </div>
+                                                <div>
+                                                    <p class="text-blue-700 dark:text-blue-300 font-medium">
+                                                        Amount to Pay:
+                                                    </p>
+                                                    <p class="text-blue-900 dark:text-blue-100 font-bold text-lg">
+                                                        @auth('customer')
+                                                            ${{ number_format(($end_user_total ?? 0) + ($packagingAmount ?? 0), 2) }}
+                                                        @else
+                                                            ${{ number_format(($origin_total ?? 0) + ($packagingAmount ?? 0), 2) }}
+                                                        @endauth
+                                                    </p>
+                                                    @if ($packagingAmount > 0)
+                                                        <p class="text-blue-600 dark:text-blue-400 text-sm mt-1">
+                                                            (Shipping:
+                                                            @auth('customer')
+                                                                ${{ number_format($end_user_total ?? 0, 2) }}
+                                                            @else
+                                                                ${{ number_format($origin_total ?? 0, 2) }}
+                                                            @endauth
+                                                            + Packaging: ${{ number_format($packagingAmount, 2) }})
+                                                        </p>
+                                                    @endif
+                                                </div>
+
+                                            </div>
+                                        @endif
+                                    </div>
+
+                                    <!-- Reader Selection -->
+                                    <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-4">
+                                        <h4
+                                            class="text-md font-semibold text-gray-900 dark:text-white mb-3 flex items-center">
+                                            <i class="fas fa-credit-card mr-2 text-purple-600"></i>
+                                            Select Terminal Reader
+                                        </h4>
+                                        @if (count($availableReaders) > 0)
+                                            <div class="space-y-2">
+                                                @foreach ($availableReaders as $reader)
+                                                    <label
+                                                        class="flex items-center p-3 border border-gray-200 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 {{ $reader['status'] !== 'online' ? 'opacity-50' : '' }}">
+                                                        <input type="radio" wire:model="selectedReaderId"
+                                                            value="{{ $reader['id'] }}"
+                                                            class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300"
+                                                            {{ $reader['status'] !== 'online' ? 'disabled' : '' }}>
+                                                        <div class="ml-3 flex-1">
+                                                            <div class="flex items-center justify-between">
+                                                                <p
+                                                                    class="text-sm font-medium text-gray-900 dark:text-white">
+                                                                    {{ $reader['label'] ?? 'Unnamed Reader' }}
+                                                                </p>
+                                                                <span
+                                                                    class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
+                                                                    {{ $reader['status'] === 'online' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' }}">
+                                                                    {{ $reader['status'] }}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </label>
+                                                @endforeach
+                                            </div>
+                                        @else
+                                            <div class="text-center py-6">
+                                                <i
+                                                    class="fas fa-exclamation-triangle text-yellow-500 text-2xl mb-2"></i>
+                                                <p class="text-gray-600 dark:text-gray-400">No readers found. Please
+                                                    ensure your S700 reader is connected and registered.</p>
+                                                <button wire:click="loadReaders"
+                                                    class="mt-2 text-blue-600 hover:text-blue-700 text-sm">
+                                                    <i class="fas fa-refresh mr-1"></i>
+                                                    Refresh Readers
+                                                </button>
+                                            </div>
+                                        @endif
+                                    </div>
+
+                                    <!-- Payment Status -->
+                                    @if ($paymentProcessing)
+                                        <div
+                                            class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4">
+                                            <div class="flex items-center">
+                                                <div
+                                                    class="animate-spin rounded-full h-5 w-5 border-b-2 border-yellow-600 mr-3">
+                                                </div>
+                                                <div>
+                                                    <h4 class="text-yellow-800 dark:text-yellow-100 font-medium">
+                                                        @if ($paymentRetryCount > 0)
+                                                            Retrying Payment... (Attempt {{ $paymentRetryCount + 1 }})
+                                                        @else
+                                                            Processing Payment...
+                                                        @endif
+                                                    </h4>
+                                                    <p class="text-yellow-700 dark:text-yellow-200 text-sm">
+                                                        Please present your test card to the S700 reader.
+                                                        <strong>The amount should now be visible on your reader
+                                                            screen.</strong>
+                                                    </p>
+                                                    @if ($paymentRetryCount > 0)
+                                                        <p class="text-yellow-600 dark:text-yellow-300 text-xs mt-1">
+                                                            Previous attempt failed - trying again now
+                                                        </p>
+                                                    @endif
+                                                    @if ($paymentIntentId)
+                                                        <p
+                                                            class="text-yellow-600 dark:text-yellow-300 text-xs mt-1 font-mono">
+                                                            Payment ID: {{ Str::limit($paymentIntentId, 20) }}
+                                                        </p>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endif
+
+                                    @if ($paymentError)
+                                        <div
+                                            class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg p-4">
+                                            <div class="flex items-start">
+                                                <i class="fas fa-exclamation-circle text-red-500 mt-1 mr-3"></i>
+                                                <div class="flex-1">
+                                                    <h4 class="text-red-800 dark:text-red-100 font-medium">Payment
+                                                        Failed</h4>
+                                                    <p class="text-red-700 dark:text-red-200 text-sm">
+                                                        {{ $paymentError }}</p>
+                                                    @if ($paymentRetryCount > 0)
+                                                        <p class="text-red-600 dark:text-red-300 text-xs mt-1">
+                                                            Attempt {{ $paymentRetryCount }} of
+                                                            {{ $maxRetryAttempts }}
+                                                        </p>
+                                                    @endif
+                                                    @if ($paymentRetryCount < $maxRetryAttempts)
+                                                        <button wire:click="retryPayment" wire:loading="retryPayment"
+                                                            wire:loading.class="cursor-wait"
+                                                            wire:loading.attr="disabled"
+                                                            class="mt-3 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm font-medium transition-colors">
+                                                            <span wire:loading wire:target="retryPayment">
+                                                                <i class="fas fa-spinner animate-spin mr-1"></i>
+                                                                Retrying...
+                                                            </span>
+                                                            <span wire:loading.remove wire:target="retryPayment">
+                                                                <i class="fas fa-redo mr-1"></i>
+                                                                Retry Payment
+                                                                ({{ $paymentRetryCount + 1 }}/{{ $maxRetryAttempts }})
+                                                            </span>
+                                                        </button>
+                                                    @else
+                                                        <div
+                                                            class="mt-3 p-2 bg-red-100 dark:bg-red-900/30 rounded text-xs text-red-800 dark:text-red-200">
+                                                            <i class="fas fa-exclamation-triangle mr-1"></i>
+                                                            Maximum retry attempts reached. Please close this modal and
+                                                            try again.
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endif
+
+                                    @if ($paymentSuccessful)
+                                        <div
+                                            class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg p-4">
+                                            <div class="flex items-center">
+                                                <i class="fas fa-check-circle text-green-500 mr-3"></i>
+                                                <div>
+                                                    <h4 class="text-green-800 dark:text-green-100 font-medium">Payment
+                                                        Successful!</h4>
+                                                    <p class="text-green-700 dark:text-green-200 text-sm">Creating your
+                                                        shipping label now...</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endif
+                                </div>
+
+                                <div class="mt-6 flex justify-between">
+                                    <x-button wire:click="$set('showPaymentModal', false)" color="gray"
+                                        :disabled="$paymentProcessing">
+                                        Cancel
+                                    </x-button>
+                                    <x-button wire:click="processPayment" color="green" :disabled="!$selectedReaderId || $paymentProcessing || $paymentSuccessful"
+                                        loading="processPayment">
+                                        @if ($paymentProcessing)
+                                            Processing...
+                                        @else
+                                            Pay & Create Label
+                                        @endif
+                                    </x-button>
+                                </div>
+                            </x-modal>
+
+                            <x-button wire:click="backToCreateRatesPage" color="gray" class="w-full sm:w-auto"
                                 loading="backToCreateRatesPage">
                                 Back
                             </x-button>
+
+                            <x-button wire:click="$toggle('showModal')" color="green" class="w-full sm:w-auto">
+                                Review & Sign
+                            </x-button>
+
                         </div>
                     @else
                         <div class="text-center py-8">
@@ -1492,5 +1782,58 @@
         function downloadPDF(trackingNumber, signaturePath) {
             @this.downloadPDF(trackingNumber, signaturePath);
         }
+
+        // Payment polling functionality
+        let paymentPollInterval = null;
+        let pollAttempts = 0;
+
+        // Listen for payment processing start
+        window.addEventListener('payment-processing-started', function() {
+            if (paymentPollInterval) {
+                clearInterval(paymentPollInterval);
+            }
+
+            pollAttempts = 0;
+
+            // Give the reader time to display amount before starting to poll
+            setTimeout(function() {
+                // Start with 3-second intervals to give user time to present card
+                paymentPollInterval = setInterval(function() {
+                    pollAttempts++;
+                    @this.pollPaymentStatus();
+
+                    // After 15 attempts (45 seconds), slow down polling to every 5 seconds
+                    if (pollAttempts >= 15) {
+                        clearInterval(paymentPollInterval);
+                        paymentPollInterval = setInterval(function() {
+                            @this.pollPaymentStatus();
+                        }, 5000);
+                    }
+                }, 3000); // Start with 3 second intervals
+            }, 2000); // Wait 2 seconds before starting polling
+        });
+
+        // Listen for payment completion
+        window.addEventListener('payment-completed', function() {
+            if (paymentPollInterval) {
+                clearInterval(paymentPollInterval);
+                paymentPollInterval = null;
+            }
+        });
+
+        // Listen for payment failed
+        window.addEventListener('payment-failed', function() {
+            if (paymentPollInterval) {
+                clearInterval(paymentPollInterval);
+                paymentPollInterval = null;
+            }
+        });
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', function() {
+            if (paymentPollInterval) {
+                clearInterval(paymentPollInterval);
+            }
+        });
     </script>
 </div>
