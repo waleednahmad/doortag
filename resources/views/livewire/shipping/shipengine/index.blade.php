@@ -75,7 +75,7 @@
                                         {{-- Email --}}
                                         <x-input label="Email (optional)" wire:model="shipFromAddress.email" />
                                         {{-- Phone --}}
-                                        <x-input label="Phone" wire:model="shipFromAddress.phone" />
+                                        <x-input label="Phone *" wire:model="shipFromAddress.phone" required/>
                                         {{-- Address --}}
                                         <x-input label="Address Line 1 *" wire:model="shipFromAddress.address_line1"
                                             required />
