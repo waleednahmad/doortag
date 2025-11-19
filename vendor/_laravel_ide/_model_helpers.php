@@ -325,6 +325,7 @@ namespace App\Models {
      * @property string|null $remember_token
      * @property string $password
      * @property \Illuminate\Support\Carbon|null $email_verified_at
+     * @property boolean $can_modify_data
      * @property int $customer_margin
      * @property float $margin
      * @property boolean $address_residential_indicator
@@ -353,6 +354,7 @@ namespace App\Models {
      * @method static \Illuminate\Database\Eloquent\Builder<Customer>|Customer whereAddressResidentialIndicator($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Customer>|Customer whereMargin($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Customer>|Customer whereCustomerMargin($value)
+     * @method static \Illuminate\Database\Eloquent\Builder<Customer>|Customer whereCanModifyData($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Customer>|Customer whereEmailVerifiedAt($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Customer>|Customer wherePassword($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Customer>|Customer whereRememberToken($value)
@@ -1008,6 +1010,7 @@ namespace App\Models {
     /**
      * App\Models\User
      *
+     * @property boolean $can_modify_data
      * @property boolean $address_residential_indicator
      * @property string|null $zipcode
      * @property string|null $state
@@ -1033,6 +1036,7 @@ namespace App\Models {
      * @method static \Illuminate\Database\Eloquent\Builder<User>|User whereEmailVerifiedAt($value)
      * @method static \Illuminate\Database\Eloquent\Builder<User>|User wherePassword($value)
      * @method static \Illuminate\Database\Eloquent\Builder<User>|User whereRememberToken($value)
+     * @method static \Illuminate\Database\Eloquent\Builder<User>|User whereCanModifyData($value)
      * @method static \Illuminate\Database\Eloquent\Builder<User>|User whereCreatedAt($value)
      * @method static \Illuminate\Database\Eloquent\Builder<User>|User whereUpdatedAt($value)
      * @method static \Illuminate\Database\Eloquent\Builder<User>|User newModelQuery()

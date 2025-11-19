@@ -64,55 +64,107 @@
                                 class="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-gray-800 dark:text-gray-200">
                                 Ship From
                             </h2>
-                            <div class="bg-white dark:bg-gray-700 rounded-lg p-3 sm:p-4 mb-3 sm:mb-4">
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-                                    <!-- Editable: Name -->
-                                    <x-input label="Name *" wire:model="shipFromAddress.name" required />
+                            @if ($this->userCanModifyData)
+                                <!-- Editable Ship From (like Ship To) -->
+                                <div class="bg-white dark:bg-gray-700 rounded-lg p-3 sm:p-4 mb-3 sm:mb-4">
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                                        {{-- Name --}}
+                                        <x-input label="Name *" wire:model="shipFromAddress.name" required />
+                                        {{-- Company --}}
+                                        <x-input label="Company (optional)" wire:model="shipFromAddress.company_name" />
+                                        {{-- Email --}}
+                                        <x-input label="Email (optional)" wire:model="shipFromAddress.email" />
+                                        {{-- Phone --}}
+                                        <x-input label="Phone" wire:model="shipFromAddress.phone" />
+                                        {{-- Address --}}
+                                        <x-input label="Address Line 1 *" wire:model="shipFromAddress.address_line1"
+                                            required />
+                                        {{-- Apt / Unit / Suite / etc. --}}
+                                        <x-input label="Address Line 2 (optional)"
+                                            wire:model="shipFromAddress.address_line2" />
 
-                                    <!-- Editable: Phone -->
-                                    <x-input label="Phone *" wire:model="shipFromAddress.phone" required />
+                                        <div class="col-span-full md:col-span-2">
+                                            {{-- City, State, Zipcode --}}
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                                                {{-- City --}}
+                                                <x-input label="City *" wire:model="shipFromAddress.city_locality"
+                                                    required />
+                                                <x-input label="Postal Code *" wire:model="shipFromAddress.postal_code"
+                                                    required />
 
-                                    <x-input label="Email (optional)" wire:model="shipFromAddress.email" />
-
-                                    <x-input label="Company Name " wire:model="shipFromAddress.company_name" disabled />
-
-                                    <!-- Preview: Full Address -->
-                                    <div
-                                        class="md:col-span-2 bg-blue-50 dark:bg-blue-900/20 rounded p-3 border border-blue-200 dark:border-blue-700">
-                                        <p
-                                            class="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-2">
-                                            Address
-                                        </p>
-                                        <div class="text-sm text-gray-700 dark:text-gray-300 space-y-1">
-                                            <p>
-                                                {{ $shipFromAddress['address_line1'] ?? '' }}
-                                                @if (!empty($shipFromAddress['address_line2']))
-                                                    {{ $shipFromAddress['address_line2'] }}
+                                                @if ($shipFromAddress['country_code'] == 'US')
+                                                    <x-input label="State *" wire:model="shipFromAddress.state_province"
+                                                        maxlength="2" required />
+                                                @else
+                                                    <x-input label="State"
+                                                        wire:model="shipFromAddress.state_province" />
                                                 @endif
-                                            </p>
-                                            <p>
-                                                {{ $shipFromAddress['city_locality'] ? $shipFromAddress['city_locality'] . ', ' : '' }}
-                                                @if (!empty($shipFromAddress['state_province']))
-                                                    {{ $shipFromAddress['state_province'] }}
-                                                @endif
-                                                {{ $shipFromAddress['postal_code'] ?? '' }}, United States
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <!-- Preview: Residential Indicator -->
-                                    @if (!empty($shipFromAddress['address_residential_indicator']))
-                                        <div class="md:col-span-2">
-                                            <div
-                                                class="inline-flex items-center px-3 py-2 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-300 dark:border-blue-600">
-                                                <i class="fas fa-home mr-2"></i>
-                                                Residential Address
+                                                {{-- Country --}}
+                                                <x-select.styled label="Country *" searchable
+                                                    wire:model.live="shipFromAddress.country_code" :options="$this->countries"
+                                                    placeholder="Select country" required />
                                             </div>
                                         </div>
-                                    @endif
-                                </div>
-                            </div>
 
+                                        {{-- Ressidental address (checkbox) --}}
+                                        <div class="col-span-full md:col-span-2">
+                                            <x-checkbox label="Residential Address"
+                                                wire:model.live="shipFromAddress.address_residential_indicator" />
+                                        </div>
+                                    </div>
+                                </div>
+                            @else
+                                <!-- Read-only Ship From (current preview style) -->
+                                <div class="bg-white dark:bg-gray-700 rounded-lg p-3 sm:p-4 mb-3 sm:mb-4">
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                                        <!-- Editable: Name -->
+                                        <x-input label="Name *" wire:model="shipFromAddress.name" required />
+
+                                        <!-- Editable: Phone -->
+                                        <x-input label="Phone *" wire:model="shipFromAddress.phone" required />
+
+                                        <x-input label="Email (optional)" wire:model="shipFromAddress.email" />
+
+                                        <x-input label="Company Name " wire:model="shipFromAddress.company_name"
+                                            disabled />
+
+                                        <!-- Preview: Full Address -->
+                                        <div
+                                            class="md:col-span-2 bg-blue-50 dark:bg-blue-900/20 rounded p-3 border border-blue-200 dark:border-blue-700">
+                                            <p
+                                                class="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-2">
+                                                Address
+                                            </p>
+                                            <div class="text-sm text-gray-700 dark:text-gray-300 space-y-1">
+                                                <p>
+                                                    {{ $shipFromAddress['address_line1'] ?? '' }}
+                                                    @if (!empty($shipFromAddress['address_line2']))
+                                                        {{ $shipFromAddress['address_line2'] }}
+                                                    @endif
+                                                </p>
+                                                <p>
+                                                    {{ $shipFromAddress['city_locality'] ? $shipFromAddress['city_locality'] . ', ' : '' }}
+                                                    @if (!empty($shipFromAddress['state_province']))
+                                                        {{ $shipFromAddress['state_province'] }}
+                                                    @endif
+                                                    {{ $shipFromAddress['postal_code'] ?? '' }}, United States
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <!-- Preview: Residential Indicator -->
+                                        @if (!empty($shipFromAddress['address_residential_indicator']))
+                                            <div class="md:col-span-2">
+                                                <div
+                                                    class="inline-flex items-center px-3 py-2 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-300 dark:border-blue-600">
+                                                    <i class="fas fa-home mr-2"></i>
+                                                    Residential Address
+                                                </div>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            @endif
                         </section>
 
 
@@ -221,10 +273,12 @@
                                             <div class="flex items-center">
                                                 @if ($package['package_code'] === 'custom')
                                                     <img src="{{ asset('assets/images/Parcel-box.png') }}"
-                                                        alt="Custom Package" class="object-contain w-[60px] h-[60px]" />
+                                                        alt="Custom Package"
+                                                        class="object-contain w-[60px] h-[60px]" />
                                                 @else
                                                     <img src="{{ asset('assets/images/fedex.svg') }}"
-                                                        alt="FedEx Package" class="object-contain w-[60px] h-[60px]" />
+                                                        alt="FedEx Package"
+                                                        class="object-contain w-[60px] h-[60px]" />
                                                 @endif
                                                 <div class="ml-[.9em]">
                                                     <h1 class="text-[1em] font-[400] text-gray-900 dark:text-gray-100">
@@ -792,7 +846,9 @@
                                                             class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 ">
                                                             Estimated Delivery:
                                                             <span class="font-bold">
-                                                                {{ $rate['carrier_delivery_days'] }}
+                                                                {{ \Carbon\Carbon::parse($rate['estimated_delivery_date'])->format('l m/d') }}
+                                                                by
+                                                                {{ \Carbon\Carbon::parse($rate['estimated_delivery_date'])->format('h:i A') }}
                                                             </span>
                                                             @if ($rate['delivery_days'])
                                                                 ({{ $rate['delivery_days'] }}
@@ -929,7 +985,10 @@
                                                     </p>
                                                 </div>
                                             </div>
-                                            @if (!empty($shipFromAddress['address_residential_indicator']))
+                                            @if (
+                                                !empty($shipFromAddress['address_residential_indicator']) &&
+                                                    ($shipFromAddress['address_residential_indicator'] === 'yes' ||
+                                                        $shipFromAddress['address_residential_indicator'] === true))
                                                 <div class="md:col-span-2">
                                                     <span
                                                         class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
@@ -1005,7 +1064,10 @@
                                                     </p>
                                                 </div>
                                             </div>
-                                            @if (!empty($shipToAddress['address_residential_indicator']))
+                                            @if (
+                                                !empty($shipToAddress['address_residential_indicator']) &&
+                                                    ($shipToAddress['address_residential_indicator'] === 'yes' ||
+                                                        $shipToAddress['address_residential_indicator'] === true))
                                                 <div class="md:col-span-2">
                                                     <span
                                                         class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300">
@@ -1637,7 +1699,8 @@
                                 Back
                             </x-button>
 
-                            <x-button wire:click="$toggle('showModal')" color="green" class="w-full sm:w-auto">
+                            <x-button wire:click="$toggle('showModal')" color="green" :disabled="!$selectedRate"
+                                class="w-full sm:w-auto">
                                 Review & Sign
                             </x-button>
 

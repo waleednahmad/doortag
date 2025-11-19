@@ -43,6 +43,11 @@
                     <x-checkbox label="{{ __('Residential Address') }}" wire:model="addressResidentialIndicator"
                         disabled />
                 </div>
+                {{-- can_modify_data --}}
+                <div>
+                    <x-checkbox label="{{ __('Allow me to modify ship from address data') }}" wire:model="canModifyData"
+                         />
+                </div>
 
             </div>
             <x-slot:footer>

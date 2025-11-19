@@ -27,6 +27,7 @@ class Index extends Component
         'name' => '',
         'company_name' => '',
         'phone' => '',
+        'email' => '',
         'address_line1' => '',
         'address_line2' => '',
         'city_locality' => '',
@@ -40,6 +41,7 @@ class Index extends Component
         'name' => '',
         'company_name' => '',
         'phone' => '',
+        'email' => '',
         'address_line1' => '',
         'address_line2' => '',
         'city_locality' => '',
@@ -284,20 +286,42 @@ class Index extends Component
 
     public function setDefaultAddresses()
     {
+        $authenticatedUser = Auth::user();
+        $canModifyData = $authenticatedUser->can_modify_data ?? true;
+
         // Set default ship from address
-        $this->shipFromAddress = [
-            'name' => '',
-            'company_name' => 'DoorTag',
-            'phone' =>  Auth::user()->phone,
-            'email' =>  '',
-            'address_line1' =>  Auth::user()->address,
-            'address_line2' =>  Auth::user()->address2,
-            'city_locality' =>  Auth::user()->city,
-            'state_province' =>  Auth::user()->state,
-            'postal_code' =>  Auth::user()->zipcode,
-            'country_code' => 'US',
-            'address_residential_indicator' => Auth::user()->address_residential_indicator
-        ];
+        if ($canModifyData) {
+            // If user can modify data, start with empty fields (like shipTo)
+            $this->shipFromAddress = [
+                'name' => '',
+                'company_name' => '',
+                'phone' => '',
+                'email' => '',
+                'address_line1' => '',
+                'address_line2' => '',
+                'city_locality' => '',
+                'state_province' => '',
+                'postal_code' => '',
+                'country_code' => 'US',
+                'address_residential_indicator' => false
+            ];
+        } else {
+            // If user cannot modify data, populate with their stored data (read-only)
+            $this->shipFromAddress = [
+                'name' => '',
+                'company_name' => 'DoorTag',
+                'phone' => $authenticatedUser->phone,
+                'email' => $authenticatedUser->email,
+                'address_line1' => $authenticatedUser->address,
+                'address_line2' => $authenticatedUser->address2,
+                'city_locality' => $authenticatedUser->city,
+                'state_province' => $authenticatedUser->state,
+                'postal_code' => $authenticatedUser->zipcode,
+                'country_code' => 'US',
+                'address_residential_indicator' => $authenticatedUser->address_residential_indicator
+            ];
+        }
+
         // $this->shipFromAddress = [
         //     'name' => '',
         //     'company_name' => '',
@@ -1281,10 +1305,25 @@ class Index extends Component
         $this->certifyHazardousMaterials = false;
         $this->certifyInvoiceAccuracy = false;
 
+        $this->shipFromAddress = [
+            'name' => '',
+            'company_name' => '',
+            'phone' => '',
+            'email' => '',
+            'address_line1' => '',
+            'address_line2' => '',
+            'city_locality' => '',
+            'state_province' => '',
+            'postal_code' => '',
+            'country_code' => 'US',
+            'address_residential_indicator' => false
+        ];
+
         $this->shipToAddress = [
             'name' => '',
             'company_name' => '',
             'phone' => '',
+            'email' => '',
             'address_line1' => '',
             'address_line2' => '',
             'city_locality' => '',
@@ -1474,6 +1513,12 @@ class Index extends Component
         $invoiceCompleted = $this->shipToAddress['country_code'] != 'US' ? $this->certifyInvoiceAccuracy : true;
 
         return $hazardousCompleted && $invoiceCompleted;
+    }
+
+    #[Computed()]
+    public function userCanModifyData()
+    {
+        return Auth::user()->can_modify_data ?? true;
     }
 
     public function render()

@@ -32,6 +32,7 @@ class User extends Authenticatable
         'zipcode',
         'password',
         'address_residential_indicator',
+        'can_modify_data',
     ];
 
     protected $hidden = [
@@ -45,6 +46,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'address_residential_indicator' => 'boolean',
+            'can_modify_data' => 'boolean',
         ];
     }
 

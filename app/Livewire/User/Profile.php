@@ -26,6 +26,8 @@ class Profile extends Component
 
     public $addressResidentialIndicator = false;
 
+    public $canModifyData = true;
+
     public function mount(): void
     {
         $authenticatedUser = Auth::user();
@@ -36,6 +38,7 @@ class Profile extends Component
             $this->user = Customer::find($authenticatedUser->id);
         }
         $this->addressResidentialIndicator = (bool) ($this->user->address_residential_indicator ?? false);
+        $this->canModifyData = (bool) ($this->user->can_modify_data ?? true);
     }
 
     public function rules(): array
@@ -79,6 +82,9 @@ class Profile extends Component
             'addressResidentialIndicator' => [
                 'boolean'
             ],
+            'canModifyData' => [
+                'boolean'
+            ],
             'password' => [
                 'nullable',
                 'string',
@@ -99,6 +105,7 @@ class Profile extends Component
 
         $this->user->password = when($this->password !== null, Hash::make($this->password), $this->user->password);
         $this->user->address_residential_indicator = $this->addressResidentialIndicator;
+        $this->user->can_modify_data = $this->canModifyData;
         $this->user->save();
 
         $this->dispatch('updated', name: $this->user->name);
