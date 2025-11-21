@@ -113,6 +113,15 @@ class Index extends Component
         $this->toast()->success('Labels refreshed successfully!')->send();
     }
 
+    public function confirmVoidLabel($labelId)
+    {
+        $this->dialog()
+            ->question('Warning', 'Are you sure you want to void this label? This action cannot be undone.')
+            ->confirm('Yes, Void Label', 'voidLabel', $labelId)
+            ->cancel('Cancel')
+            ->send();
+    }
+
     public function voidLabel($labelId)
     {
         try {

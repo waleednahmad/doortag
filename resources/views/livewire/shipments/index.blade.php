@@ -229,8 +229,9 @@
                                     <div class="flex flex-wrap gap-2">
                                         {{-- void a label --}}
                                         @if ($label['status'] != 'voided')
-                                            <x-button wire:click="voidLabel('{{ $label['label_id'] ?? '' }}' )"
-                                                loading="voidLabel('{{ $label['label_id'] ?? '' }}' )" color="red"
+                                            <x-button wire:click="confirmVoidLabel('{{ $label['label_id'] ?? '' }}' )"
+                                                loading="voidLabel('{{ $label['label_id'] ?? '' }}' ) " 
+                                                color="red"
                                                 sm title="Void Label">
                                                 <x-slot:left>
                                                     <i class="fas fa-times-circle mr-1"></i>
