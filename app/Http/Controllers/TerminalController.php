@@ -277,12 +277,6 @@ class TerminalController
             $amount = $request->input('amount'); // Amount in cents
             $description = $request->input('description', 'Shipping Label Payment');
 
-            info('Creating shipping payment intent', [
-                'amount' => $amount,
-                'description' => $description,
-                'test_mode' => $this->testMode
-            ]);
-
             // Validate amount
             if (!$amount || $amount < 50) {
                 throw new \Exception('Invalid amount. Minimum amount is $0.50');

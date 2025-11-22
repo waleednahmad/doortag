@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rates Comparison by Carrier - 2025-11-21 16:10:09</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.95;
+        }
+        
+        .comparison-table {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .carrier-section {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        
+        .carrier-header {
+            padding: 20px;
+            color: white;
+            font-size: 1.3rem;
+            font-weight: 600;
+            border-bottom: 3px solid #ddd;
+        }
+        
+        .carrier-1 .carrier-header {
+            background: linear-gradient(135deg, #667eea 0%, #5568d3 100%);
+        }
+        
+        .carrier-2 .carrier-header {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .carrier-id {
+            font-size: 0.85rem;
+            opacity: 0.9;
+            margin-top: 5px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th {
+            background: #f8f9fa;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+            font-size: 0.95rem;
+            border-bottom: 2px solid #ddd;
+        }
+        
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+            font-size: 0.95rem;
+        }
+        
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+        
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .service-name {
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .price {
+            font-weight: 600;
+            color: #667eea;
+            font-size: 1.05rem;
+        }
+        
+        .carrier-2 .price {
+            color: #f5576c;
+        }
+        
+        .delivery-info {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .delivery-days {
+            display: inline-block;
+            background: #e8f0fe;
+            color: #1967d2;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        .carrier-2 .delivery-days {
+            background: #ffe8ed;
+            color: #c5192d;
+        }
+        
+        .summary {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        
+        .summary h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+        }
+        
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .summary-card {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .summary-card.carrier-2 {
+            border-left-color: #f5576c;
+        }
+        
+        .summary-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        
+        .summary-value {
+            font-size: 1.3rem;
+            color: #333;
+            font-weight: 600;
+        }
+        
+        .avg-price {
+            color: #667eea;
+        }
+        
+        .carrier-2 .avg-price {
+            color: #f5576c;
+        }
+        
+        @media (max-width: 1024px) {
+            .comparison-table {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Shipping Rates Comparison</h1>
+            <p>Sorted by Carrier ID | Log Timestamp: 2025-11-21 16:10:09</p>
+        </div>
+        
+        <div class="comparison-table">
+            <!-- Carrier 1: se-4121981 -->
+            <div class="carrier-section carrier-1">
+                <div class="carrier-header">
+                    FedEx Apna Bazaar International
+                    <div class="carrier-id">ID: se-4121981</div>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Service Type</th>
+                            <th>Price</th>
+                            <th>Delivery</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="service-name">FedEx Home Delivery®</td>
+                            <td class="price">$8.46</td>
+                            <td class="delivery-info"><span class="delivery-days">1 day</span></td>
+                        </tr>
+                        <tr>
+                            <td class="service-name">FedEx First Overnight®</td>
+                            <td class="price">$117.31</td>
+                            <td class="delivery-info"><span class="delivery-days">3 days</span></td>
+                        </tr>
+                        <tr>
+                            <td class="service-name">FedEx Priority Overnight®</td>
+                            <td class="price">$25.66</td>
+                            <td class="delivery-info"><span class="delivery-days">3 days</span></td>
+                        </tr>
+                        <tr>
+                            <td class="service-name">FedEx Standard Overnight®</td>
+                            <td class="price">$24.28</td>
+                            <td class="delivery-info"><span class="delivery-days">3 days</span></td>
+                        </tr>
+                        <tr>
+                            <td class="service-name">FedEx 2Day® A.M.</td>
+                            <td class="price">$22.27</td>
+                            <td class="delivery-info"><span class="delivery-days">4 days</span></td>
+                        </tr>
+                        <tr>
+                            <td class="service-name">FedEx 2Day®</td>
+                            <td class="price">$17.92</td>
+                            <td class="delivery-info"><span class="delivery-days">4 days</span></td>
+                        </tr>
+                        <tr>
+                            <td class="service-name">FedEx Express Saver®</td>
+                            <td class="price">$16.25</td>
+                            <td class="delivery-info"><span class="delivery-days">5 days</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Carrier 2: se-4084605 -->
+            <div class="carrier-section carrier-2">
+                <div class="carrier-header">
+                    FedEx Waleed's Personal
+                    <div class="carrier-id">ID: se-4084605</div>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Service Type</th>
+                            <th>Price</th>
+                            <th>Delivery</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="service-name">FedEx Home Delivery®</td>
+                            <td class="price">$16.96</td>
+                            <td class="delivery-info"><span class="delivery-days">1 day</span></td>
+                        </tr>
+                        <tr>
+                            <td class="service-name">FedEx First Overnight®</td>
+                            <td class="price">$117.31</td>
+                            <td class="delivery-info"><span class="delivery-days">3 days</span></td>
+                        </tr>
+                        <tr>
+                            <td class="service-name">FedEx Priority Overnight®</td>
+                            <td class="price">$25.66</td>
+                            <td class="delivery-info"><span class="delivery-days">3 days</span></td>
+                        </tr>
+                        <tr>
+                            <td class="service-name">FedEx Standard Overnight®</td>
+                            <td class="price">$58.79</td>
+                            <td class="delivery-info"><span class="delivery-days">3 days</span></td>
+                        </tr>
+                        <tr>
+                            <td class="service-name">FedEx 2Day® A.M.</td>
+                            <td class="price">$42.59</td>
+                            <td class="delivery-info"><span class="delivery-days">4 days</span></td>
+                        </tr>
+                        <tr>
+                            <td class="service-name">FedEx 2Day®</td>
+                            <td class="price">$38.28</td>
+                            <td class="delivery-info"><span class="delivery-days">4 days</span></td>
+                        </tr>
+                        <tr>
+                            <td class="service-name">FedEx Express Saver®</td>
+                            <td class="price">$34.73</td>
+                            <td class="delivery-info"><span class="delivery-days">5 days</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="summary">
+            <h2>Summary Comparison</h2>
+            <div class="summary-grid">
+                <div class="summary-card">
+                    <div class="summary-label">Cheapest Option (Carrier 1)</div>
+                    <div class="summary-value">$8.46 <span style="font-size: 0.7rem; color: #999;">(Home Delivery)</span></div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-label">Average Price (Carrier 1)</div>
+                    <div class="summary-value avg-price">$32.02</div>
+                </div>
+                <div class="summary-card carrier-2">
+                    <div class="summary-label">Cheapest Option (Carrier 2)</div>
+                    <div class="summary-value">$16.96 <span style="font-size: 0.7rem; color: #999;">(Home Delivery)</span></div>
+                </div>
+                <div class="summary-card carrier-2">
+                    <div class="summary-label">Average Price (Carrier 2)</div>
+                    <div class="summary-value avg-price">$47.90</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

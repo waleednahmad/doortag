@@ -91,7 +91,7 @@ class Index extends Component
             $defaultPackage = collect($this->carrierPackaging)->firstWhere('package_code', $this->selectedPackaging);
             $this->selectedPackage = $defaultPackage;
         }
-        
+
         // Always ensure selectedPackage has a fallback value
         if (empty($this->selectedPackage)) {
             $this->selectedPackage = [
@@ -185,13 +185,8 @@ class Index extends Component
 
             $shipEngine = new ShipEngineService();
 
-
-
-
-
-
             $shipmentData = [
-                'carrier_ids' => ["se-4121981"], // For fedex only
+                'carrier_ids' => ["se-4121981", "se-4084605"], // For fedex only
                 'from_country_code' => $this->shipFromAddress['country_code'],
                 'from_postal_code' => $this->shipFromAddress['postal_code'],
                 'to_country_code' => $this->shipToAddress['country_code'],
@@ -231,12 +226,8 @@ class Index extends Component
                 return;
             }
 
-            info('Estimated Rates Response: ' . print_r($response, true));
-
 
             $responseRates = collect($response ?? []);
-
-
 
             $authenticatedUser = Auth::user();
             if ($authenticatedUser instanceof Customer && $authenticatedUser->margin > 0) {
@@ -285,7 +276,8 @@ class Index extends Component
             }
 
 
-            $this->rates = $formatedRates;
+            $this->rates = $this->addPriceComparison($formatedRates);
+
             $this->sortRates(); // Apply default sorting
             $this->dispatch('scroll-to-top');
             $this->toast()->success('Rates retrieved successfully!')->send();
@@ -294,6 +286,73 @@ class Index extends Component
         } finally {
             $this->loading = false;
         }
+    }
+
+
+    /**
+     * Add price comparison between carriers for the same service type
+     * Groups rates by service type and compares prices between se-4121981 and se-4084605
+     * 
+     * @param array $formatedRates
+     * @return array Rates with price_comparison added
+     */
+    private function addPriceComparison($formattedRates)
+    {
+        $ratesCollection = collect($formattedRates);
+
+        // Group by service type → then key by carrier_id
+        $ratesByService = $ratesCollection
+            ->groupBy('service_type')
+            ->map(fn($serviceRates) => $serviceRates->keyBy('carrier_id'));
+
+        return collect($formattedRates)->map(function ($rate) use ($ratesByService) {
+
+            $serviceType = $rate['service_type'];
+            $serviceRates = $ratesByService->get($serviceType, collect());
+
+            // Target carriers
+            $carrier1 = 'se-4121981';
+            $carrier2 = 'se-4084605';
+
+            // Default comparison structure
+            $rate['price_comparison'] = [
+                'carrier_1_id'         => $carrier1,
+                'carrier_2_id'         => $carrier2,
+                'carrier_1_price'      => null,
+                'carrier_2_price'      => null,
+                'price_difference'     => null,
+                'difference_percentage' => null,
+                'is_cheaper'           => null,
+            ];
+
+            $carrier1Rate = $serviceRates->get($carrier1);
+            $carrier2Rate = $serviceRates->get($carrier2);
+
+            if ($carrier1Rate && $carrier2Rate) {
+
+                // Convert to float
+                $price1 = (float) str_replace(',', '', $carrier1Rate['calculated_amount']);
+                $price2 = (float) str_replace(',', '', $carrier2Rate['calculated_amount']);
+
+                $rate['price_comparison']['carrier_1_price'] = $price1;
+                $rate['price_comparison']['carrier_2_price'] = $price2;
+
+                // Absolute difference
+                $difference = abs($price1 - $price2);
+                $rate['price_comparison']['price_difference'] = $difference;
+
+                // Correct percentage based on highest price
+                $base = max($price1, $price2);
+                $percentage = ($difference / $base) * 100;
+                $rate['price_comparison']['difference_percentage'] = round($percentage, 2);
+
+                // Determine which is cheaper
+                $rate['price_comparison']['is_cheaper'] =
+                    $price1 < $price2 ? 'carrier_1' : ($price2 < $price1 ? 'carrier_2' : 'equal');
+            }
+
+            return $rate;
+        })->values()->all();
     }
 
 

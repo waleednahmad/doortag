@@ -441,6 +441,7 @@ class ShipEngineService
     {
         return [
             'name' => $address['name'] ?? '',
+            'email' => $address['email'] ?? '',
             'phone' => $address['phone'] ?? '',
             'company_name' => $address['company_name'] ?? '',
             'address_line1' => $address['address_line1'] ?? '',

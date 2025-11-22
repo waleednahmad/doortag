@@ -384,6 +384,17 @@
                     </div>
                 </div>
 
+                @php
+                    // Filter rates to show only primary carrier (se-4121981)
+                    $primaryCarrierId = 'se-4121981';
+                    $primaryRates = collect($rates)
+                        ->filter(function ($rate) use ($primaryCarrierId) {
+                            return $rate['carrier_id'] === $primaryCarrierId;
+                        })
+                        ->values()
+                        ->all();
+                @endphp
+
                 <x-card class="mt-4 sm:mt-6">
                     {{-- <x-slot:header> --}}
                     <div class="space-y-4 flex flex-col sm:flex-row sm:items-center sm:justify-between pb-5 sm:pb-2">
@@ -393,15 +404,15 @@
                                 <h3 class="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">
                                     Rate Quotes
                                 </h3>
-                                @if (!empty($rates))
+                                @if (!empty($primaryRates))
                                     <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                        Found {{ count($rates) }} shipping option(s)
+                                        Found {{ count($primaryRates) }} shipping option(s)
                                     </p>
                                 @endif
                             </div>
                         </div>
 
-                        @if (!empty($rates))
+                        @if (!empty($primaryRates))
                             <!-- Enhanced Sorting Section -->
                             <div
                                 class="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
@@ -515,9 +526,9 @@
                     </div>
                     {{-- </x-slot:header> --}}
 
-                    @if (!empty($rates))
+                    @if (!empty($primaryRates))
                         <div class="space-y-4">
-                            @foreach ($rates as $index => $rate)
+                            @foreach ($primaryRates as $index => $rate)
                                 <div x-data="{ rateBreakdownOpen: false }"
                                     class="border rounded-lg overflow-hidden hover:shadow-md transition-all duration-300 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600">
                                     <!-- Main Quote Content - Clickable -->
@@ -548,7 +559,9 @@
                                                             class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 ">
                                                             Estimated Delivery:
                                                             <span class="font-bold">
-                                                                {{ $rate['carrier_delivery_days'] }}
+                                                                {{ \Carbon\Carbon::parse($rate['estimated_delivery_date'])->format('l m/d') }}
+                                                                by
+                                                                {{ \Carbon\Carbon::parse($rate['estimated_delivery_date'])->format('h:i A') }}
                                                             </span>
                                                             @if ($rate['delivery_days'])
                                                                 ({{ $rate['delivery_days'] }}
@@ -572,9 +585,24 @@
                                                         class="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase mb-1">
                                                         Shipping Rate
                                                     </div>
-                                                    <div
-                                                        class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
-                                                        ${{ $rate['calculated_amount'] }}
+                                                    <div class="space-y-1">
+                                                        <div class="flex items-center gap-4">
+                                                            @if (isset($rate['price_comparison']) && $rate['price_comparison']['is_cheaper'] === 'carrier_1')
+                                                                <div
+                                                                    class="text-sm line-through text-gray-400 dark:text-gray-500">
+                                                                    ${{ number_format($rate['price_comparison']['carrier_2_price'], 2) }}
+                                                                </div>
+                                                            @endif
+                                                            <div
+                                                                class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
+                                                                ${{ $rate['calculated_amount'] }}
+                                                            </div>
+                                                        </div>
+                                                        @if (isset($rate['price_comparison']) && $rate['price_comparison']['is_cheaper'] === 'carrier_1')
+                                                            <x-badge
+                                                                text="You Save ${{ number_format($rate['price_comparison']['price_difference'], 2) }}  ({{ abs($rate['price_comparison']['difference_percentage']) }}% lower)"
+                                                                color="green" />
+                                                        @endif
                                                     </div>
                                                 </div>
                                             </div>
