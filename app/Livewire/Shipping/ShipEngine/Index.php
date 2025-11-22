@@ -615,7 +615,6 @@ class Index extends Component
 
 
             $responseRates = collect($response['rate_response']['rates'] ?? []);
-            info('Rates Response: ' . print_r($responseRates->toArray(), true));
             if ($responseRates->isEmpty()) {
                 $this->dialog()->warning('No rates found for the given shipment details.')->send();
                 return;
