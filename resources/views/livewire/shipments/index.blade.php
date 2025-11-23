@@ -66,7 +66,7 @@
             <div class="space-y-4">
                 @foreach ($this->labels as $index => $label)
                     @php
-                        $package = $label['packages'][0] ?? null;
+                        $packages = $label['packages'] ?? [];
                         $shipTo = $label['ship_to'] ?? [];
                         $cost =
                             [
@@ -335,24 +335,32 @@
                                     </div>
 
                                     <!-- Package Info -->
-                                    @if ($package)
+                                    @if (!empty($packages) && is_array($packages))
                                         <div>
-                                            <h4 class="font-medium text-gray-900 dark:text-white mb-2">Package Details
+                                            <h4 class="font-medium text-gray-900 dark:text-white mb-2">
+                                                {{ count($packages) > 1 ? 'Package Details (' . count($packages) . ')' : 'Package Details' }}
                                             </h4>
-                                            <div class="text-gray-600 dark:text-gray-400">
-                                                <p><span class="font-medium">Weight:</span>
-                                                    {{ $package['weight']['value'] ?? 0 }}
-                                                    {{ $package['weight']['unit'] ?? 'lb' }}</p>
-                                                @if (isset($package['dimensions']))
-                                                    <p><span class="font-medium">Dimensions:</span>
-                                                        {{ $package['dimensions']['length'] ?? 0 }} x
-                                                        {{ $package['dimensions']['width'] ?? 0 }} x
-                                                        {{ $package['dimensions']['height'] ?? 0 }}
-                                                        {{ $package['dimensions']['unit'] ?? 'in' }}
-                                                    </p>
-                                                @endif
-                                                <p><span class="font-medium">Package:</span>
-                                                    {{ ucfirst($package['package_code'] ?? 'package') }}</p>
+                                            <div class="text-gray-600 dark:text-gray-400 space-y-3">
+                                                @foreach ($packages as $pkgIndex => $package)
+                                                    <div class="{{ $pkgIndex > 0 ? 'pt-3 border-t border-gray-200 dark:border-gray-600' : '' }}">
+                                                        @if (count($packages) > 1)
+                                                            <p class="font-semibold text-gray-700 dark:text-gray-300 mb-1">Package {{ $pkgIndex + 1 }}</p>
+                                                        @endif
+                                                        <p><span class="font-medium">Weight:</span>
+                                                            {{ $package['weight']['value'] ?? 0 }}
+                                                            {{ $package['weight']['unit'] ?? 'lb' }}</p>
+                                                        @if (isset($package['dimensions']))
+                                                            <p><span class="font-medium">Dimensions:</span>
+                                                                {{ $package['dimensions']['length'] ?? 0 }} x
+                                                                {{ $package['dimensions']['width'] ?? 0 }} x
+                                                                {{ $package['dimensions']['height'] ?? 0 }}
+                                                                {{ $package['dimensions']['unit'] ?? 'in' }}
+                                                            </p>
+                                                        @endif
+                                                        <p><span class="font-medium">Package:</span>
+                                                            {{ ucfirst($package['package_code'] ?? 'package') }}</p>
+                                                    </div>
+                                                @endforeach
                                             </div>
                                         </div>
                                     @endif

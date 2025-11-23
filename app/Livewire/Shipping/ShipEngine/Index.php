@@ -53,16 +53,8 @@ class Index extends Component
     public $shipToAddressCountryFullName = '';
     public $hsipFromAddressCountryFullName = '';
 
-    public $package = [
-        'weight' => '',
-        'weight_unit' => 'pound',
-        'length' => '',
-        'width' => '',
-        'height' => '',
-        'dimension_unit' => 'inch',
-        'insured_value' => 100,
-        "insurance_provider" => "parcelguard",
-    ];
+    public $packages = [];
+    public $currentPackageIndex = 0; // Track which package is being edited
 
     public $customs = [
         'contents' => 'merchandise', // [merchandise, documents]
@@ -163,9 +155,14 @@ class Index extends Component
 
     public function updated($name, $value)
     {
-        if ($name === 'isInsuranceChecked') {
-            if (!$value) {
-                $this->package['insured_value'] = 100;
+        // Handle insurance checkbox changes for current package
+        if (str_starts_with($name, 'packages.') && str_contains($name, '.is_insured')) {
+            preg_match('/packages\.(\d+)\.is_insured/', $name, $matches);
+            if (isset($matches[1])) {
+                $index = (int)$matches[1];
+                if (!$value && isset($this->packages[$index])) {
+                    $this->packages[$index]['insured_value'] = 100;
+                }
             }
         }
 
@@ -201,9 +198,21 @@ class Index extends Component
             'shipToAddress.city_locality' => 'required|string|max:255',
             'shipToAddress.country_code' => 'required|string|size:2',
 
-            'package.weight' => 'required|numeric|min:0.1',
-            'package.insured_value' => 'required_if:isInsuranceChecked,true|numeric|min:100',
+            'packages' => 'required|array|min:1',
         ];
+
+        // Validate each package
+        foreach ($this->packages as $index => $package) {
+            $rules["packages.{$index}.weight"] = 'required|numeric|min:0.1';
+            $rules["packages.{$index}.insured_value"] = 'required_if:packages.'.$index.'.is_insured,true|numeric|min:100';
+            
+            // Validate dimensions for custom packages
+            if (isset($package['package_code']) && $package['package_code'] === 'custom') {
+                $rules["packages.{$index}.length"] = 'required|numeric|min:1';
+                $rules["packages.{$index}.width"] = 'required|numeric|min:1';
+                $rules["packages.{$index}.height"] = 'required|numeric|min:1';
+            }
+        }
 
         if ($this->shipToAddress['country_code'] == 'US') {
             $rules['shipToAddress.state_province'] = 'required|string|max:2';
@@ -211,13 +220,6 @@ class Index extends Component
         } else {
             $rules['shipToAddress.state_province'] = 'nullable|string|max:255';
             $rules['shipToAddress.postal_code'] = 'nullable|string|max:20';
-        }
-
-
-        if ($this->selectedPackaging == 'custom') {
-            $rules['package.length'] = 'required|numeric|min:1';
-            $rules['package.width'] = 'required|numeric|min:1';
-            $rules['package.height'] = 'required|numeric|min:1';
         }
 
         // Add customs validation for international shipments
@@ -246,9 +248,15 @@ class Index extends Component
 
     public function messages()
     {
-        return [
-            'package.insured_value.min' => 'Please enter an amount of $101 or more. Amounts below this are already covered by the carrier.',
-        ];
+        $messages = [];
+        
+        foreach ($this->packages as $index => $package) {
+            $messages["packages.{$index}.insured_value.min"] = 'Package ' . ($index + 1) . ': Please enter an amount of $101 or more. Amounts below this are already covered by the carrier.';
+            $messages["packages.{$index}.weight.required"] = 'Package ' . ($index + 1) . ': Weight is required.';
+            $messages["packages.{$index}.weight.min"] = 'Package ' . ($index + 1) . ': Weight must be at least 0.1 lbs.';
+        }
+        
+        return $messages;
     }
 
     public function mount()
@@ -257,12 +265,86 @@ class Index extends Component
         $this->setDefaultAddresses();
         $this->loadCarrierPackaging();
         $this->setDefaultSelectedPackage();
+        $this->initializePackages();
 
         // Set a default date for today date
         $this->shipDate = now()->format('Y-m-d');
 
         $country = Country::where('value', $this->shipToAddress['country_code'])->first();
         $this->shipToAddressCountryFullName = $country ? $country->label : '';
+    }
+
+    public function initializePackages()
+    {
+        // Initialize with one default package
+        if (empty($this->packages)) {
+            $this->packages = [
+                [
+                    'weight' => '',
+                    'weight_unit' => 'pound',
+                    'length' => '',
+                    'width' => '',
+                    'height' => '',
+                    'dimension_unit' => 'inch',
+                    'insured_value' => 100,
+                    'is_insured' => false,
+                    'package_code' => $this->selectedPackaging ?? 'custom',
+                ]
+            ];
+        }
+    }
+
+    public function addPackage()
+    {
+        $this->packages[] = [
+            'weight' => '',
+            'weight_unit' => 'pound',
+            'length' => '',
+            'width' => '',
+            'height' => '',
+            'dimension_unit' => 'inch',
+            'insured_value' => 100,
+            'is_insured' => false,
+            'package_code' => $this->selectedPackaging ?? 'custom',
+        ];
+
+        $this->toast()->success('Package added successfully!')->send();
+    }
+
+    public function removePackage($index)
+    {
+        if (count($this->packages) <= 1) {
+            $this->toast()->warning('At least one package is required.')->send();
+            return;
+        }
+
+        if (isset($this->packages[$index])) {
+            array_splice($this->packages, $index, 1);
+            $this->packages = array_values($this->packages); // Re-index array
+            $this->toast()->info('Package removed successfully.')->send();
+        }
+    }
+
+    public function updatePackageCode($index)
+    {
+        if (isset($this->packages[$index])) {
+            $this->packages[$index]['package_code'] = $this->selectedPackaging;
+            $this->toast()->info('Package type updated for Package ' . ($index + 1))->send();
+        }
+    }
+
+    public function selectPackagingForPackage($packageIndex, $packageCode)
+    {
+        if (isset($this->packages[$packageIndex])) {
+            $this->packages[$packageIndex]['package_code'] = $packageCode;
+            
+            // Find the package details
+            $selectedPackage = collect($this->carrierPackaging)->firstWhere('package_code', $packageCode);
+            
+            if ($selectedPackage) {
+                $this->toast()->info('Package ' . ($packageIndex + 1) . ': Selected ' . $selectedPackage['name'])->send();
+            }
+        }
     }
 
     public function setDefaultSelectedPackage()
@@ -521,42 +603,49 @@ class Index extends Component
 
             $shipEngine = new ShipEngineService();
 
+            // Build packages array
+            $packagesData = [];
+            $hasAnyInsurance = false;
 
-            $packageData = [];
+            foreach ($this->packages as $package) {
+                $packageData = [];
 
-            if ($this->selectedPackage && $this->selectedPackage['package_code'] != 'custom') {
-                $packageData =  [
-                    'weight' => [
-                        'value' => $this->package['weight'] ?? 1,
-                        'unit' => $this->package['weight_unit'] ?? 'pound'
-                    ],
+                // Check if package is custom or predefined
+                if (isset($package['package_code']) && $package['package_code'] !== 'custom') {
+                    $packageData = [
+                        'weight' => [
+                            'value' => $package['weight'] ?? 1,
+                            'unit' => $package['weight_unit'] ?? 'pound'
+                        ],
+                        'package_code' => $package['package_code'],
+                    ];
+                } else {
+                    // Custom package - include dimensions
+                    $packageData = [
+                        'weight' => [
+                            'value' => $package['weight'] ?? 1,
+                            'unit' => $package['weight_unit'] ?? 'pound'
+                        ],
+                        'dimensions' => [
+                            'length' => $package['length'] ?? 12,
+                            'width' => $package['width'] ?? 12,
+                            'height' => $package['height'] ?? 12,
+                            'unit' => $package['dimension_unit'] ?? 'inch'
+                        ],
+                    ];
+                }
 
-                    'package_code' => $this->selectedPackage['package_code'] ?? '',
-                ];
-            } else { // Custom package
-                $packageData =  [
-                    'weight' => [
-                        'value' => $this->package['weight'] ?? 1,
-                        'unit' => $this->package['weight_unit'] ?? 'pound'
-                    ],
-                    'dimensions' => [
-                        'length' => $this->package['length'] ?? 12,
-                        'width' => $this->package['width'] ?? 12,
-                        'height' => $this->package['height'] ?? 12,
-                        'unit' => $this->package['dimension_unit'] ?? 'inch'
-                    ],
-                ];
+                // Add insurance if checked for this package
+                if (isset($package['is_insured']) && $package['is_insured']) {
+                    $packageData['insured_value'] = [
+                        'amount' => $package['insured_value'] ?? 100,
+                        'currency' => 'USD'
+                    ];
+                    $hasAnyInsurance = true;
+                }
+
+                $packagesData[] = $packageData;
             }
-
-
-            // Add insurance value if checked
-            if ($this->isInsuranceChecked) {
-                $packageData['insured_value'] = [
-                    'amount' => $this->package['insured_value'] ?? 1,
-                    'currency' => 'USD'
-                ];
-            }
-
 
             $shipmentData = [
                 'rate_options' => [
@@ -567,13 +656,12 @@ class Index extends Component
                     'ship_date' => $this->shipDate, // Format: YYYY-MM-DD
                     'ship_to' => $shipEngine->formatAddress($this->shipToAddress),
                     'ship_from' => $shipEngine->formatAddress($this->shipFromAddress),
-                    'packages' => [
-                        $packageData
-                    ],
+                    'packages' => $packagesData,
                 ]
             ];
-            // Add insurance provider if checked
-            if ($this->isInsuranceChecked) {
+            
+            // Add insurance provider if any package has insurance
+            if ($hasAnyInsurance) {
                 $shipmentData['shipment']['insurance_provider'] = 'parcelguard';
             }
 
@@ -1374,6 +1462,21 @@ class Index extends Component
         $this->certifyHazardousMaterials = false;
         $this->certifyInvoiceAccuracy = false;
 
+        // Reset packages to single default package
+        $this->packages = [
+            [
+                'weight' => '',
+                'weight_unit' => 'pound',
+                'length' => '',
+                'width' => '',
+                'height' => '',
+                'dimension_unit' => 'inch',
+                'insured_value' => 100,
+                'is_insured' => false,
+                'package_code' => $this->selectedPackaging ?? 'custom',
+            ]
+        ];
+
         $this->shipFromAddress = [
             'name' => '',
             'company_name' => '',
@@ -1400,17 +1503,6 @@ class Index extends Component
             'postal_code' => '',
             'country_code' => 'US',
             'address_residential_indicator' => true
-        ];
-
-        $this->package = [
-            'weight' => 1,
-            'weight_unit' => 'pound',
-            'length' => '',
-            'width' => '',
-            'height' => '',
-            'dimension_unit' => 'inch',
-            'insured_value' => 1,
-            "insurance_provider" => "shipsurance",
         ];
     }
 

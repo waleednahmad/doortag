@@ -31,205 +31,206 @@
                         <x-shipping.ship-to-address :shipToAddress="$shipToAddress" :countries="$this->countries" />
 
 
-                        <!-- Type of Packaging -->
-                        <section class="mt-3">
-                            <h1
-                                class="text-base sm:text-lg font-semibold mb-3 sm:mb-2 text-gray-800 dark:text-gray-200">
-                                Type of Packaging
-                            </h1>
-
-                            <div x-data="{ packagingOpen: false }" class="rounded-[5px] border-2 transition-colors duration-200"
-                                :class="packagingOpen ? 'border-[#00a9ff]' :
-                                    'border-gray-300 dark:border-gray-600 bg-gradient-to-b from-white to-gray-100 dark:from-gray-700 dark:to-gray-800'">
-
-                                <div @click="packagingOpen = !packagingOpen"
-                                    class="w-full flex items-center justify-between p-[10px] cursor-pointer rounded-[4px] transition-colors"
-                                    :class="packagingOpen ? 'hover:bg-blue-50 dark:hover:bg-blue-900/20' :
-                                        'hover:bg-gray-50 dark:hover:bg-gray-600'">
-                                    <div class="flex items-center">
-                                        {{-- img container --}}
-                                        <span class="w-[130px] h-[90px]  flex items-center justify-center">
-                                            @if ($selectedPackage && $selectedPackage['package_code'] === 'custom')
-                                                <img src="{{ asset('assets/images/Parcel-box.png') }}" alt="Parcel"
-                                                    class=" w-full object-contain" />
-                                            @else
-                                                <img src="{{ asset('assets/images/fedex.svg') }}" alt="Parcel"
-                                                    class="w-full object-contain" />
-                                            @endif
-                                        </span>
-                                        <div class="ml-[.9em]">
-
-                                            <h1 class="text-[1em] font-[400] text-gray-900 dark:text-gray-100">
-                                                {{ $selectedPackage['name'] ?? 'Custom Box or Rigid Packaging' }}
-                                            </h1>
-                                            <p
-                                                class="text-[.824em] font-[400] text-gray-500 dark:text-gray-400 mt-[3px]">
-                                                {{ $selectedPackage['description'] ?? 'Any custom box or thick parcel' }}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <i class="fas fa-caret-down text-[1.3em] text-gray-900 dark:text-gray-100"
-                                        :class="packagingOpen ? 'rotate-180' : ''"
-                                        style="transition: transform 0.2s;"></i>
-                                </div>
-
-                                <!-- Package Options -->
-                                <div x-show="packagingOpen" x-transition @click.away="packagingOpen = false">
-                                    @forelse ($carrierPackaging as $index => $package)
-                                        <div wire:click="selectPackaging('{{ $package['package_code'] }}')"
-                                            @click="packagingOpen = false"
-                                            class="w-full flex items-center justify-between p-[10px] cursor-pointer transition-colors {{ $selectedPackaging === $package['package_code'] ? 'bg-blue-50 dark:bg-blue-900/20 border-[#00a9ff]' : 'hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-[#00a9ff] dark:hover:border-blue-400' }} {{ $index === 0 ? 'border-t-[1px] border-gray-300 dark:border-gray-600' : '' }}">
-                                            <div class="flex items-center">
-                                                @if ($package['package_code'] === 'custom')
-                                                    <img src="{{ asset('assets/images/Parcel-box.png') }}"
-                                                        alt="Custom Package" class="object-contain w-[60px] h-[60px]" />
-                                                @else
-                                                    <img src="{{ asset('assets/images/fedex.svg') }}"
-                                                        alt="FedEx Package" class="object-contain w-[60px] h-[60px]" />
-                                                @endif
-                                                <div class="ml-[.9em]">
-                                                    <h1 class="text-[1em] font-[400] text-gray-900 dark:text-gray-100">
-                                                        {{ $package['name'] }}
-                                                    </h1>
-                                                    <p
-                                                        class="text-[.824em] font-[400] text-gray-500 dark:text-gray-400 mt-[3px]">
-                                                        {{ $package['description'] }}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            @if ($selectedPackaging === $package['package_code'])
-                                                <i
-                                                    class="fas fa-check text-[1.2em] text-blue-600 dark:text-blue-400"></i>
-                                            @endif
-                                        </div>
-                                    @empty
-                                        <div class="p-4 text-center text-gray-500 dark:text-gray-400">
-                                            <p>No packaging options available</p>
-                                        </div>
-                                    @endforelse
-                                </div>
-                            </div>
-                        </section>
-
-
-
-
-
-                        <!-- Package Details Section -->
+                        <!-- Packages List Section -->
                         <section class="mt-3">
                             <div class="flex items-center justify-between mb-3 sm:mb-4">
                                 <h2 class="text-base sm:text-lg font-semibold text-gray-800 dark:text-gray-200">
                                     Package Details
                                 </h2>
+                                <x-button wire:click="addPackage" color="green" sm>
+                                    <i class="fas fa-plus mr-1"></i> Add Package
+                                </x-button>
                             </div>
 
-                            <div
-                                class="bg-white dark:bg-gray-700 rounded-lg p-3 sm:p-4 lg:p-6 mb-3 sm:mb-4 border border-gray-200 dark:border-gray-600">
-                                <div class="flex items-center justify-between mb-4">
-                                    <h5 class="font-medium text-sm sm:text-base text-gray-800 dark:text-gray-200">
-                                        Package 1
-                                    </h5>
-                                </div>
+                            @foreach ($packages as $index => $package)
+                                <div wire:key="package-{{ $index }}"
+                                    class="bg-white dark:bg-gray-700 rounded-lg p-3 sm:p-4 lg:p-6 mb-3 sm:mb-4 border border-gray-200 dark:border-gray-600">
+                                    <div class="flex items-center justify-between mb-4">
+                                        <h5 class="font-medium text-sm sm:text-base text-gray-800 dark:text-gray-200">
+                                            Package {{ $index + 1 }}
+                                        </h5>
+                                        @if (count($packages) > 1)
+                                            <x-button wire:click="removePackage({{ $index }})" color="red" sm>
+                                                <i class="fas fa-trash"></i>
+                                            </x-button>
+                                        @endif
+                                    </div>
 
-                                <!-- Package Dimensions -->
-                                @if ($selectedPackage['package_code'] == 'custom')
-                                    <div class="mb-6 sm:mb-8"
-                                        x-hide="{{ $selectedPackage['package_code'] !== 'custom' }}">
-                                        <h6
-                                            class="text-sm sm:text-base font-medium text-gray-800 dark:text-gray-200 mb-3 sm:mb-4">
-                                            Package Dimensions (Inches)
+                                    <!-- Type of Packaging for this package -->
+                                    <div class="mb-4">
+                                        <h6 class="text-sm sm:text-base font-medium text-gray-800 dark:text-gray-200 mb-3">
+                                            Type of Packaging
                                         </h6>
+                                        
+                                        @php
+                                            $currentPackageType = collect($carrierPackaging)->firstWhere('package_code', $package['package_code'] ?? 'custom');
+                                        @endphp
 
-                                        <!-- Desktop Layout (Large screens) -->
-                                        <div class="hidden lg:grid lg:grid-cols-5 gap-4 items-end">
-                                            <div>
-                                                <x-number wire:model="package.length" label="Length *" step="0.1"
-                                                    min="1" required />
-                                            </div>
-                                            <div
-                                                class="flex items-center justify-center text-gray-500 dark:text-gray-400 pb-3">
-                                                <span class="text-lg sm:text-xl">×</span>
-                                            </div>
-                                            <div>
-                                                <x-number wire:model="package.width" label="Width *" step="0.1"
-                                                    min="1" required />
-                                            </div>
-                                            <div
-                                                class="flex items-center justify-center text-gray-500 dark:text-gray-400 pb-3">
-                                                <span class="text-lg sm:text-xl">×</span>
-                                            </div>
-                                            <div>
-                                                <x-number wire:model="package.height" label="Height *" step="0.1"
-                                                    min="1" required />
-                                            </div>
-                                        </div>
+                                        <div x-data="{ packagingOpen: false }" class="rounded-[5px] border-2 transition-colors duration-200"
+                                            :class="packagingOpen ? 'border-[#00a9ff]' :
+                                                'border-gray-300 dark:border-gray-600 bg-gradient-to-b from-white to-gray-100 dark:from-gray-700 dark:to-gray-800'">
 
-                                        <!-- Tablet Layout (Medium screens) -->
-                                        <div class="hidden md:grid lg:hidden md:grid-cols-3 gap-4">
-                                            <div>
-                                                <x-number wire:model="package.length" label="Length *" step="0.1"
-                                                    min="1" required />
+                                            <div @click="packagingOpen = !packagingOpen"
+                                                class="w-full flex items-center justify-between p-[10px] cursor-pointer rounded-[4px] transition-colors"
+                                                :class="packagingOpen ? 'hover:bg-blue-50 dark:hover:bg-blue-900/20' :
+                                                    'hover:bg-gray-50 dark:hover:bg-gray-600'">
+                                                <div class="flex items-center">
+                                                    <span class="w-[130px] h-[90px] flex items-center justify-center">
+                                                        @if ($currentPackageType && $currentPackageType['package_code'] === 'custom')
+                                                            <img src="{{ asset('assets/images/Parcel-box.png') }}" alt="Parcel"
+                                                                class="w-full object-contain" />
+                                                        @else
+                                                            <img src="{{ asset('assets/images/fedex.svg') }}" alt="Parcel"
+                                                                class="w-full object-contain" />
+                                                        @endif
+                                                    </span>
+                                                    <div class="ml-[.9em]">
+                                                        <h1 class="text-[1em] font-[400] text-gray-900 dark:text-gray-100">
+                                                            {{ $currentPackageType['name'] ?? 'Custom Box or Rigid Packaging' }}
+                                                        </h1>
+                                                        <p class="text-[.824em] font-[400] text-gray-500 dark:text-gray-400 mt-[3px]">
+                                                            {{ $currentPackageType['description'] ?? 'Any custom box or thick parcel' }}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <i class="fas fa-caret-down text-[1.3em] text-gray-900 dark:text-gray-100"
+                                                    :class="packagingOpen ? 'rotate-180' : ''"
+                                                    style="transition: transform 0.2s;"></i>
                                             </div>
-                                            <div>
-                                                <x-number wire:model="package.width" label="Width *" step="0.1"
-                                                    min="1" required />
-                                            </div>
-                                            <div>
-                                                <x-number wire:model="package.height" label="Height *" step="0.1"
-                                                    min="1" required />
-                                            </div>
-                                        </div>
 
-                                        <!-- Mobile Layout (Small screens) -->
-                                        <div class="md:hidden space-y-3">
-                                            <div class="grid grid-cols-1 gap-3">
-                                                <div>
-                                                    <x-number label="Length *" wire:model="package.length"
-                                                        min="1" step="0.1" required />
-                                                </div>
-                                                <div>
-                                                    <x-number wire:model="package.width" label="Width *" min="1"
-                                                        step="0.1" required />
-                                                </div>
-                                                <div>
-                                                    <x-number wire:model="package.height" label="Height *"
-                                                        step="0.1" min="1" required />
-                                                </div>
+                                            <!-- Package Options -->
+                                            <div x-show="packagingOpen" x-transition @click.away="packagingOpen = false">
+                                                @forelse ($carrierPackaging as $pkgIndex => $pkgOption)
+                                                    <div wire:click="selectPackagingForPackage({{ $index }}, '{{ $pkgOption['package_code'] }}')"
+                                                        @click="packagingOpen = false"
+                                                        class="w-full flex items-center justify-between p-[10px] cursor-pointer transition-colors {{ ($package['package_code'] ?? 'custom') === $pkgOption['package_code'] ? 'bg-blue-50 dark:bg-blue-900/20 border-[#00a9ff]' : 'hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-[#00a9ff] dark:hover:border-blue-400' }} {{ $pkgIndex === 0 ? 'border-t-[1px] border-gray-300 dark:border-gray-600' : '' }}">
+                                                        <div class="flex items-center">
+                                                            @if ($pkgOption['package_code'] === 'custom')
+                                                                <img src="{{ asset('assets/images/Parcel-box.png') }}"
+                                                                    alt="Custom Package" class="object-contain w-[60px] h-[60px]" />
+                                                            @else
+                                                                <img src="{{ asset('assets/images/fedex.svg') }}"
+                                                                    alt="FedEx Package" class="object-contain w-[60px] h-[60px]" />
+                                                            @endif
+                                                            <div class="ml-[.9em]">
+                                                                <h1 class="text-[1em] font-[400] text-gray-900 dark:text-gray-100">
+                                                                    {{ $pkgOption['name'] }}
+                                                                </h1>
+                                                                <p class="text-[.824em] font-[400] text-gray-500 dark:text-gray-400 mt-[3px]">
+                                                                    {{ $pkgOption['description'] }}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                        @if (($package['package_code'] ?? 'custom') === $pkgOption['package_code'])
+                                                            <i class="fas fa-check text-[1.2em] text-blue-600 dark:text-blue-400"></i>
+                                                        @endif
+                                                    </div>
+                                                @empty
+                                                    <div class="p-4 text-center text-gray-500 dark:text-gray-400">
+                                                        <p>No packaging options available</p>
+                                                    </div>
+                                                @endforelse
                                             </div>
                                         </div>
                                     </div>
-                                @endif
 
-                                <!-- Weight -->
-                                <div class="mb-6 sm:mb-8">
-                                    <h6
-                                        class="text-sm sm:text-base font-medium text-gray-700 dark:text-gray-300 mb-3 sm:mb-4">
-                                        Package Weight
-                                    </h6>
-                                    <div class="max-w-md">
-                                        <x-number label="Weight (Pounds) *" step="0.1" min="0.1"
-                                            wire:model="package.weight" required />
+                                    <!-- Package Dimensions (for custom packages only) -->
+                                    @if (($package['package_code'] ?? 'custom') == 'custom')
+                                        <div class="mb-6 sm:mb-8">
+                                            <h6
+                                                class="text-sm sm:text-base font-medium text-gray-800 dark:text-gray-200 mb-3 sm:mb-4">
+                                                Package Dimensions (Inches)
+                                            </h6>
+
+                                            <!-- Desktop Layout (Large screens) -->
+                                            <div class="hidden lg:grid lg:grid-cols-5 gap-4 items-end">
+                                                <div>
+                                                    <x-number wire:model="packages.{{ $index }}.length"
+                                                        label="Length *" step="0.1" min="1" required />
+                                                </div>
+                                                <div
+                                                    class="flex items-center justify-center text-gray-500 dark:text-gray-400 pb-3">
+                                                    <span class="text-lg sm:text-xl">×</span>
+                                                </div>
+                                                <div>
+                                                    <x-number wire:model="packages.{{ $index }}.width"
+                                                        label="Width *" step="0.1" min="1" required />
+                                                </div>
+                                                <div
+                                                    class="flex items-center justify-center text-gray-500 dark:text-gray-400 pb-3">
+                                                    <span class="text-lg sm:text-xl">×</span>
+                                                </div>
+                                                <div>
+                                                    <x-number wire:model="packages.{{ $index }}.height"
+                                                        label="Height *" step="0.1" min="1" required />
+                                                </div>
+                                            </div>
+
+                                            <!-- Tablet Layout (Medium screens) -->
+                                            <div class="hidden md:grid lg:hidden md:grid-cols-3 gap-4">
+                                                <div>
+                                                    <x-number wire:model="packages.{{ $index }}.length"
+                                                        label="Length *" step="0.1" min="1" required />
+                                                </div>
+                                                <div>
+                                                    <x-number wire:model="packages.{{ $index }}.width"
+                                                        label="Width *" step="0.1" min="1" required />
+                                                </div>
+                                                <div>
+                                                    <x-number wire:model="packages.{{ $index }}.height"
+                                                        label="Height *" step="0.1" min="1" required />
+                                                </div>
+                                            </div>
+
+                                            <!-- Mobile Layout (Small screens) -->
+                                            <div class="md:hidden space-y-3">
+                                                <div class="grid grid-cols-1 gap-3">
+                                                    <div>
+                                                        <x-number label="Length *"
+                                                            wire:model="packages.{{ $index }}.length" min="1"
+                                                            step="0.1" required />
+                                                    </div>
+                                                    <div>
+                                                        <x-number wire:model="packages.{{ $index }}.width"
+                                                            label="Width *" min="1" step="0.1" required />
+                                                    </div>
+                                                    <div>
+                                                        <x-number wire:model="packages.{{ $index }}.height"
+                                                            label="Height *" step="0.1" min="1" required />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endif
+
+                                    <!-- Weight -->
+                                    <div class="mb-6 sm:mb-8">
+                                        <h6
+                                            class="text-sm sm:text-base font-medium text-gray-700 dark:text-gray-300 mb-3 sm:mb-4">
+                                            Package Weight
+                                        </h6>
+                                        <div class="max-w-md">
+                                            <x-number label="Weight (Pounds) *" step="0.1" min="0.1"
+                                                wire:model="packages.{{ $index }}.weight" required />
+                                        </div>
+                                    </div>
+
+                                    <!-- Insurance for this package -->
+                                    <div class="flex flex-col gap-3" x-data="{ insured: @js($package['is_insured'] ?? false) }">
+                                        <x-checkbox label="Insurance for this package"
+                                            wire:model.live='packages.{{ $index }}.is_insured'
+                                            hint="Enter the total value to add coverage by InsureShield" class="text-sm" 
+                                            x-model="insured" />
+
+                                        <div x-show="insured" x-transition>
+                                            <x-number label="Declared Package Value ($) *" placeholder="Enter package value"
+                                                step="0.01" wire:model='packages.{{ $index }}.insured_value'
+                                                min="100" />
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-
-
-
-
+                            @endforeach
                         </section>
-
-                        <!-- Insurance Section -->
-                        <div class="my-4 flex flex-col  gap-3" x-data="{ insuranceChecked: @entangle('isInsuranceChecked') }">
-                            <x-checkbox label="Insurance" wire:model.live='isInsuranceChecked'
-                                hint="Enter the total value of your shipment to add coverage by InsureShield"
-                                class="text-sm" />
-
-                            <div x-show="insuranceChecked" x-transition>
-                                <x-number label="Declared Package Value ($) *" placeholder="Enter package value"
-                                    :required="$this->isInsuranceChecked" step="0.01" wire:model='package.insured_value'
-                                    min="100" />
-                            </div>
-                        </div>
 
 
                         <section class="mt-3">
@@ -460,17 +461,30 @@
                         <!-- Package Details -->
                         <div class="lg:w-[33.3333%] w-full text-[14px] lg:pl-[8px] pl-0">
                             <h1 class="font-[500] text-gray-600 dark:text-gray-300 pb-[6px] leading-[1.42857143]">
-                                Package Details</h1>
-                            <div class="mb-2">
-                                <p class="text-gray-500 dark:text-gray-400 font-[500] leading-[1.42857143]">
-                                    Package 1: <span
-                                        class="pl-[4px] font-[400]">{{ $selectedCarrier ? collect($carriers)->firstWhere('carrier_id', $selectedCarrier)['friendly_name'] ?? 'Multiple Services' : 'Multiple Services' }}</span>
-                                </p>
-                                <p class="text-gray-500 dark:text-gray-400 font-[500] leading-[1.42857143]">
-                                    Weight: <span class="pl-[4px] font-[400]">{{ $package['weight'] }}
-                                        {{ $package['weight_unit'] }}</span>
-                                </p>
-                            </div>
+                                Package Details ({{ count($packages) }})</h1>
+                            @foreach ($packages as $index => $pkg)
+                                @php
+                                    $pkgType = collect($carrierPackaging)->firstWhere('package_code', $pkg['package_code'] ?? 'custom');
+                                @endphp
+                                <div class="mb-2 {{ $index > 0 ? 'pt-2 border-t border-gray-300 dark:border-gray-600' : '' }}">
+                                    <p class="text-gray-500 dark:text-gray-400 font-[500] leading-[1.42857143]">
+                                        Package {{ $index + 1 }}: <span class="pl-[4px] font-[400]">{{ $pkgType['name'] ?? 'Custom Package' }}</span>
+                                    </p>
+                                    <p class="text-gray-500 dark:text-gray-400 font-[500] leading-[1.42857143]">
+                                        Weight: <span class="pl-[4px] font-[400]">{{ $pkg['weight'] ?? 'N/A' }} {{ $pkg['weight_unit'] ?? 'lbs' }}</span>
+                                    </p>
+                                    @if (isset($pkg['package_code']) && $pkg['package_code'] === 'custom' && !empty($pkg['length']))
+                                        <p class="text-gray-500 dark:text-gray-400 font-[500] leading-[1.42857143]">
+                                            Dimensions: <span class="pl-[4px] font-[400]">{{ $pkg['length'] }} × {{ $pkg['width'] }} × {{ $pkg['height'] }} in</span>
+                                        </p>
+                                    @endif
+                                    @if (isset($pkg['is_insured']) && $pkg['is_insured'] && !empty($pkg['insured_value']))
+                                        <p class="text-gray-500 dark:text-gray-400 font-[500] leading-[1.42857143]">
+                                            Insurance: <span class="pl-[4px] font-[400]">${{ number_format($pkg['insured_value'], 2) }}</span>
+                                        </p>
+                                    @endif
+                                </div>
+                            @endforeach
                         </div>
 
                         <!-- Service Details -->
@@ -683,7 +697,7 @@
                                             </div>
 
                                             <!-- Rate Details -->
-                                            <div class="text-center sm:text-right space-y-2">
+                                            <div class="text-center  space-y-2">
                                                 <div
                                                     class="border rounded p-2 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700">
                                                     <div
@@ -919,80 +933,83 @@
                                         <h3
                                             class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
                                             <i class="fas fa-box mr-2 text-purple-600"></i>
-                                            Package Details
+                                            Package Details ({{ count($packages) }})
                                         </h3>
-                                        <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 space-y-4">
-                                            <!-- Package Type -->
-                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                <div>
-                                                    <p
-                                                        class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
-                                                        Package Type</p>
-                                                    <p class="text-base font-medium text-gray-900 dark:text-white">
-                                                        @php
-                                                            $selectedPackage = collect($carrierPackaging)->firstWhere(
-                                                                'package_code',
-                                                                $selectedPackaging,
-                                                            );
-                                                        @endphp
-                                                        {{ $selectedPackage['name'] ?? 'N/A' }}
-                                                    </p>
+                                        
+                                        @foreach ($packages as $pkgIndex => $pkg)
+                                            @php
+                                                $pkgType = collect($carrierPackaging)->firstWhere('package_code', $pkg['package_code'] ?? 'custom');
+                                            @endphp
+                                            
+                                            <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 space-y-4 {{ $pkgIndex > 0 ? 'mt-4' : '' }}">
+                                                <!-- Package Header -->
+                                                <div class="flex items-center justify-between border-b border-gray-300 dark:border-gray-600 pb-2">
+                                                    <h4 class="text-sm font-semibold text-purple-600 dark:text-purple-400">
+                                                        Package {{ $pkgIndex + 1 }}
+                                                    </h4>
                                                 </div>
+                                                
+                                                <!-- Package Type & Weight -->
+                                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                    <div>
+                                                        <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+                                                            Package Type
+                                                        </p>
+                                                        <p class="text-base font-medium text-gray-900 dark:text-white">
+                                                            {{ $pkgType['name'] ?? 'Custom Package' }}
+                                                        </p>
+                                                    </div>
 
-                                                <!-- Weight -->
-                                                <div>
-                                                    <p
-                                                        class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
-                                                        Weight</p>
-                                                    <p class="text-base font-medium text-gray-900 dark:text-white">
-                                                        {{ $package['weight'] ?? 'N/A' }} lbs
-                                                    </p>
-                                                </div>
-                                            </div>
-
-                                            <!-- Dimensions (if custom package) -->
-                                            @if ($selectedPackage['package_code'] == 'custom' && !empty($package['length']))
-                                                <div>
-                                                    <p
-                                                        class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
-                                                        Dimensions (inches)</p>
-                                                    <p class="text-base font-medium text-gray-900 dark:text-white">
-                                                        {{ $package['length'] ?? 0 }} ×
-                                                        {{ $package['width'] ?? 0 }} ×
-                                                        {{ $package['height'] ?? 0 }}
-                                                    </p>
-                                                </div>
-                                            @endif
-
-                                            <!-- Insurance -->
-                                            @if (!empty($package['insured_value']) && $isInsuranceChecked)
-                                                <div class="border-t pt-4">
-                                                    <p
-                                                        class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
-                                                        Insurance</p>
-                                                    <div class="flex items-center space-x-2">
-                                                        <span
-                                                            class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300">
-                                                            <i class="fas fa-shield-alt mr-1"></i>
-                                                            Declared Value:
-                                                            ${{ number_format($package['insured_value'], 2) }}
-                                                        </span>
+                                                    <div>
+                                                        <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+                                                            Weight
+                                                        </p>
+                                                        <p class="text-base font-medium text-gray-900 dark:text-white">
+                                                            {{ $pkg['weight'] ?? 'N/A' }} lbs
+                                                        </p>
                                                     </div>
                                                 </div>
-                                            @endif
 
-                                            <!-- Shipment Date -->
-                                            @if (!empty($shipDate))
-                                                <div class="border-t pt-4">
-                                                    <p
-                                                        class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
-                                                        Ship Date</p>
-                                                    <p class="text-base font-medium text-gray-900 dark:text-white">
-                                                        {{ \Carbon\Carbon::createFromFormat('Y-m-d', $shipDate)->format('F d, Y') }}
-                                                    </p>
-                                                </div>
-                                            @endif
-                                        </div>
+                                                <!-- Dimensions (if custom package) -->
+                                                @if (isset($pkg['package_code']) && $pkg['package_code'] === 'custom' && !empty($pkg['length']))
+                                                    <div class="border-t border-gray-300 dark:border-gray-600 pt-4">
+                                                        <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+                                                            Dimensions (inches)
+                                                        </p>
+                                                        <p class="text-base font-medium text-gray-900 dark:text-white">
+                                                            {{ $pkg['length'] ?? 0 }} × {{ $pkg['width'] ?? 0 }} × {{ $pkg['height'] ?? 0 }}
+                                                        </p>
+                                                    </div>
+                                                @endif
+
+                                                <!-- Insurance -->
+                                                @if (isset($pkg['is_insured']) && $pkg['is_insured'] && !empty($pkg['insured_value']))
+                                                    <div class="border-t border-gray-300 dark:border-gray-600 pt-4">
+                                                        <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+                                                            Insurance
+                                                        </p>
+                                                        <div class="flex items-center space-x-2">
+                                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300">
+                                                                <i class="fas fa-shield-alt mr-1"></i>
+                                                                Declared Value: ${{ number_format($pkg['insured_value'], 2) }}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        @endforeach
+
+                                        <!-- Shipment Date -->
+                                        @if (!empty($shipDate))
+                                            <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mt-4">
+                                                <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+                                                    Ship Date
+                                                </p>
+                                                <p class="text-base font-medium text-gray-900 dark:text-white">
+                                                    {{ \Carbon\Carbon::createFromFormat('Y-m-d', $shipDate)->format('F d, Y') }}
+                                                </p>
+                                            </div>
+                                        @endif
                                     </div>
 
                                     <!-- Selected Label Preview -->

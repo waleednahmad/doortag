@@ -82,9 +82,6 @@ class ShipmentController
             $customs = is_array($shipmentData['customs'] ?? null) ? $shipmentData['customs'] : [];
             $packages = is_array($shipmentData['packages'] ?? null) ? $shipmentData['packages'] : [];
 
-            // Get the first package or create empty one
-            $firstPackage = is_array($packages[0] ?? null) ? $packages[0] : [];
-
             // Get tax identifiers from request data
             $taxIdentifiers = is_array($shipmentData['tax_identifiers'] ?? null) ? $shipmentData['tax_identifiers'] : [];
 
@@ -92,18 +89,26 @@ class ShipmentController
             $serviceCode = $trackingResponse['service_code'] ?? '';
             $carrierCode = $trackingResponse['carrier_code'] ?? '';
 
+            // Transform packages for blade view
+            $transformedPackages = [];
+            foreach ($packages as $pkg) {
+                $transformedPackages[] = [
+                    'weight' => is_array($pkg['weight'] ?? null) ? $pkg['weight']['value'] ?? 0 : 0,
+                    'weight_unit' => is_array($pkg['weight'] ?? null) ? $pkg['weight']['unit'] ?? 'pound' : 'pound',
+                    'length' => is_array($pkg['dimensions'] ?? null) ? $pkg['dimensions']['length'] ?? null : null,
+                    'width' => is_array($pkg['dimensions'] ?? null) ? $pkg['dimensions']['width'] ?? null : null,
+                    'height' => is_array($pkg['dimensions'] ?? null) ? $pkg['dimensions']['height'] ?? null : null,
+                    'dimension_unit' => is_array($pkg['dimensions'] ?? null) ? $pkg['dimensions']['unit'] ?? 'inch' : 'inch',
+                    'insured_value' => is_array($pkg['insured_value'] ?? null) ? $pkg['insured_value']['amount'] ?? 0 : 0,
+                    'package_code' => $pkg['package_code'] ?? 'package',
+                    'package_name' => ucfirst(str_replace('_', ' ', $pkg['package_code'] ?? 'Package')),
+                ];
+            }
+
             $data = [
                 'shipFromAddress' => $shipFromAddress,
                 'shipToAddress' => $shipToAddress,
-                'package' => [
-                    'weight' => is_array($firstPackage['weight'] ?? null) ? $firstPackage['weight']['value'] ?? 0 : 0,
-                    'weight_unit' => is_array($firstPackage['weight'] ?? null) ? $firstPackage['weight']['unit'] ?? 'pound' : 'pound',
-                    'length' => is_array($firstPackage['dimensions'] ?? null) ? $firstPackage['dimensions']['length'] ?? null : null,
-                    'width' => is_array($firstPackage['dimensions'] ?? null) ? $firstPackage['dimensions']['width'] ?? null : null,
-                    'height' => is_array($firstPackage['dimensions'] ?? null) ? $firstPackage['dimensions']['height'] ?? null : null,
-                    'dimension_unit' => is_array($firstPackage['dimensions'] ?? null) ? $firstPackage['dimensions']['unit'] ?? 'inch' : 'inch',
-                    'insured_value' => is_array($firstPackage['insured_value'] ?? null) ? $firstPackage['insured_value']['amount'] ?? 0 : 0,
-                ],
+                'packages' => $transformedPackages,
                 'customs' => $customs,
                 'tax_identifiers' => $taxIdentifiers,
                 'shipDate' => $shipmentData['ship_date'] ?? null,
@@ -115,18 +120,6 @@ class ShipmentController
                     'estimated_delivery_date' => $trackingResponse['estimated_delivery_date'] ?? null,
                     'calculated_amount' => $shipment->end_user_total ?? $shipment->customer_total ?? $shipment->origin_total ?? 0,
                 ],
-                'carrierPackaging' => [
-                    [
-                        'package_code' => $firstPackage['package_code'] ?? 'package',
-                        'name' => ucfirst(str_replace('_', ' ', $firstPackage['package_code'] ?? 'Package'))
-                    ]
-                ],
-                'selectedPackaging' => $firstPackage['package_code'] ?? 'package',
-                'selectedPackage' => [
-                    'package_code' => $firstPackage['package_code'] ?? 'package',
-                    'name' => ucfirst(str_replace('_', ' ', $firstPackage['package_code'] ?? 'Package'))
-                ],
-                'isInsuranceChecked' => (is_array($firstPackage['insured_value'] ?? null) ? $firstPackage['insured_value']['amount'] ?? 0 : 0) > 0,
                 'end_user_total' => $shipment->end_user_total,
                 'customer_total' => $shipment->customer_total,
                 'origin_total' => $shipment->origin_total,

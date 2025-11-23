@@ -496,53 +496,34 @@
         </div>
 
         <!-- PACKAGE DETAILS -->
-        <div class="package-box">
-            <b>Package Details</b>
-            @php
-                // Use passed selectedPackage or calculate from carrierPackaging
-                if (empty($selectedPackage) || !is_array($selectedPackage)) {
-                    $selectedPackage = collect($carrierPackaging)->firstWhere('package_code', $selectedPackaging);
-                }
-                if (empty($selectedPackage)) {
-                    $selectedPackage = [
-                        'name' => ucfirst(str_replace('_', ' ', $selectedPackaging ?? 'Package')),
-                        'package_code' => $selectedPackaging ?? 'package',
-                    ];
-                }
-            @endphp
-            <div class="package-col">
-                <div>
-                    <span class="muted">
-                        Type:
-                    </span>
-                    <span class="value">
-                        {{ $selectedPackage['name'] ?? 'Package / Box' }}
-                    </span>
-                </div>
-                @if (!empty($package) && isset($package['insured_value']) && $package['insured_value'] > 100)
-                    <div>
-                        <span class="muted">
-                            Declared Value:
-                        </span>
-                        <span class="value">
-                            ${{ number_format($package['insured_value'] ?? 0, 2) }}
-                        </span>
+        @if (!empty($packages) && is_array($packages))
+            @foreach ($packages as $pkgIndex => $package)
+                <div class="package-box" style="{{ $pkgIndex > 0 ? 'margin-top: 12px;' : '' }}">
+                    <b>{{ count($packages) > 1 ? 'Package ' . ($pkgIndex + 1) . ' of ' . count($packages) : 'Package Details' }}</b>
+                    <div class="package-col">
+                        <div>
+                            <span class="muted">Type:</span>
+                            <span class="value">{{ $package['package_name'] ?? 'Package / Box' }}</span>
+                        </div>
+                        @if (!empty($package['insured_value']) && $package['insured_value'] > 100)
+                            <div>
+                                <span class="muted">Declared Value:</span>
+                                <span class="value">${{ number_format($package['insured_value'], 2) }}</span>
+                            </div>
+                        @endif
+                   
                     </div>
-                @endif
-                @if (!empty($shipDate))
-                    <div><span class="muted">Ship Date:</span> <span
-                            class="value">{{ \Carbon\Carbon::parse($shipDate)->format('M d, Y') }}</span></div>
-                @endif
-            </div>
-            <div class="package-col">
-                <div><span class="muted">Weight:</span> <span class="value">{{ $package['weight'] ?? 'N/A' }}
-                        lbs</span></div>
-                @if (!empty($package['length']) && !empty($package['width']) && !empty($package['height']))
-                    <div><span class="muted">Dimensions:</span> <span class="value">{{ $package['length'] }} ×
-                            {{ $package['width'] }} × {{ $package['height'] }} in</span></div>
-                @endif
-            </div>
-        </div>
+                    <div class="package-col">
+                        <div><span class="muted">Weight:</span> <span class="value">{{ $package['weight'] ?? 'N/A' }}
+                                lbs</span></div>
+                        @if (!empty($package['length']) && !empty($package['width']) && !empty($package['height']))
+                            <div><span class="muted">Dimensions:</span> <span class="value">{{ $package['length'] }} ×
+                                    {{ $package['width'] }} × {{ $package['height'] }} in</span></div>
+                        @endif
+                    </div>
+                </div>
+            @endforeach
+        @endif
 
         <!-- CUSTOMS INFORMATION -->
         @if (is_array($shipToAddress) && ($shipToAddress['country_code'] ?? 'US') != 'US' && !empty($customs['customs_items']))
