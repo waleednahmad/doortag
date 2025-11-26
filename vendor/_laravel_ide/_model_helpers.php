@@ -664,6 +664,7 @@ namespace App\Models {
      * App\Models\Shipment
      *
      * @property float|null $total_with_packaging
+     * @property float|null $total_weight
      * @property float|null $packaging_amount
      * @property string|null $stripe_payment_status
      * @property decimal:2|null $stripe_amount_paid
@@ -708,6 +709,7 @@ namespace App\Models {
      * @method static \Illuminate\Database\Eloquent\Builder<Shipment>|Shipment whereStripeAmountPaid($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Shipment>|Shipment whereStripePaymentStatus($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Shipment>|Shipment wherePackagingAmount($value)
+     * @method static \Illuminate\Database\Eloquent\Builder<Shipment>|Shipment whereTotalWeight($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Shipment>|Shipment whereTotalWithPackaging($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Shipment>|Shipment newModelQuery()
      * @method static \Illuminate\Database\Eloquent\Builder<Shipment>|Shipment newQuery()

@@ -211,6 +211,18 @@
                                         </div>
                                     @endif
 
+                                    <!-- Total Weight Display -->
+                                    @if (!empty($label['total_weight']))
+                                        <div class="mb-2 sm:mb-0">
+                                            <div class="text-left">
+                                                <p class="text-xs text-gray-500 dark:text-gray-400">Total Weight</p>
+                                                <p class="text-lg font-bold text-gray-900 dark:text-white">
+                                                    {{ number_format($label['total_weight'], 2) }} lbs
+                                                </p>
+                                            </div>
+                                        </div>
+                                    @endif
+
 
                                     <!-- Collapse Toggle Button -->
                                     <button @click="open = !open"

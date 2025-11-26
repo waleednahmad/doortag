@@ -59,6 +59,7 @@ class Index extends Component
                     $label['origin_total'] = $shipment->origin_total;
                     $label['customer_total'] = $shipment->customer_total;
                     $label['end_user_total'] = $shipment->end_user_total;
+                    $label['total_weight'] = $shipment->total_weight;
                     $label['signature'] = $shipment->signature_path;
                     $label['ship_to_address_country_full_name'] = $requestData['ship_to_address_country_full_name'] ?? null;
                     $label['stripe_amount_paid'] = $shipment->stripe_amount_paid;
@@ -68,6 +69,7 @@ class Index extends Component
                     $label['origin_total'] = null;
                     $label['customer_total'] = null;
                     $label['end_user_total'] = null;
+                    $label['total_weight'] = null;
                 }
             }
 

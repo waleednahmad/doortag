@@ -341,7 +341,15 @@
                     @if (!empty($trackingNumber))
                         <tr>
                             <td class="muted">Tracking</td>
-                            <td class="tracking-highlight">{{ $trackingNumber }}</td>
+                            <td class="tracking-highlight">
+                                @if (!empty($trackingUrl))
+                                    <a href="{{ $trackingUrl }}" target="_blank" style="color: inherit; text-decoration: underline; cursor: pointer;">
+                                        {{ $trackingNumber }}
+                                    </a>
+                                @else
+                                    {{ $trackingNumber }}
+                                @endif
+                            </td>
                         </tr>
                     @endif
 
@@ -523,6 +531,16 @@
                     </div>
                 </div>
             @endforeach
+        @endif
+
+        <!-- TOTAL WEIGHT -->
+        @if (!empty($total_weight))
+            <div class="package-box" style="border: 1px solid var(--border); background-color: #fafafa;">
+                <b>Total Weight</b>
+                <div class="package-col">
+                    <div style="font-size: 14px;"><span class="value">{{ number_format($total_weight, 2) }} lbs</span></div>
+                </div>
+            </div>
         @endif
 
         <!-- CUSTOMS INFORMATION -->

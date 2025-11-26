@@ -188,91 +188,28 @@
 
                             <div
                                 class="bg-white dark:bg-gray-700 rounded-lg p-3 sm:p-4 lg:p-6 mb-3 sm:mb-4 border border-gray-200 dark:border-gray-600">
-                                <div class="flex items-center justify-between mb-4">
-                                    <h5 class="font-medium text-sm sm:text-base text-gray-800 dark:text-gray-200">
-                                        Package 1
-                                    </h5>
-                                </div>
-
                                 <!-- Package Dimensions -->
-                                @if ($selectedPackage['package_code'] == 'custom')
-                                    <div class="mb-6 sm:mb-8"
-                                        x-hide="{{ $selectedPackage['package_code'] !== 'custom' }}">
-                                        <h6
-                                            class="text-sm sm:text-base font-medium text-gray-800 dark:text-gray-200 mb-3 sm:mb-4">
-                                            Package Dimensions (Inches)
-                                        </h6>
-
-                                        <!-- Desktop Layout (Large screens) -->
-                                        <div class="hidden lg:grid lg:grid-cols-5 gap-4 items-end">
-                                            <div>
-                                                <x-number wire:model="package.length" label="Length *" step="0.1"
-                                                    min="1" required />
-                                            </div>
-                                            <div
-                                                class="flex items-center justify-center text-gray-500 dark:text-gray-400 pb-3">
-                                                <span class="text-lg sm:text-xl">×</span>
-                                            </div>
-                                            <div>
-                                                <x-number wire:model="package.width" label="Width *" step="0.1"
-                                                    min="1" required />
-                                            </div>
-                                            <div
-                                                class="flex items-center justify-center text-gray-500 dark:text-gray-400 pb-3">
-                                                <span class="text-lg sm:text-xl">×</span>
-                                            </div>
-                                            <div>
-                                                <x-number wire:model="package.height" label="Height *" step="0.1"
-                                                    min="1" required />
-                                            </div>
-                                        </div>
-
-                                        <!-- Tablet Layout (Medium screens) -->
-                                        <div class="hidden md:grid lg:hidden md:grid-cols-3 gap-4">
-                                            <div>
-                                                <x-number wire:model="package.length" label="Length *" step="0.1"
-                                                    min="1" required />
-                                            </div>
-                                            <div>
-                                                <x-number wire:model="package.width" label="Width *" step="0.1"
-                                                    min="1" required />
-                                            </div>
-                                            <div>
-                                                <x-number wire:model="package.height" label="Height *" step="0.1"
-                                                    min="1" required />
-                                            </div>
-                                        </div>
-
-                                        <!-- Mobile Layout (Small screens) -->
-                                        <div class="md:hidden space-y-3">
-                                            <div class="grid grid-cols-1 gap-3">
-                                                <div>
-                                                    <x-number label="Length *" wire:model="package.length"
-                                                        min="1" step="0.1" required />
-                                                </div>
-                                                <div>
-                                                    <x-number wire:model="package.width" label="Width *"
-                                                        min="1" step="0.1" required />
-                                                </div>
-                                                <div>
-                                                    <x-number wire:model="package.height" label="Height *"
-                                                        step="0.1" min="1" required />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endif
-
-                                <!-- Weight -->
-                                <div class="mb-6 sm:mb-8">
-                                    <h6
-                                        class="text-sm sm:text-base font-medium text-gray-700 dark:text-gray-300 mb-3 sm:mb-4">
-                                        Package Weight
-                                    </h6>
-                                    <div class="max-w-md">
+                                <div class="grid grid-cols-12 gap-4 mb-4">
+                                    <div
+                                        class="col-span-12 sm:col-span-3 border-b sm:border-b-0 sm:border-r border-gray-200 dark:border-gray-600 pb-4 sm:pb-0 sm:pr-4">
                                         <x-number label="Weight (Pounds) *" step="0.1" min="0.1"
                                             wire:model="package.weight" required />
                                     </div>
+
+                                    @if ($selectedPackage['package_code'] == 'custom')
+                                        <div class="col-span-12 sm:col-span-9">
+                                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4">
+                                                <x-number wire:model="package.length" label="Length *" step="0.1"
+                                                    min="1" required />
+
+                                                <x-number wire:model="package.width" label="Width *" step="0.1"
+                                                    min="1" required />
+
+                                                <x-number wire:model="package.height" label="Height *" step="0.1"
+                                                    min="1" required />
+                                            </div>
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
                         </section>

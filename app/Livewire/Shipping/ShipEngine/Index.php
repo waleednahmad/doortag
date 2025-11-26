@@ -23,6 +23,7 @@ class Index extends Component
     use Interactions;
 
     public $end_user_total, $customer_total, $origin_total;
+    public $total_weight = 0; // Total weight of all packages in pounds
     public $shipFromAddress = [
         'name' => '',
         'company_name' => '',
@@ -166,6 +167,11 @@ class Index extends Component
                     $this->packages[$index]['insured_value'] = 100;
                 }
             }
+        }
+
+        // Recalculate total weight when any package weight changes
+        if (str_starts_with($name, 'packages.') && str_contains($name, '.weight')) {
+            $this->calculateTotalWeight();
         }
 
         // For the ship date, ensure the format is correct
@@ -323,7 +329,22 @@ class Index extends Component
         if (isset($this->packages[$index])) {
             array_splice($this->packages, $index, 1);
             $this->packages = array_values($this->packages); // Re-index array
+            $this->calculateTotalWeight(); // Recalculate total weight after removing package
             $this->toast()->info('Package removed successfully.')->send();
+        }
+    }
+
+    /**
+     * Calculate the total weight of all packages
+     */
+    public function calculateTotalWeight()
+    {
+        $this->total_weight = 0;
+        
+        foreach ($this->packages as $package) {
+            if (!empty($package['weight'])) {
+                $this->total_weight += (float) $package['weight'];
+            }
         }
     }
 
@@ -585,6 +606,9 @@ class Index extends Component
             $this->rules(),
             $this->messages()
         );
+
+        // Calculate total weight of all packages
+        $this->calculateTotalWeight();
 
         // handle the address_residential_indicator
         $this->shipFromAddress['address_residential_indicator'] = $this->shipFromAddress['address_residential_indicator'] == true ? 'yes' : 'no';
@@ -1296,6 +1320,8 @@ class Index extends Component
                     // Store packaging information
                     'packaging_amount' => $this->packagingAmount ?? 0,
                     'total_with_packaging' => $totalWithPackaging,
+                    // Store shipment weight information
+                    'total_weight' => $this->total_weight,
                     // Store Stripe payment information
                     'stripe_response' => $paymentIntentData,
                     'stripe_payment_intent_id' => $this->paymentIntentId,
