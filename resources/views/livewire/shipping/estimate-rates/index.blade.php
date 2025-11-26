@@ -385,8 +385,15 @@
                 </div>
 
                 @php
-                    // Filter rates to show only primary carrier (se-4121981)
-                    $primaryCarrierId = 'se-4121981';
+                    // Filter rates to show only primary carrier (se-4084605)
+                    if (auth('web')->check()) {
+                        // for admin
+                        $primaryCarrierId = 'se-4121981'; // Doortag
+                    } else {
+                        // customer
+                        $primaryCarrierId = 'se-4084605'; // Fedex
+                    }
+
                     $primaryRates = collect($rates)
                         ->filter(function ($rate) use ($primaryCarrierId) {
                             return $rate['carrier_id'] === $primaryCarrierId;
@@ -547,13 +554,9 @@
                                                 <div class="flex-1">
                                                     <h4
                                                         class="font-semibold text-gray-900 dark:text-white text-sm sm:text-base">
-                                                        {{-- {{ $rate['carrier_friendly_name'] ?? 'Unknown Carrier' }} - --}}
                                                         {{ $rate['service_type'] ?? 'Unknown Service' }}
                                                     </h4>
-                                                    {{-- <p
-                                                        class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                                        Service Code: {{ $rate['service_code'] ?? 'N/A' }}
-                                                    </p> --}}
+
                                                     @if (isset($rate['carrier_delivery_days']))
                                                         <p
                                                             class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 ">
@@ -569,16 +572,12 @@
                                                             @endif
                                                         </p>
                                                     @endif
-                                                    {{-- @if (isset($rate['zone']))
-                                                        <p class="text-xs sm:text-sm text-blue-600 dark:text-blue-400">
-                                                            Zone: {{ $rate['zone'] }}
-                                                        </p>
-                                                    @endif --}}
+
                                                 </div>
                                             </div>
 
                                             <!-- Rate Details -->
-                                            <div class="text-center sm:text-right space-y-2">
+                                            <div class="text-center  space-y-2">
                                                 <div
                                                     class="border rounded p-2 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700">
                                                     <div
@@ -587,21 +586,63 @@
                                                     </div>
                                                     <div class="space-y-1">
                                                         <div class="flex items-center gap-4">
-                                                            @if (isset($rate['price_comparison']) && $rate['price_comparison']['is_cheaper'] === 'carrier_1')
+                                                            @if (auth('customer')->check() && isset($rate['original_total']) && $rate['original_total'] > $rate['calculated_amount'])
                                                                 <div
                                                                     class="text-sm line-through text-gray-400 dark:text-gray-500">
-                                                                    ${{ number_format($rate['price_comparison']['carrier_2_price'], 2) }}
+                                                                    ${{ number_format($rate['original_total'], 2) }}
                                                                 </div>
+                                                            @else
+                                                                @if (auth('web')->check() && isset($rate['price_comparison']['carrier_2_price']))
+                                                                    <div
+                                                                        class="text-sm line-through text-gray-400 dark:text-gray-500">
+                                                                        ${{ number_format($rate['price_comparison']['carrier_2_price'], 2) }}
+                                                                    </div>
+                                                                @endif
                                                             @endif
                                                             <div
                                                                 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
                                                                 ${{ $rate['calculated_amount'] }}
                                                             </div>
                                                         </div>
-                                                        @if (isset($rate['price_comparison']) && $rate['price_comparison']['is_cheaper'] === 'carrier_1')
+                                                        @php
+                                                            if (auth('web')->check()) {
+                                                                // for admin
+                                                                $difference =
+                                                                    $rate['price_comparison']['carrier_2_price'] -
+                                                                    $rate['original_total'];
+                                                                $differencePercentage =
+                                                                    100 -
+                                                                    number_format(
+                                                                        ($rate['original_total'] /
+                                                                            $rate['price_comparison'][
+                                                                                'carrier_2_price'
+                                                                            ]) *
+                                                                            100,
+                                                                        0,
+                                                                    );
+                                                            } else {
+                                                                // customer
+                                                                $difference = number_format(
+                                                                    $rate['original_total'] -
+                                                                        $rate['calculated_amount'],
+                                                                    2,
+                                                                );
+                                                                $differencePercentage = number_format(
+                                                                    ($difference / $rate['original_total']) * 100,
+                                                                    0,
+                                                                );
+                                                            }
+                                                        @endphp
+                                                        @if (auth('customer')->check() && isset($rate['original_total']) && $rate['original_total'] > $rate['calculated_amount'])
                                                             <x-badge
-                                                                text="You Save ${{ number_format($rate['price_comparison']['price_difference'], 2) }}  ({{ abs($rate['price_comparison']['difference_percentage']) }}% lower)"
+                                                                text="Save ${{ $difference }}  ({{ abs($differencePercentage) }}%)"
                                                                 color="green" />
+                                                        @else
+                                                            @if (auth('web')->check() && isset($rate['price_comparison']['carrier_2_price']))
+                                                                <x-badge
+                                                                    text="Save ${{ number_format($difference, 2) }}  ({{ abs($differencePercentage) }}%)"
+                                                                    color="green" />
+                                                            @endif
                                                         @endif
                                                     </div>
                                                 </div>
@@ -632,13 +673,14 @@
                         </div>
 
                         <div class="mt-6 pt-4 border-t border-gray-200 dark:border-gray-600 flex justify-between">
+                            <x-button wire:click="backToCreateRatesPage" color="gray" class="w-full sm:w-auto"
+                                loading="backToCreateRatesPage">
+                                Back
+                            </x-button>
+
                             <x-button href="{{ route('shipping.shipengine.index') }}" color="green"
                                 class="w-full sm:w-auto" loading="createLabel">
                                 Ship Now
-                            </x-button>
-                            <x-button wire:click="backToCreateRatesPage" color="blue" class="w-full sm:w-auto"
-                                loading="backToCreateRatesPage">
-                                Back
                             </x-button>
                         </div>
                     @else

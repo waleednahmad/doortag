@@ -227,7 +227,16 @@ class Index extends Component
             }
 
 
+
+
+
             $responseRates = collect($response ?? []);
+
+
+            // excludes the rates those have service_code as 'fedex_first_overnight'
+            $responseRates = $responseRates->filter(function ($rate) {
+                return $rate['service_code'] !== 'fedex_first_overnight';
+            });
 
             $authenticatedUser = Auth::user();
             if ($authenticatedUser instanceof Customer && $authenticatedUser->margin > 0) {
@@ -238,20 +247,21 @@ class Index extends Component
                     $otherAmount = (float) ($rate['other_amount']['amount'] ?? 0);
                     $requestedComparisonAmount = (float) ($rate['requested_comparison_amount']['amount'] ?? 0);
                     $originalTotal = $shippingAmount + $insuranceAmount + $confirmationAmount + $otherAmount + $requestedComparisonAmount;
-                    $marginMultiplier = 1 + ($authenticatedUser->margin / 100);
-                    $custmoerMargin = 1 + ($authenticatedUser->customer_margin / 100);
-                    $newTotal = $originalTotal * $marginMultiplier * $custmoerMargin;
+                    $marginMultiplier = 1 - ($authenticatedUser->margin / 100);
+                    $custmoerMargin = 1 - ($authenticatedUser->customer_margin / 100);
+                    $newTotal = $originalTotal * $custmoerMargin;
 
                     // Set Data to stored in the shipments table
-                    $this->origin_total = number_format($originalTotal, 2);
-                    $this->customer_total = number_format($originalTotal * $marginMultiplier, 2);
-                    $this->end_user_total = number_format($newTotal, 2);
+                    $this->origin_total = number_format($originalTotal, 2); // Doortag 100
+                    $this->customer_total = number_format($newTotal * $marginMultiplier, 2); // apnabazar 120
+                    $this->end_user_total = number_format($newTotal, 2);  // end user 140
 
                     // New data 
                     $rate['original_total'] = number_format($originalTotal, 2);
                     $rate['margin'] = number_format($marginMultiplier, 2);
                     $rate['customer_margin'] = number_format($custmoerMargin, 2);
-                    $rate['calculated_amount'] = number_format($newTotal, 2);
+                    $rate['customer_total'] = number_format($this->customer_total, 2);
+                    $rate['calculated_amount'] = number_format($this->end_user_total, 2);
                     return $rate;
                 }, $responseRates->toArray());
             } else { // WEB Guard
@@ -265,6 +275,8 @@ class Index extends Component
 
                     // Set Data to stored in the shipments table
                     $this->origin_total = number_format($originalTotal, 2);
+
+
                     // $this->customer_total = number_format($originalTotal * $marginMultiplier, 2);
                     // $this->end_user_total = number_format($newTotal, 2);
 
@@ -274,7 +286,6 @@ class Index extends Component
                     return $rate;
                 }, $responseRates->toArray());
             }
-
 
             $this->rates = $this->addPriceComparison($formatedRates);
 
@@ -310,9 +321,9 @@ class Index extends Component
             $serviceType = $rate['service_type'];
             $serviceRates = $ratesByService->get($serviceType, collect());
 
-            // Target carriers
-            $carrier1 = 'se-4121981';
-            $carrier2 = 'se-4084605';
+            // Target carriers (updated: carrier 2 is now primary)
+            $carrier1 = 'se-4121981'; // Secondary (Door tag)
+            $carrier2 = 'se-4084605'; // Primary (FedEx) - NOW PRIMARY
 
             // Default comparison structure
             $rate['price_comparison'] = [
@@ -331,8 +342,8 @@ class Index extends Component
             if ($carrier1Rate && $carrier2Rate) {
 
                 // Convert to float
-                $price1 = (float) str_replace(',', '', $carrier1Rate['calculated_amount']);
-                $price2 = (float) str_replace(',', '', $carrier2Rate['calculated_amount']);
+                $price1 = (float) str_replace(',', '', $carrier1Rate['original_total']);
+                $price2 = (float) str_replace(',', '', $carrier2Rate['original_total']);
 
                 $rate['price_comparison']['carrier_1_price'] = $price1;
                 $rate['price_comparison']['carrier_2_price'] = $price2;

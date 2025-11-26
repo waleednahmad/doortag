@@ -58,15 +58,20 @@
 
                                     <!-- Type of Packaging for this package -->
                                     <div class="mb-4">
-                                        <h6 class="text-sm sm:text-base font-medium text-gray-800 dark:text-gray-200 mb-3">
+                                        <h6
+                                            class="text-sm sm:text-base font-medium text-gray-800 dark:text-gray-200 mb-3">
                                             Type of Packaging
                                         </h6>
-                                        
+
                                         @php
-                                            $currentPackageType = collect($carrierPackaging)->firstWhere('package_code', $package['package_code'] ?? 'custom');
+                                            $currentPackageType = collect($carrierPackaging)->firstWhere(
+                                                'package_code',
+                                                $package['package_code'] ?? 'custom',
+                                            );
                                         @endphp
 
-                                        <div x-data="{ packagingOpen: false }" class="rounded-[5px] border-2 transition-colors duration-200"
+                                        <div x-data="{ packagingOpen: false }"
+                                            class="rounded-[5px] border-2 transition-colors duration-200"
                                             :class="packagingOpen ? 'border-[#00a9ff]' :
                                                 'border-gray-300 dark:border-gray-600 bg-gradient-to-b from-white to-gray-100 dark:from-gray-700 dark:to-gray-800'">
 
@@ -77,18 +82,20 @@
                                                 <div class="flex items-center">
                                                     <span class="w-[130px] h-[90px] flex items-center justify-center">
                                                         @if ($currentPackageType && $currentPackageType['package_code'] === 'custom')
-                                                            <img src="{{ asset('assets/images/Parcel-box.png') }}" alt="Parcel"
-                                                                class="w-full object-contain" />
+                                                            <img src="{{ asset('assets/images/Parcel-box.png') }}"
+                                                                alt="Parcel" class="w-full object-contain" />
                                                         @else
-                                                            <img src="{{ asset('assets/images/fedex.svg') }}" alt="Parcel"
-                                                                class="w-full object-contain" />
+                                                            <img src="{{ asset('assets/images/fedex.svg') }}"
+                                                                alt="Parcel" class="w-full object-contain" />
                                                         @endif
                                                     </span>
                                                     <div class="ml-[.9em]">
-                                                        <h1 class="text-[1em] font-[400] text-gray-900 dark:text-gray-100">
+                                                        <h1
+                                                            class="text-[1em] font-[400] text-gray-900 dark:text-gray-100">
                                                             {{ $currentPackageType['name'] ?? 'Custom Box or Rigid Packaging' }}
                                                         </h1>
-                                                        <p class="text-[.824em] font-[400] text-gray-500 dark:text-gray-400 mt-[3px]">
+                                                        <p
+                                                            class="text-[.824em] font-[400] text-gray-500 dark:text-gray-400 mt-[3px]">
                                                             {{ $currentPackageType['description'] ?? 'Any custom box or thick parcel' }}
                                                         </p>
                                                     </div>
@@ -99,7 +106,8 @@
                                             </div>
 
                                             <!-- Package Options -->
-                                            <div x-show="packagingOpen" x-transition @click.away="packagingOpen = false">
+                                            <div x-show="packagingOpen" x-transition
+                                                @click.away="packagingOpen = false">
                                                 @forelse ($carrierPackaging as $pkgIndex => $pkgOption)
                                                     <div wire:click="selectPackagingForPackage({{ $index }}, '{{ $pkgOption['package_code'] }}')"
                                                         @click="packagingOpen = false"
@@ -107,22 +115,27 @@
                                                         <div class="flex items-center">
                                                             @if ($pkgOption['package_code'] === 'custom')
                                                                 <img src="{{ asset('assets/images/Parcel-box.png') }}"
-                                                                    alt="Custom Package" class="object-contain w-[60px] h-[60px]" />
+                                                                    alt="Custom Package"
+                                                                    class="object-contain w-[60px] h-[60px]" />
                                                             @else
                                                                 <img src="{{ asset('assets/images/fedex.svg') }}"
-                                                                    alt="FedEx Package" class="object-contain w-[60px] h-[60px]" />
+                                                                    alt="FedEx Package"
+                                                                    class="object-contain w-[60px] h-[60px]" />
                                                             @endif
                                                             <div class="ml-[.9em]">
-                                                                <h1 class="text-[1em] font-[400] text-gray-900 dark:text-gray-100">
+                                                                <h1
+                                                                    class="text-[1em] font-[400] text-gray-900 dark:text-gray-100">
                                                                     {{ $pkgOption['name'] }}
                                                                 </h1>
-                                                                <p class="text-[.824em] font-[400] text-gray-500 dark:text-gray-400 mt-[3px]">
+                                                                <p
+                                                                    class="text-[.824em] font-[400] text-gray-500 dark:text-gray-400 mt-[3px]">
                                                                     {{ $pkgOption['description'] }}
                                                                 </p>
                                                             </div>
                                                         </div>
                                                         @if (($package['package_code'] ?? 'custom') === $pkgOption['package_code'])
-                                                            <i class="fas fa-check text-[1.2em] text-blue-600 dark:text-blue-400"></i>
+                                                            <i
+                                                                class="fas fa-check text-[1.2em] text-blue-600 dark:text-blue-400"></i>
                                                         @endif
                                                     </div>
                                                 @empty
@@ -187,8 +200,8 @@
                                                 <div class="grid grid-cols-1 gap-3">
                                                     <div>
                                                         <x-number label="Length *"
-                                                            wire:model="packages.{{ $index }}.length" min="1"
-                                                            step="0.1" required />
+                                                            wire:model="packages.{{ $index }}.length"
+                                                            min="1" step="0.1" required />
                                                     </div>
                                                     <div>
                                                         <x-number wire:model="packages.{{ $index }}.width"
@@ -196,7 +209,8 @@
                                                     </div>
                                                     <div>
                                                         <x-number wire:model="packages.{{ $index }}.height"
-                                                            label="Height *" step="0.1" min="1" required />
+                                                            label="Height *" step="0.1" min="1"
+                                                            required />
                                                     </div>
                                                 </div>
                                             </div>
@@ -219,12 +233,13 @@
                                     <div class="flex flex-col gap-3" x-data="{ insured: @js($package['is_insured'] ?? false) }">
                                         <x-checkbox label="Insurance for this package"
                                             wire:model.live='packages.{{ $index }}.is_insured'
-                                            hint="Enter the total value to add coverage by InsureShield" class="text-sm" 
-                                            x-model="insured" />
+                                            hint="Enter the total value to add coverage by InsureShield"
+                                            class="text-sm" x-model="insured" />
 
                                         <div x-show="insured" x-transition>
-                                            <x-number label="Declared Package Value ($) *" placeholder="Enter package value"
-                                                step="0.01" wire:model='packages.{{ $index }}.insured_value'
+                                            <x-number label="Declared Package Value ($) *"
+                                                placeholder="Enter package value" step="0.01"
+                                                wire:model='packages.{{ $index }}.insured_value'
                                                 min="100" />
                                         </div>
                                     </div>
@@ -464,23 +479,31 @@
                                 Package Details ({{ count($packages) }})</h1>
                             @foreach ($packages as $index => $pkg)
                                 @php
-                                    $pkgType = collect($carrierPackaging)->firstWhere('package_code', $pkg['package_code'] ?? 'custom');
+                                    $pkgType = collect($carrierPackaging)->firstWhere(
+                                        'package_code',
+                                        $pkg['package_code'] ?? 'custom',
+                                    );
                                 @endphp
-                                <div class="mb-2 {{ $index > 0 ? 'pt-2 border-t border-gray-300 dark:border-gray-600' : '' }}">
+                                <div
+                                    class="mb-2 {{ $index > 0 ? 'pt-2 border-t border-gray-300 dark:border-gray-600' : '' }}">
                                     <p class="text-gray-500 dark:text-gray-400 font-[500] leading-[1.42857143]">
-                                        Package {{ $index + 1 }}: <span class="pl-[4px] font-[400]">{{ $pkgType['name'] ?? 'Custom Package' }}</span>
+                                        Package {{ $index + 1 }}: <span
+                                            class="pl-[4px] font-[400]">{{ $pkgType['name'] ?? 'Custom Package' }}</span>
                                     </p>
                                     <p class="text-gray-500 dark:text-gray-400 font-[500] leading-[1.42857143]">
-                                        Weight: <span class="pl-[4px] font-[400]">{{ $pkg['weight'] ?? 'N/A' }} {{ $pkg['weight_unit'] ?? 'lbs' }}</span>
+                                        Weight: <span class="pl-[4px] font-[400]">{{ $pkg['weight'] ?? 'N/A' }}
+                                            {{ $pkg['weight_unit'] ?? 'lbs' }}</span>
                                     </p>
                                     @if (isset($pkg['package_code']) && $pkg['package_code'] === 'custom' && !empty($pkg['length']))
                                         <p class="text-gray-500 dark:text-gray-400 font-[500] leading-[1.42857143]">
-                                            Dimensions: <span class="pl-[4px] font-[400]">{{ $pkg['length'] }} × {{ $pkg['width'] }} × {{ $pkg['height'] }} in</span>
+                                            Dimensions: <span class="pl-[4px] font-[400]">{{ $pkg['length'] }} ×
+                                                {{ $pkg['width'] }} × {{ $pkg['height'] }} in</span>
                                         </p>
                                     @endif
                                     @if (isset($pkg['is_insured']) && $pkg['is_insured'] && !empty($pkg['insured_value']))
                                         <p class="text-gray-500 dark:text-gray-400 font-[500] leading-[1.42857143]">
-                                            Insurance: <span class="pl-[4px] font-[400]">${{ number_format($pkg['insured_value'], 2) }}</span>
+                                            Insurance: <span
+                                                class="pl-[4px] font-[400]">${{ number_format($pkg['insured_value'], 2) }}</span>
                                         </p>
                                     @endif
                                 </div>
@@ -505,8 +528,15 @@
                 {{-- Rates Section --}}
 
                 @php
-                    // Filter rates to show only primary carrier (se-4121981)
-                    $primaryCarrierId = 'se-4121981';
+                    // Filter rates to show only primary carrier (se-4084605)
+                    if (auth('web')->check()) {
+                        // for admin
+                        $primaryCarrierId = 'se-4121981'; // Doortag
+                    } else {
+                        // customer
+                        $primaryCarrierId = 'se-4084605'; // Fedex
+                    }
+
                     $primaryRates = collect($rates)
                         ->filter(function ($rate) use ($primaryCarrierId) {
                             return $rate['carrier_id'] === $primaryCarrierId;
@@ -670,13 +700,9 @@
                                                 <div class="flex-1">
                                                     <h4
                                                         class="font-semibold text-gray-900 dark:text-white text-sm sm:text-base">
-                                                        {{-- {{ $rate['carrier_friendly_name'] ?? 'Unknown Carrier' }} - --}}
                                                         {{ $rate['service_type'] ?? 'Unknown Service' }}
                                                     </h4>
-                                                    {{-- <p
-                                                        class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                                        Service Code: {{ $rate['service_code'] ?? 'N/A' }}
-                                                    </p> --}}
+
                                                     @if (isset($rate['carrier_delivery_days']))
                                                         <p
                                                             class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 ">
@@ -706,21 +732,57 @@
                                                     </div>
                                                     <div class="space-y-1">
                                                         <div class="flex items-center gap-4">
-                                                            @if (isset($rate['price_comparison']) && $rate['price_comparison']['is_cheaper'] === 'carrier_1')
+                                                            @if (auth('customer')->check() && isset($rate['original_total']) && $rate['original_total'] > $rate['calculated_amount'])
                                                                 <div
                                                                     class="text-sm line-through text-gray-400 dark:text-gray-500">
-                                                                    ${{ number_format($rate['price_comparison']['carrier_2_price'], 2) }}
+                                                                    ${{ number_format($rate['original_total'], 2) }}
                                                                 </div>
+                                                            @else
+                                                                @if (auth('web')->check() && isset($rate['price_comparison']['carrier_2_price']))
+                                                                    <div
+                                                                        class="text-sm line-through text-gray-400 dark:text-gray-500">
+                                                                        ${{ number_format($rate['price_comparison']['carrier_2_price'], 2) }}
+                                                                    </div>
+                                                                @endif
                                                             @endif
                                                             <div
                                                                 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
                                                                 ${{ $rate['calculated_amount'] }}
                                                             </div>
                                                         </div>
-                                                        @if (isset($rate['price_comparison']) && $rate['price_comparison']['is_cheaper'] === 'carrier_1')
+                                                        @php
+                                                            if (auth('web')->check()) {
+                                                                // for admin
+                                                                $difference =
+                                                                    $rate['price_comparison']['carrier_2_price'] -
+                                                                    $rate['original_total'];
+                                                                $differencePercentage = 100 -  number_format(
+                                                                    ($rate['original_total'] / $rate['price_comparison']['carrier_2_price']) * 100,
+                                                                    0,
+                                                                );
+                                                            } else {
+                                                                // customer
+                                                                $difference = number_format(
+                                                                    $rate['original_total'] -
+                                                                        $rate['calculated_amount'],
+                                                                    2,
+                                                                );
+                                                                $differencePercentage = number_format(
+                                                                    ($difference / $rate['original_total']) * 100,
+                                                                    0,
+                                                                );
+                                                            }
+                                                        @endphp
+                                                        @if (auth('customer')->check() && isset($rate['original_total']) && $rate['original_total'] > $rate['calculated_amount'])
                                                             <x-badge
-                                                                text="You Save ${{ number_format($rate['price_comparison']['price_difference'], 2) }}  ({{ abs($rate['price_comparison']['difference_percentage']) }}% lower)"
+                                                                text="Save ${{ $difference }}  ({{ abs($differencePercentage) }}%)"
                                                                 color="green" />
+                                                        @else
+                                                            @if (auth('web')->check() && isset($rate['price_comparison']['carrier_2_price']))
+                                                                <x-badge
+                                                                    text="Save ${{ number_format($difference, 2) }}  ({{ abs($differencePercentage) }}%)"
+                                                                    color="green" />
+                                                            @endif
                                                         @endif
                                                     </div>
                                                 </div>
@@ -935,24 +997,31 @@
                                             <i class="fas fa-box mr-2 text-purple-600"></i>
                                             Package Details ({{ count($packages) }})
                                         </h3>
-                                        
+
                                         @foreach ($packages as $pkgIndex => $pkg)
                                             @php
-                                                $pkgType = collect($carrierPackaging)->firstWhere('package_code', $pkg['package_code'] ?? 'custom');
+                                                $pkgType = collect($carrierPackaging)->firstWhere(
+                                                    'package_code',
+                                                    $pkg['package_code'] ?? 'custom',
+                                                );
                                             @endphp
-                                            
-                                            <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 space-y-4 {{ $pkgIndex > 0 ? 'mt-4' : '' }}">
+
+                                            <div
+                                                class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 space-y-4 {{ $pkgIndex > 0 ? 'mt-4' : '' }}">
                                                 <!-- Package Header -->
-                                                <div class="flex items-center justify-between border-b border-gray-300 dark:border-gray-600 pb-2">
-                                                    <h4 class="text-sm font-semibold text-purple-600 dark:text-purple-400">
+                                                <div
+                                                    class="flex items-center justify-between border-b border-gray-300 dark:border-gray-600 pb-2">
+                                                    <h4
+                                                        class="text-sm font-semibold text-purple-600 dark:text-purple-400">
                                                         Package {{ $pkgIndex + 1 }}
                                                     </h4>
                                                 </div>
-                                                
+
                                                 <!-- Package Type & Weight -->
                                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                     <div>
-                                                        <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+                                                        <p
+                                                            class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
                                                             Package Type
                                                         </p>
                                                         <p class="text-base font-medium text-gray-900 dark:text-white">
@@ -961,7 +1030,8 @@
                                                     </div>
 
                                                     <div>
-                                                        <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+                                                        <p
+                                                            class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
                                                             Weight
                                                         </p>
                                                         <p class="text-base font-medium text-gray-900 dark:text-white">
@@ -973,11 +1043,13 @@
                                                 <!-- Dimensions (if custom package) -->
                                                 @if (isset($pkg['package_code']) && $pkg['package_code'] === 'custom' && !empty($pkg['length']))
                                                     <div class="border-t border-gray-300 dark:border-gray-600 pt-4">
-                                                        <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+                                                        <p
+                                                            class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
                                                             Dimensions (inches)
                                                         </p>
                                                         <p class="text-base font-medium text-gray-900 dark:text-white">
-                                                            {{ $pkg['length'] ?? 0 }} × {{ $pkg['width'] ?? 0 }} × {{ $pkg['height'] ?? 0 }}
+                                                            {{ $pkg['length'] ?? 0 }} × {{ $pkg['width'] ?? 0 }} ×
+                                                            {{ $pkg['height'] ?? 0 }}
                                                         </p>
                                                     </div>
                                                 @endif
@@ -985,13 +1057,16 @@
                                                 <!-- Insurance -->
                                                 @if (isset($pkg['is_insured']) && $pkg['is_insured'] && !empty($pkg['insured_value']))
                                                     <div class="border-t border-gray-300 dark:border-gray-600 pt-4">
-                                                        <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+                                                        <p
+                                                            class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
                                                             Insurance
                                                         </p>
                                                         <div class="flex items-center space-x-2">
-                                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300">
+                                                            <span
+                                                                class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300">
                                                                 <i class="fas fa-shield-alt mr-1"></i>
-                                                                Declared Value: ${{ number_format($pkg['insured_value'], 2) }}
+                                                                Declared Value:
+                                                                ${{ number_format($pkg['insured_value'], 2) }}
                                                             </span>
                                                         </div>
                                                     </div>
@@ -1002,7 +1077,8 @@
                                         <!-- Shipment Date -->
                                         @if (!empty($shipDate))
                                             <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mt-4">
-                                                <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+                                                <p
+                                                    class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
                                                     Ship Date
                                                 </p>
                                                 <p class="text-base font-medium text-gray-900 dark:text-white">

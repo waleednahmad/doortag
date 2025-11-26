@@ -151,6 +151,8 @@ class Index extends Component
 
     public $packagingAmount = 0;
 
+    public $doortag_price = 0;
+
 
 
     public function updated($name, $value)
@@ -204,8 +206,8 @@ class Index extends Component
         // Validate each package
         foreach ($this->packages as $index => $package) {
             $rules["packages.{$index}.weight"] = 'required|numeric|min:0.1';
-            $rules["packages.{$index}.insured_value"] = 'required_if:packages.'.$index.'.is_insured,true|numeric|min:100';
-            
+            $rules["packages.{$index}.insured_value"] = 'required_if:packages.' . $index . '.is_insured,true|numeric|min:100';
+
             // Validate dimensions for custom packages
             if (isset($package['package_code']) && $package['package_code'] === 'custom') {
                 $rules["packages.{$index}.length"] = 'required|numeric|min:1';
@@ -249,13 +251,13 @@ class Index extends Component
     public function messages()
     {
         $messages = [];
-        
+
         foreach ($this->packages as $index => $package) {
             $messages["packages.{$index}.insured_value.min"] = 'Package ' . ($index + 1) . ': Please enter an amount of $101 or more. Amounts below this are already covered by the carrier.';
             $messages["packages.{$index}.weight.required"] = 'Package ' . ($index + 1) . ': Weight is required.';
             $messages["packages.{$index}.weight.min"] = 'Package ' . ($index + 1) . ': Weight must be at least 0.1 lbs.';
         }
-        
+
         return $messages;
     }
 
@@ -337,10 +339,10 @@ class Index extends Component
     {
         if (isset($this->packages[$packageIndex])) {
             $this->packages[$packageIndex]['package_code'] = $packageCode;
-            
+
             // Find the package details
             $selectedPackage = collect($this->carrierPackaging)->firstWhere('package_code', $packageCode);
-            
+
             if ($selectedPackage) {
                 $this->toast()->info('Package ' . ($packageIndex + 1) . ': Selected ' . $selectedPackage['name'])->send();
             }
@@ -659,7 +661,7 @@ class Index extends Component
                     'packages' => $packagesData,
                 ]
             ];
-            
+
             // Add insurance provider if any package has insurance
             if ($hasAnyInsurance) {
                 $shipmentData['shipment']['insurance_provider'] = 'parcelguard';
@@ -692,6 +694,9 @@ class Index extends Component
             // Store the request data for later use
 
             $response = $shipEngine->getRates($shipmentData);
+
+
+
             // store the $shipToAddressCountryFullName in the $shipmentData
             $shipmentData['ship_to_address_country_full_name'] = $this->shipToAddressCountryFullName;
             $this->lastRequestData = $shipmentData;
@@ -708,6 +713,11 @@ class Index extends Component
                 return;
             }
 
+            // excludes the rates those have service_code as 'fedex_first_overnight'
+            $responseRates = $responseRates->filter(function ($rate) {
+                return $rate['service_code'] !== 'fedex_first_overnight';
+            });
+
 
             $authenticatedUser = Auth::user();
             if ($authenticatedUser instanceof Customer && $authenticatedUser->margin > 0) {
@@ -718,20 +728,21 @@ class Index extends Component
                     $otherAmount = (float) ($rate['other_amount']['amount'] ?? 0);
                     $requestedComparisonAmount = (float) ($rate['requested_comparison_amount']['amount'] ?? 0);
                     $originalTotal = $shippingAmount + $insuranceAmount + $confirmationAmount + $otherAmount + $requestedComparisonAmount;
-                    $marginMultiplier = 1 + ($authenticatedUser->margin / 100);
-                    $custmoerMargin = 1 + ($authenticatedUser->customer_margin / 100);
-                    $newTotal = $originalTotal * $marginMultiplier * $custmoerMargin;
+                    $marginMultiplier = 1 - ($authenticatedUser->margin / 100);
+                    $custmoerMargin = 1 - ($authenticatedUser->customer_margin / 100);
+                    $newTotal = $originalTotal * $custmoerMargin;
 
                     // Set Data to stored in the shipments table
-                    $this->origin_total = number_format($originalTotal, 2);
-                    $this->customer_total = number_format($originalTotal * $marginMultiplier, 2);
-                    $this->end_user_total = number_format($newTotal, 2);
+                    $this->origin_total = number_format($originalTotal, 2); // Doortag 100
+                    $this->customer_total = number_format($newTotal * $marginMultiplier, 2); // apnabazar 120
+                    $this->end_user_total = number_format($newTotal, 2);  // end user 140
 
                     // New data 
                     $rate['original_total'] = number_format($originalTotal, 2);
                     $rate['margin'] = number_format($marginMultiplier, 2);
                     $rate['customer_margin'] = number_format($custmoerMargin, 2);
-                    $rate['calculated_amount'] = number_format($newTotal, 2);
+                    $rate['customer_total'] = number_format($this->customer_total, 2);
+                    $rate['calculated_amount'] = number_format($this->end_user_total, 2);
                     return $rate;
                 }, $responseRates->toArray());
             } else { // WEB Guard
@@ -771,6 +782,72 @@ class Index extends Component
         }
     }
 
+    /**
+     * Add price comparison between carriers for the same service type
+     * Groups rates by service type and compares prices between se-4121981 and se-4084605
+     * 
+     * @param array $formatedRates
+     * @return array Rates with price_comparison added
+     */
+    private function addPriceComparison($formattedRates)
+    {
+        $ratesCollection = collect($formattedRates);
+
+        // Group by service type → then key by carrier_id
+        $ratesByService = $ratesCollection
+            ->groupBy('service_type')
+            ->map(fn($serviceRates) => $serviceRates->keyBy('carrier_id'));
+
+        return collect($formattedRates)->map(function ($rate) use ($ratesByService) {
+
+            $serviceType = $rate['service_type'];
+            $serviceRates = $ratesByService->get($serviceType, collect());
+
+            // Target carriers (updated: carrier 2 is now primary)
+            $carrier1 = 'se-4121981'; // Secondary (Door tag)
+            $carrier2 = 'se-4084605'; // Primary (FedEx) - NOW PRIMARY
+
+            // Default comparison structure
+            $rate['price_comparison'] = [
+                'carrier_1_id'         => $carrier1,
+                'carrier_2_id'         => $carrier2,
+                'carrier_1_price'      => null,
+                'carrier_2_price'      => null,
+                'price_difference'     => null,
+                'difference_percentage' => null,
+                'is_cheaper'           => null,
+            ];
+
+            $carrier1Rate = $serviceRates->get($carrier1);
+            $carrier2Rate = $serviceRates->get($carrier2);
+
+            if ($carrier1Rate && $carrier2Rate) {
+
+                // Convert to float
+                $price1 = (float) str_replace(',', '', $carrier1Rate['original_total']);
+                $price2 = (float) str_replace(',', '', $carrier2Rate['original_total']);
+
+                $rate['price_comparison']['carrier_1_price'] = $price1;
+                $rate['price_comparison']['carrier_2_price'] = $price2;
+
+                // Absolute difference
+                $difference = abs($price1 - $price2);
+                $rate['price_comparison']['price_difference'] = $difference;
+
+                // Correct percentage based on highest price
+                $base = max($price1, $price2);
+                $percentage = ($difference / $base) * 100;
+                $rate['price_comparison']['difference_percentage'] = round($percentage, 2);
+
+                // Determine which is cheaper
+                $rate['price_comparison']['is_cheaper'] =
+                    $price1 < $price2 ? 'carrier_1' : ($price2 < $price1 ? 'carrier_2' : 'equal');
+            }
+
+            return $rate;
+        })->values()->all();
+    }
+
     public function selectRate($rateId)
     {
         if ($this->selectedRate && $this->selectedRate['rate_id'] == $rateId) {
@@ -801,18 +878,22 @@ class Index extends Component
 
         $authenticatedUser = Auth::user();
         if ($authenticatedUser instanceof Customer && $authenticatedUser->margin > 0) {
-            $marginMultiplier = 1 + ($authenticatedUser->margin / 100);
-            $custmoerMargin = 1 + ($authenticatedUser->customer_margin / 100);
-            $newTotal = $originalTotal * $marginMultiplier * $custmoerMargin;
+            $marginMultiplier = 1 - ($authenticatedUser->margin / 100);
+            $custmoerMargin = 1 - ($authenticatedUser->customer_margin / 100);
+            $newTotal = $originalTotal * $custmoerMargin;
+
             // Set Data to stored in the shipments table
-            $this->origin_total = number_format($originalTotal, 2);
-            $this->customer_total = number_format($originalTotal * $marginMultiplier, 2);
-            $this->end_user_total = number_format($newTotal, 2);
+            $this->origin_total = number_format($originalTotal, 2); // Doortag 100
+            $this->customer_total = number_format($newTotal * $marginMultiplier, 2); // apnabazar 120
+            $this->end_user_total = number_format($newTotal, 2);  // end user 140
         } else {
 
             // Set Data to stored in the shipments table
             $this->origin_total = number_format($originalTotal, 2);
         }
+
+        // Store the doortag Price
+        $this->doortag_price = $this->selectedRate['price_comparison']['carrier_1_price'] ?? null;
     }
 
     public function sortByPrice()
@@ -884,73 +965,11 @@ class Index extends Component
         }
 
         $this->rates = $rates->values()->all();
+
+        // info("Final Rates" . print_r($this->rates, true));
     }
 
-    /**
-     * Add price comparison between carriers for the same service type
-     * Groups rates by service type and compares prices between se-4121981 and se-4084605
-     * 
-     * @param array $formatedRates
-     * @return array Rates with price_comparison added
-     */
-    private function addPriceComparison($formattedRates)
-    {
-        $ratesCollection = collect($formattedRates);
 
-        // Group by service type → then key by carrier_id
-        $ratesByService = $ratesCollection
-            ->groupBy('service_type')
-            ->map(fn($serviceRates) => $serviceRates->keyBy('carrier_id'));
-
-        return collect($formattedRates)->map(function ($rate) use ($ratesByService) {
-
-            $serviceType = $rate['service_type'];
-            $serviceRates = $ratesByService->get($serviceType, collect());
-
-            // Target carriers
-            $carrier1 = 'se-4121981';
-            $carrier2 = 'se-4084605';
-
-            // Default comparison structure
-            $rate['price_comparison'] = [
-                'carrier_1_id'         => $carrier1,
-                'carrier_2_id'         => $carrier2,
-                'carrier_1_price'      => null,
-                'carrier_2_price'      => null,
-                'price_difference'     => null,
-                'difference_percentage' => null,
-                'is_cheaper'           => null,
-            ];
-
-            $carrier1Rate = $serviceRates->get($carrier1);
-            $carrier2Rate = $serviceRates->get($carrier2);
-
-            if ($carrier1Rate && $carrier2Rate) {
-
-                // Convert to float
-                $price1 = (float) str_replace(',', '', $carrier1Rate['calculated_amount']);
-                $price2 = (float) str_replace(',', '', $carrier2Rate['calculated_amount']);
-
-                $rate['price_comparison']['carrier_1_price'] = $price1;
-                $rate['price_comparison']['carrier_2_price'] = $price2;
-
-                // Absolute difference
-                $difference = abs($price1 - $price2);
-                $rate['price_comparison']['price_difference'] = $difference;
-
-                // Correct percentage based on highest price
-                $base = max($price1, $price2);
-                $percentage = ($difference / $base) * 100;
-                $rate['price_comparison']['difference_percentage'] = round($percentage, 2);
-
-                // Determine which is cheaper
-                $rate['price_comparison']['is_cheaper'] =
-                    $price1 < $price2 ? 'carrier_1' : ($price2 < $price1 ? 'carrier_2' : 'equal');
-            }
-
-            return $rate;
-        })->values()->all();
-    }
 
 
     /**
@@ -1284,6 +1303,7 @@ class Index extends Component
                     'stripe_payment_status' => $paymentIntentData['status'],
                     'carrier_delivery_days' => $this->selectedRate['carrier_delivery_days'] ?? null,
                     'estimated_delivery_date' => $this->selectedRate['estimated_delivery_date'] ?? null,
+                    'door_tag_price' => $this->doortag_price ?? null,
                 ]);
 
                 // Store the shipment record for downloadPDF to use
