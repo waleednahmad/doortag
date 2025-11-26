@@ -343,7 +343,7 @@ class Index extends Component
         
         foreach ($this->packages as $package) {
             if (!empty($package['weight'])) {
-                $this->total_weight += (float) $package['weight'];
+                $this->total_weight += ceil((float) $package['weight']);
             }
         }
     }
@@ -649,13 +649,13 @@ class Index extends Component
                     // Custom package - include dimensions
                     $packageData = [
                         'weight' => [
-                            'value' => $package['weight'] ?? 1,
+                            'value' => ceil((float) ($package['weight'] ?? 1)),
                             'unit' => $package['weight_unit'] ?? 'pound'
                         ],
                         'dimensions' => [
-                            'length' => $package['length'] ?? 12,
-                            'width' => $package['width'] ?? 12,
-                            'height' => $package['height'] ?? 12,
+                            'length' => ceil((float) ($package['length'] ?? 12)),
+                            'width' => ceil((float) ($package['width'] ?? 12)),
+                            'height' => ceil((float) ($package['height'] ?? 12)),
                             'unit' => $package['dimension_unit'] ?? 'inch'
                         ],
                     ];

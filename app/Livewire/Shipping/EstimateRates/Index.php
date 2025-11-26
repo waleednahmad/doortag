@@ -198,7 +198,7 @@ class Index extends Component
             if ($this->selectedPackage && $this->selectedPackage['package_code'] != 'custom') {
                 $shipmentData = array_merge($shipmentData, [
                     'weight' => [
-                        'value' => $this->package['weight'] ?? 1,
+                        'value' => ceil((float) ($this->package['weight'] ?? 1)),
                         'unit' => $this->package['weight_unit'] ?? 'pound'
                     ],
 
@@ -207,13 +207,13 @@ class Index extends Component
             } else { // Custom package
                 $shipmentData = array_merge($shipmentData, [
                     'weight' => [
-                        'value' => $this->package['weight'] ?? 1,
+                        'value' => ceil((float) ($this->package['weight'] ?? 1)),
                         'unit' => $this->package['weight_unit'] ?? 'pound'
                     ],
                     'dimensions' => [
-                        'length' => $this->package['length'] ?? 12,
-                        'width' => $this->package['width'] ?? 12,
-                        'height' => $this->package['height'] ?? 12,
+                        'length' => ceil((float) ($this->package['length'] ?? 12)),
+                        'width' => ceil((float) ($this->package['width'] ?? 12)),
+                        'height' => ceil((float) ($this->package['height'] ?? 12)),
                         'unit' => $this->package['dimension_unit'] ?? 'inch'
                     ],
                 ]);
