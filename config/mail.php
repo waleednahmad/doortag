@@ -109,7 +109,7 @@ return [
 
     'from' => [
         'address' => env('MAIL_FROM_ADDRESS', 'info@doortag.com'),
-        'name' => env('MAIL_FROM_NAME', 'Example'),
+        'name' => env('MAIL_FROM_NAME', 'DoorTag'),
     ],
 
 ];

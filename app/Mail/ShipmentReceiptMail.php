@@ -26,7 +26,10 @@ class ShipmentReceiptMail extends Mailable
                     '0',
                     STR_PAD_LEFT
                 ),
-            from: "Doortag",
+            from: new \Illuminate\Mail\Mailables\Address(
+                config('mail.from.address'),
+                config('mail.from.name')
+            ),
         );
     }
 
