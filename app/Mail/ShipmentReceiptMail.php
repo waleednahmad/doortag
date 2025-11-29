@@ -14,20 +14,19 @@ class ShipmentReceiptMail extends Mailable
 
     public function __construct(
         public array $shipmentData,
-    ) {
-    }
+    ) {}
 
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Shipment Receipt — Order #' . 
-                     str_pad(
-                         $this->shipmentData['orderNumber'] ?? '000000', 
-                         6, 
-                         '0', 
-                         STR_PAD_LEFT
-                     ),
-            from: $this->shipmentData['shipFromAddress']['email'] ?? config('mail.from.address'),
+            subject: 'Shipment Receipt — Order #' .
+                str_pad(
+                    $this->shipmentData['orderNumber'] ?? '000000',
+                    6,
+                    '0',
+                    STR_PAD_LEFT
+                ),
+            from: config('mail.from.address'),
         );
     }
 
