@@ -25,6 +25,8 @@
         "livewire/livewire": "^3.0.0",
         "railsware/mailtrap-php": "^3.9",
         "stripe/stripe-php": "^18.2",
+        "symfony/http-client": "^7.4",
+        "symfony/mailgun-mailer": "^7.4",
         "tallstackui/tallstackui": "^2.0.0"
     },
     "require-dev": {
