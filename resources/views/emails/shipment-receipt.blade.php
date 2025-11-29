@@ -381,7 +381,7 @@
             </div>
             <div class="header-right">
                 <div><strong>Phone:</strong> (813) 903-1774</div>
-                <div><strong>Email:</strong> support@doortag.com</div>
+                <div><strong>Email:</strong> info@doortag.com</div>
             </div>
         </header>
         <h1>Shipment Receipt</h1>

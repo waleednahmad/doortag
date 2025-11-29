@@ -104,10 +104,10 @@ Route::get('/test-email', function () {
         ];
 
         // Send the email using ShipmentReceiptMail
-        \Illuminate\Support\Facades\Mail::to('ahmadalsakhen36@gmail.com')
+        \Illuminate\Support\Facades\Mail::to('waleed.n.ahmad@gmail.com')
             ->send(new \App\Mail\ShipmentReceiptMail($emailData));
 
-        return 'Test shipment receipt email sent successfully to ahmadalsakhen36@gmail.com (Shipment ID: ' . $shipment->id . ')';
+        return 'Test shipment receipt email sent successfully to waleed.n.ahmad@gmail.com (Shipment ID: ' . $shipment->id . ')';
     } catch (\Exception $e) {
         return 'Failed to send email: ' . $e->getMessage();
     }
