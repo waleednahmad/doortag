@@ -3,9 +3,15 @@
 
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="x-apple-disable-message-reformatting" />
     <title>Shipment Receipt — Order #{{ !empty($orderNumber) ? str_pad($orderNumber, 6, '0', STR_PAD_LEFT) : '000000' }}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!--[if mso]>
+    <style type="text/css">
+        body, table, td {font-family: Arial, Helvetica, sans-serif !important;}
+    </style>
+    <![endif]-->
     <style>
         :root {
             --accent: #0b5ed7;
@@ -23,37 +29,40 @@
         html,
         body {
             margin: 0;
-            background: #fff;
+            padding: 0;
+            background: #f5f5f5;
+            width: 100%;
         }
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             color: #111;
             font-size: 12px;
+            line-height: 1.5;
         }
 
         .page {
-            max-width: 8.5in;
-            margin: 12px auto;
-            padding: 12px;
+            max-width: 650px;
+            margin: 20px auto;
+            padding: 20px;
             background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 6px;
         }
 
         header {
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
             align-items: center;
             margin-bottom: 12px;
         }
 
         header img {
-            height: 40px;
+            height: 24px;
         }
 
         .header-right {
-            text-align: right;
-            font-size: 12px;
-            line-height: 1.3;
+            display: none;
         }
 
         h1 {
@@ -73,11 +82,12 @@
         }
 
         .summary .right {
-            width: 160px;
+            min-width: 160px;
+            max-width: 200px;
             border: 1px solid var(--border);
             padding: 8px;
             border-radius: 6px;
-            font-size: 13px;
+            font-size: 12px;
         }
 
         .summary .right .muted {
@@ -91,7 +101,7 @@
         table.tax {
             width: 100%;
             border-collapse: collapse;
-            font-size: 13px;
+            font-size: 12px;
             margin-bottom: 12px;
         }
 
@@ -103,14 +113,21 @@
             vertical-align: top;
         }
 
+        table.items {
+            min-width: 500px;
+        }
+
         table.items th {
             text-align: left;
             border-bottom: 1px solid var(--border);
             font-weight: 600;
+            font-size: 11px;
+            white-space: nowrap;
         }
 
         table.items td {
             border-bottom: 1px solid var(--border);
+            font-size: 11px;
         }
 
         .tracking-highlight {
@@ -155,7 +172,7 @@
             margin-bottom: 12px;
             display: flex;
             flex-wrap: wrap;
-            font-size: 13px;
+            font-size: 12px;
             gap: 8px;
         }
 
@@ -173,7 +190,8 @@
             border-radius: 6px;
             padding: 12px;
             margin-bottom: 12px;
-            font-size: 13px;
+            font-size: 12px;
+            overflow-x: auto;
         }
 
         .customs-box b {
@@ -279,33 +297,52 @@
             display: none;
         }
 
-        @media (max-width: 600px) {
+        @media only screen and (max-width: 650px) {
+            .page {
+                margin: 0 !important;
+                padding: 12px !important;
+                border: none !important;
+                border-radius: 0 !important;
+                max-width: 100% !important;
+                width: 100% !important;
+            }
+
             .summary {
-                flex-direction: column;
+                flex-direction: column !important;
             }
 
             .summary .right {
-                width: 100%;
+                width: 100% !important;
             }
 
             .addresses {
-                flex-direction: column;
+                flex-direction: column !important;
             }
 
             .package-col {
-                flex: 1 1 100%;
+                flex: 1 1 100% !important;
             }
 
             .customs-col {
-                flex: 1 1 100%;
+                flex: 1 1 100% !important;
             }
 
             .cert-box {
-                flex-direction: column;
+                flex-direction: column !important;
             }
 
             .cert-signature {
-                margin-top: 12px;
+                margin-top: 12px !important;
+                text-align: left !important;
+            }
+
+            table.info,
+            table.items {
+                font-size: 11px !important;
+            }
+
+            h1 {
+                font-size: 18px !important;
             }
         }
     </style>

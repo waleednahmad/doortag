@@ -26,7 +26,7 @@ class ShipmentReceiptMail extends Mailable
                     '0',
                     STR_PAD_LEFT
                 ),
-            from: config('mail.from.address'),
+            from: "Doortag",
         );
     }
 
