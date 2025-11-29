@@ -14,6 +14,18 @@ Route::get('/', function () {
     return view('welcome');
 })->name('welcome');
 
+Route::get('/test-email', function () {
+    try {
+        \Illuminate\Support\Facades\Mail::raw('Hello Ahmad', function ($message) {
+            $message->to('ahmadalsakhen36@gmail.com')
+                    ->subject('Test Email from DoorTag');
+        });
+        return 'Test email sent successfully to ahmadalsakhen36@gmail.com';
+    } catch (\Exception $e) {
+        return 'Failed to send email: ' . $e->getMessage();
+    }
+})->name('test.email');
+
 Route::middleware(['auth:web,customer'])->group(function () {
     // Route::view('/dashboard', 'dashboard')->name('dashboard');
     // Route::get('/dashboard', ShippingIndex::class)->name('dashboard');

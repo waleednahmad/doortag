@@ -23,22 +23,22 @@ class ShipmentObserver implements ShouldHandleEventsAfterCommit
         $senderEmail = $shipFromAddress['email'] ?? null;
 
         // Only send email if sender email exists
-        // if (!empty($senderEmail)) {
-        //     try {
-        //         // Prepare shipment data for the email template
-        //         $shipmentData = $this->prepareShipmentData($shipment);
+        if (!empty($senderEmail)) {
+            try {
+                // Prepare shipment data for the email template
+                $shipmentData = $this->prepareShipmentData($shipment);
 
-        //         // Send email using Mailtrap to the sender
-        //         Mail::to($senderEmail)->send(new ShipmentReceiptMail($shipmentData));
-        //     } catch (\Exception $e) {
-        //         // Log the error but don't fail the shipment creation
-        //         Log::error('Failed to send shipment receipt email', [
-        //             'shipment_id' => $shipment->id,
-        //             'email' => $senderEmail,
-        //             'error' => $e->getMessage(),
-        //         ]);
-        //     }
-        // }
+                // Send email using Mailgun to the sender
+                Mail::to($senderEmail)->send(new ShipmentReceiptMail($shipmentData));
+            } catch (\Exception $e) {
+                // Log the error but don't fail the shipment creation
+                Log::error('Failed to send shipment receipt email', [
+                    'shipment_id' => $shipment->id,
+                    'email' => $senderEmail,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
     }
 
     /**
