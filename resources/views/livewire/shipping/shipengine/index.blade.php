@@ -1134,7 +1134,7 @@
                                                                 class="flex justify-between items-center border-t border-indigo-200 dark:border-indigo-700 pt-3 mt-3">
                                                                 <span
                                                                     class="text-sm font-semibold text-indigo-700 dark:text-indigo-300">
-                                                                    Tax Amount:
+                                                                    Tax:
                                                                 </span>
                                                                 <span
                                                                     class="text-lg font-bold text-indigo-700 dark:text-indigo-300">

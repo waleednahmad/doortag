@@ -6,7 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="x-apple-disable-message-reformatting" />
-    <title>Shipment Receipt — Order #{{ !empty($orderNumber) ? str_pad($orderNumber, 6, '0', STR_PAD_LEFT) : '000000' }}</title>
+    <title>Shipment Receipt — Order #{{ !empty($orderNumber) ? str_pad($orderNumber, 6, '0', STR_PAD_LEFT) : '000000' }}
+    </title>
     <!--[if mso]>
     <style type="text/css">
         body, table, td {font-family: Arial, Helvetica, sans-serif !important;}
@@ -392,57 +393,58 @@
                 <td class="left">
                     <table class="info">
                         @if (!empty($orderNumber))
-                        <tr>
-                            <td class="muted">Order #</td>
-                            <td class="value mono">{{ str_pad($orderNumber, 6, '0', STR_PAD_LEFT) }}</td>
-                        </tr>
-                    @endif
-                    @if (!empty($paymentNumber))
-                        <tr>
-                            <td class="muted">Payment</td>
-                            <td class="value mono">{{ $paymentNumber }}</td>
-                        </tr>
-                    @endif
-                    @if (!empty($trackingNumber))
-                        <tr>
-                            <td class="muted">Tracking</td>
-                            <td class="tracking-highlight">
-                                @if (!empty($trackingUrl))
-                                    <a href="{{ $trackingUrl }}" target="_blank" style="color: inherit; text-decoration: underline;">
+                            <tr>
+                                <td class="muted">Order #</td>
+                                <td class="value mono">{{ str_pad($orderNumber, 6, '0', STR_PAD_LEFT) }}</td>
+                            </tr>
+                        @endif
+                        @if (!empty($paymentNumber))
+                            <tr>
+                                <td class="muted">Payment</td>
+                                <td class="value mono">{{ $paymentNumber }}</td>
+                            </tr>
+                        @endif
+                        @if (!empty($trackingNumber))
+                            <tr>
+                                <td class="muted">Tracking</td>
+                                <td class="tracking-highlight">
+                                    @if (!empty($trackingUrl))
+                                        <a href="{{ $trackingUrl }}" target="_blank"
+                                            style="color: inherit; text-decoration: underline;">
+                                            {{ $trackingNumber }}
+                                        </a>
+                                    @else
                                         {{ $trackingNumber }}
-                                    </a>
-                                @else
-                                    {{ $trackingNumber }}
-                                @endif
-                            </td>
-                        </tr>
-                    @endif
+                                    @endif
+                                </td>
+                            </tr>
+                        @endif
 
-                    @if (!empty($estimated_delivery_date))
-                        <tr>
-                            <td class="muted">Estimated Delivery</td>
-                            <td class="value">
-                                {{ \Carbon\Carbon::parse($estimated_delivery_date)->format('l m/d') }} by
-                                {{ \Carbon\Carbon::parse($estimated_delivery_date)->format('h:i A') }}
-                            </td>
-                        </tr>
-                    @elseif (!empty($carrier_delivery_days))
-                        <tr>
-                            <td class="muted">Estimated Delivery</td>
-                            <td class="value">
-                                {{ $carrier_delivery_days }}
-                            </td>
-                        </tr>
-                    @endif
+                        @if (!empty($estimated_delivery_date))
+                            <tr>
+                                <td class="muted">Estimated Delivery</td>
+                                <td class="value">
+                                    {{ \Carbon\Carbon::parse($estimated_delivery_date)->format('l m/d') }} by
+                                    {{ \Carbon\Carbon::parse($estimated_delivery_date)->format('h:i A') }}
+                                </td>
+                            </tr>
+                        @elseif (!empty($carrier_delivery_days))
+                            <tr>
+                                <td class="muted">Estimated Delivery</td>
+                                <td class="value">
+                                    {{ $carrier_delivery_days }}
+                                </td>
+                            </tr>
+                        @endif
 
-                    @if ($selectedRate)
-                        <tr>
-                            <td class="muted">Carrier / Service</td>
-                            <td>{{ strtoupper($selectedRate['carrier_code'] ?? 'N/A') }} —
-                                {{ ucwords(str_replace('_', ' ', $selectedRate['service_type'] ?? 'N/A')) }}</td>
-                        </tr>
-                    @endif
-                </table>
+                        @if ($selectedRate)
+                            <tr>
+                                <td class="muted">Carrier / Service</td>
+                                <td>{{ strtoupper($selectedRate['carrier_code'] ?? 'N/A') }} —
+                                    {{ ucwords(str_replace('_', ' ', $selectedRate['service_type'] ?? 'N/A')) }}</td>
+                            </tr>
+                        @endif
+                    </table>
                 </td>
                 <td class="right">
                     <div class="section-title">CHARGES</div>
@@ -461,6 +463,15 @@
                                 <td class="charge-value">${{ number_format($packaging_amount ?? 0, 2) }}</td>
                             </tr>
                         </table>
+                        @if (isset($tax_amount) && $tax_amount > 0)
+                            <table cellpadding="0" cellspacing="0" style="width:100%;margin-bottom:4px;">
+                                <tr>
+                                    <td class="charge-label">Tax</td>
+                                    <td class="charge-value">${{ number_format($tax_amount, 2) }}</td>
+                                </tr>
+                            </table>
+                        @endif
+
                     @endif
                     <div class="charge-total">
                         <table cellpadding="0" cellspacing="0" style="width:100%;">
@@ -480,99 +491,99 @@
                 @if (is_array($shipFromAddress) && !empty($shipFromAddress))
                     <td class="addr" style="padding-right:6px;">
                         <b>From</b>
-                    <div class="muted">Name</div>
-                    <div class="value">{{ $shipFromAddress['name'] ?? 'N/A' }}</div>
-                    @if (!empty($shipFromAddress['company_name']))
-                        <div class="muted">Company</div>
-                        <div class="value">{{ $shipFromAddress['company_name'] }}</div>
-                    @else
-                        <div class="muted">Company</div>
-                        <div class="value">—</div>
-                    @endif
-                    @if (!empty($shipFromAddress['phone']))
-                        <div class="muted">Phone</div>
-                        <div class="value">{{ $shipFromAddress['phone'] }}</div>
-                    @else
-                        <div class="muted">Phone</div>
-                        <div class="value">—</div>
-                    @endif
-                    @if (!empty($shipFromAddress['email']))
-                        <div class="muted">Email</div>
-                        <div class="value">{{ $shipFromAddress['email'] }}</div>
-                    @else
-                        <div class="muted">Email</div>
-                        <div class="value">—</div>
-                    @endif
-                    <div class="muted">Address</div>
-                    <div class="value">
-                        {{ $shipFromAddress['address_line1'] ?? '' }}
-                        @if (!empty($shipFromAddress['address_line2']))
-                            {{ $shipFromAddress['address_line2'] }}
+                        <div class="muted">Name</div>
+                        <div class="value">{{ $shipFromAddress['name'] ?? 'N/A' }}</div>
+                        @if (!empty($shipFromAddress['company_name']))
+                            <div class="muted">Company</div>
+                            <div class="value">{{ $shipFromAddress['company_name'] }}</div>
+                        @else
+                            <div class="muted">Company</div>
+                            <div class="value">—</div>
                         @endif
-                    </div>
-                    <div class="value">
-                        {{ $shipFromAddress['city_locality'] ? $shipFromAddress['city_locality'] . ', ' : '' }}
-                        @if (!empty($shipFromAddress['state_province']))
-                            {{ $shipFromAddress['state_province'] }}
+                        @if (!empty($shipFromAddress['phone']))
+                            <div class="muted">Phone</div>
+                            <div class="value">{{ $shipFromAddress['phone'] }}</div>
+                        @else
+                            <div class="muted">Phone</div>
+                            <div class="value">—</div>
                         @endif
-                        {{ $shipFromAddress['postal_code'] ?? '' }}, United States
-                    </div>
-                    @if (isset($shipFromAddress['address_residential_indicator']) &&
-                            strtolower($shipFromAddress['address_residential_indicator']) === 'yes')
-                        <div class="residential-badge">Residential Address</div>
-                    @else
-                        <div class="residential-badge">Business Address</div>
-                    @endif
+                        @if (!empty($shipFromAddress['email']))
+                            <div class="muted">Email</div>
+                            <div class="value">{{ $shipFromAddress['email'] }}</div>
+                        @else
+                            <div class="muted">Email</div>
+                            <div class="value">—</div>
+                        @endif
+                        <div class="muted">Address</div>
+                        <div class="value">
+                            {{ $shipFromAddress['address_line1'] ?? '' }}
+                            @if (!empty($shipFromAddress['address_line2']))
+                                {{ $shipFromAddress['address_line2'] }}
+                            @endif
+                        </div>
+                        <div class="value">
+                            {{ $shipFromAddress['city_locality'] ? $shipFromAddress['city_locality'] . ', ' : '' }}
+                            @if (!empty($shipFromAddress['state_province']))
+                                {{ $shipFromAddress['state_province'] }}
+                            @endif
+                            {{ $shipFromAddress['postal_code'] ?? '' }}, United States
+                        </div>
+                        @if (isset($shipFromAddress['address_residential_indicator']) &&
+                                strtolower($shipFromAddress['address_residential_indicator']) === 'yes')
+                            <div class="residential-badge">Residential Address</div>
+                        @else
+                            <div class="residential-badge">Business Address</div>
+                        @endif
                     </td>
                 @endif
 
                 @if (is_array($shipToAddress) && !empty($shipToAddress))
                     <td class="addr" style="padding-left:6px;">
                         <b>To</b>
-                    <div class="muted">Name</div>
-                    <div class="value">{{ $shipToAddress['name'] ?? 'N/A' }}</div>
-                    @if (!empty($shipToAddress['company_name']))
-                        <div class="muted">Company</div>
-                        <div class="value">{{ $shipToAddress['company_name'] }}</div>
-                    @else
-                        <div class="muted">Company</div>
-                        <div class="value">—</div>
-                    @endif
-                    @if (!empty($shipToAddress['phone']))
-                        <div class="muted">Phone</div>
-                        <div class="value">{{ $shipToAddress['phone'] }}</div>
-                    @else
-                        <div class="muted">Phone</div>
-                        <div class="value">—</div>
-                    @endif
-                    @if (!empty($shipToAddress['email']))
-                        <div class="muted">Email</div>
-                        <div class="value">{{ $shipToAddress['email'] }}</div>
-                    @else
-                        <div class="muted">Email</div>
-                        <div class="value">—</div>
-                    @endif
-                    <div class="muted">Address</div>
-                    <div class="value">
-                        {{ $shipToAddress['address_line1'] ?? 'N/A' }}
-                        @if (!empty($shipToAddress['address_line2']))
-                            {{ $shipToAddress['address_line2'] }}
+                        <div class="muted">Name</div>
+                        <div class="value">{{ $shipToAddress['name'] ?? 'N/A' }}</div>
+                        @if (!empty($shipToAddress['company_name']))
+                            <div class="muted">Company</div>
+                            <div class="value">{{ $shipToAddress['company_name'] }}</div>
+                        @else
+                            <div class="muted">Company</div>
+                            <div class="value">—</div>
                         @endif
-                    </div>
-                    <div class="value">
-                        {{ $shipToAddress['city_locality'] ? $shipToAddress['city_locality'] . ', ' : '' }}
-                        @if (!empty($shipToAddress['state_province']))
-                            {{ $shipToAddress['state_province'] }}
+                        @if (!empty($shipToAddress['phone']))
+                            <div class="muted">Phone</div>
+                            <div class="value">{{ $shipToAddress['phone'] }}</div>
+                        @else
+                            <div class="muted">Phone</div>
+                            <div class="value">—</div>
                         @endif
-                        {{ $shipToAddress['postal_code'] ?? '' }},
-                        {{ $ship_to_address_country_full_name ?? 'United States' }}
-                    </div>
-                    @if (isset($shipToAddress['address_residential_indicator']) &&
-                            strtolower($shipToAddress['address_residential_indicator']) === 'yes')
-                        <div class="residential-badge">Residential Address</div>
-                    @else
-                        <div class="residential-badge">Business Address</div>
-                    @endif
+                        @if (!empty($shipToAddress['email']))
+                            <div class="muted">Email</div>
+                            <div class="value">{{ $shipToAddress['email'] }}</div>
+                        @else
+                            <div class="muted">Email</div>
+                            <div class="value">—</div>
+                        @endif
+                        <div class="muted">Address</div>
+                        <div class="value">
+                            {{ $shipToAddress['address_line1'] ?? 'N/A' }}
+                            @if (!empty($shipToAddress['address_line2']))
+                                {{ $shipToAddress['address_line2'] }}
+                            @endif
+                        </div>
+                        <div class="value">
+                            {{ $shipToAddress['city_locality'] ? $shipToAddress['city_locality'] . ', ' : '' }}
+                            @if (!empty($shipToAddress['state_province']))
+                                {{ $shipToAddress['state_province'] }}
+                            @endif
+                            {{ $shipToAddress['postal_code'] ?? '' }},
+                            {{ $ship_to_address_country_full_name ?? 'United States' }}
+                        </div>
+                        @if (isset($shipToAddress['address_residential_indicator']) &&
+                                strtolower($shipToAddress['address_residential_indicator']) === 'yes')
+                            <div class="residential-badge">Residential Address</div>
+                        @else
+                            <div class="residential-badge">Business Address</div>
+                        @endif
                     </td>
                 @endif
             </tr>
@@ -598,11 +609,14 @@
                                 @endif
                             </td>
                             <td class="package-col">
-                                <div><span class="muted">Weight:</span> <span class="value">{{ $package['weight'] ?? 'N/A' }}
+                                <div><span class="muted">Weight:</span> <span
+                                        class="value">{{ $package['weight'] ?? 'N/A' }}
                                         {{ $package['weight_unit'] ?? 'lbs' }}</span></div>
                                 @if (!empty($package['length']) && !empty($package['width']) && !empty($package['height']))
-                                    <div><span class="muted">Dimensions:</span> <span class="value">{{ $package['length'] }} ×
-                                            {{ $package['width'] }} × {{ $package['height'] }} {{ $package['dimension_unit'] ?? 'in' }}</span></div>
+                                    <div><span class="muted">Dimensions:</span> <span
+                                            class="value">{{ $package['length'] }} ×
+                                            {{ $package['width'] }} × {{ $package['height'] }}
+                                            {{ $package['dimension_unit'] ?? 'in' }}</span></div>
                                 @endif
                             </td>
                         </tr>
@@ -616,7 +630,8 @@
             <div class="package-box" style="border: 1px solid var(--border); background-color: #fafafa;">
                 <b>Total Weight</b>
                 <div class="package-col">
-                    <div style="font-size: 14px;"><span class="value">{{ number_format($total_weight, 2) }} lbs</span></div>
+                    <div style="font-size: 14px;"><span class="value">{{ number_format($total_weight, 2) }}
+                            lbs</span></div>
                 </div>
             </div>
         @endif
@@ -697,10 +712,12 @@
             <table cellpadding="0" cellspacing="0" style="width:100%;">
                 <tr>
                     <td class="cert-text">
-                        <div>I certify that the shipment does not contain any undeclared hazardous materials or any matter
+                        <div>I certify that the shipment does not contain any undeclared hazardous materials or any
+                            matter
                             prohibited by law or postal regulation.</div>
                         @if (is_array($shipToAddress) && ($shipToAddress['country_code'] ?? 'US') != 'US')
-                            <div style="margin-top:6px;">I hereby certify that the information on this invoice is true and
+                            <div style="margin-top:6px;">I hereby certify that the information on this invoice is true
+                                and
                                 correct and the contents and value of this shipment are as stated above.</div>
                         @endif
                     </td>
@@ -715,7 +732,8 @@
         </div>
 
         <div class="muted" style="margin-top:12px; font-size:12px; clear:both;">Issued on:
-            {{ now()->format('Y-m-d H:i:s') }}</div>
+            {{ $created_at }}
+        </div>
     </div>
 </body>
 

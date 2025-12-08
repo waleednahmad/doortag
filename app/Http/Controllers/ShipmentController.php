@@ -105,6 +105,7 @@ class ShipmentController
                 'carrier_delivery_days' => $shipment->carrier_delivery_days,
                 'estimated_delivery_date' => $shipment->estimated_delivery_date,
                 'tax_amount' => $shipment->tax_amount,
+                'created_at' => $shipment->created_at->format('Y-m-d H:i:s'),
             ];
 
             return view('pdfs.shipment-details', $data);

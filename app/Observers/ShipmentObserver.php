@@ -16,8 +16,8 @@ class ShipmentObserver implements ShouldHandleEventsAfterCommit
     public function created(Shipment $shipment): void
     {
         // Check if there's a sender email in the shipment data
-        $shipFromAddress = is_array($shipment->ship_from_address) 
-            ? $shipment->ship_from_address 
+        $shipFromAddress = is_array($shipment->ship_from_address)
+            ? $shipment->ship_from_address
             : json_decode($shipment->ship_from_address, true);
 
         $senderEmail = $shipFromAddress['email'] ?? null;
@@ -135,6 +135,8 @@ class ShipmentObserver implements ShouldHandleEventsAfterCommit
                 'packaging_amount' => $shipment->packaging_amount,
                 'carrier_delivery_days' => $shipment->carrier_delivery_days,
                 'estimated_delivery_date' => $shipment->estimated_delivery_date,
+                'tax_amount' => $shipment->tax_amount,
+                'created_at' => $shipment->created_at->format('Y-m-d H:i:s'),
             ];
         } catch (\Exception $e) {
             Log::error('Error preparing shipment data for email', [

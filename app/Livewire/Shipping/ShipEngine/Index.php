@@ -1695,6 +1695,7 @@ class Index extends Component
                 'stripe_amount_paid' => $shipment->stripe_amount_paid,
                 'packaging_amount' => $shipment->packaging_amount,
                 'tax_amount' => $shipment->tax_amount,
+                'created_at' => $shipment->created_at->format('Y-m-d H:i:s'),
             ];
 
             $pdf = Pdf::loadView('pdfs.shipment-details', $data)

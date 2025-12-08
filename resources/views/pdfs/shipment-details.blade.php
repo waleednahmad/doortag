@@ -639,7 +639,7 @@
         </div>
 
         <div class="muted" style="margin-top:12px; font-size:12px; clear:both;">Issued on:
-            {{ now()->format('Y-m-d H:i:s') }}</div>
+            {{ $created_at }}</div>
     </div>
 </body>
 
