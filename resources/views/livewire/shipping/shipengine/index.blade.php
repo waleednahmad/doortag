@@ -771,7 +771,7 @@
                         {{-- Section for the $packagingAmount --}}
                         <div class="mt-6 pt-4 border-t border-gray-200 dark:border-gray-600 flex justify-between">
                             <div class="text-lg font-bold text-gray-900 dark:text-white">
-                                <x-number wire:model="packagingAmount" label="Packaging Amount" step="0.1"
+                                <x-number wire:model.blur="packagingAmount" label="Packaging Amount" step="0.1"
                                     min="0" required />
                             </div>
                         </div>
@@ -1128,6 +1128,21 @@
                                                                 ${{ number_format($packagingAmount ?? 0, 2) }}
                                                             </span>
                                                         </div>
+                                                        <!-- Tax Amount -->
+                                                        @if (isset($taxAmount) && $taxAmount > 0)
+                                                            <div
+                                                                class="flex justify-between items-center border-t border-indigo-200 dark:border-indigo-700 pt-3 mt-3">
+                                                                <span
+                                                                    class="text-sm font-semibold text-indigo-700 dark:text-indigo-300">
+                                                                    Tax Amount:
+                                                                </span>
+                                                                <span
+                                                                    class="text-lg font-bold text-indigo-700 dark:text-indigo-300">
+                                                                    ${{ number_format($taxAmount ?? 0, 2) }}
+                                                                </span>
+                                                            </div>
+                                                        @endif
+
                                                         <!-- Total Amount -->
                                                         <div
                                                             class="flex justify-between items-center border-t border-indigo-200 dark:border-indigo-700 pt-3 mt-3">
@@ -1138,12 +1153,12 @@
                                                             @auth('customer')
                                                                 <span
                                                                     class="text-lg font-bold text-indigo-700 dark:text-indigo-300">
-                                                                    ${{ number_format($end_user_total ?? 0, 2) + number_format($packagingAmount ?? 0, 2) }}
+                                                                    ${{ number_format($end_user_total + $taxAmount ?? 0, 2) + number_format($packagingAmount ?? 0, 2) }}
                                                                 </span>
                                                             @else
                                                                 <span
                                                                     class="text-lg font-bold text-indigo-700 dark:text-indigo-300">
-                                                                    ${{ number_format(($selectedRate['calculated_amount'] ?? 0) + ($packagingAmount ?? 0), 2) }}
+                                                                    ${{ number_format(($selectedRate['calculated_amount'] + $taxAmount ?? 0) + ($packagingAmount ?? 0), 2) }}
                                                                 </span>
                                                             @endauth
                                                         </div>
@@ -1394,9 +1409,9 @@
                                                     </p>
                                                     <p class="text-blue-900 dark:text-blue-100 font-bold text-lg">
                                                         @auth('customer')
-                                                            ${{ number_format(($end_user_total ?? 0) + ($packagingAmount ?? 0), 2) }}
+                                                            ${{ number_format(($end_user_total ?? 0) + ($packagingAmount ?? 0) + ($taxAmount ?? 0), 2) }}
                                                         @else
-                                                            ${{ number_format(($origin_total ?? 0) + ($packagingAmount ?? 0), 2) }}
+                                                            ${{ number_format(($origin_total ?? 0) + ($packagingAmount ?? 0) + ($taxAmount ?? 0), 2) }}
                                                         @endauth
                                                     </p>
                                                     @if ($packagingAmount > 0)
@@ -1407,7 +1422,12 @@
                                                             @else
                                                                 ${{ number_format($origin_total ?? 0, 2) }}
                                                             @endauth
-                                                            + Packaging: ${{ number_format($packagingAmount, 2) }})
+                                                            + Packaging: ${{ number_format($packagingAmount, 2) }}
+                                                            @if (isset($taxAmount) && $taxAmount > 0)
+                                                                + Tax: ${{ number_format($taxAmount, 2) }}
+                                                            @endif
+
+                                                            )
                                                         </p>
                                                     @endif
                                                 </div>

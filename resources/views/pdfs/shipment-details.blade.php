@@ -343,7 +343,8 @@
                             <td class="muted">Tracking</td>
                             <td class="tracking-highlight">
                                 @if (!empty($trackingUrl))
-                                    <a href="{{ $trackingUrl }}" target="_blank" style="color: inherit; text-decoration: underline; cursor: pointer;">
+                                    <a href="{{ $trackingUrl }}" target="_blank"
+                                        style="color: inherit; text-decoration: underline; cursor: pointer;">
                                         {{ $trackingNumber }}
                                     </a>
                                 @else
@@ -393,6 +394,13 @@
                         <div class="charge-label">Packaging</div>
                         <div class="charge-value">${{ number_format($packaging_amount ?? 0, 2) }}</div>
                     </div>
+                    @if ($tax_amount && $tax_amount > 0)
+                        <div class="charge-row">
+                            <div class="charge-label">Tax</div>
+                            <div class="charge-value">${{ number_format($tax_amount ?? 0, 2) }}</div>
+                        </div>
+                    @endif
+
                 @endif
                 <div class="charge-total">
                     <div class="charge-label">Total Paid</div>
@@ -519,13 +527,14 @@
                                 <span class="value">${{ number_format($package['insured_value'], 2) }}</span>
                             </div>
                         @endif
-                   
+
                     </div>
                     <div class="package-col">
                         <div><span class="muted">Weight:</span> <span class="value">{{ $package['weight'] ?? 'N/A' }}
                                 lbs</span></div>
                         @if (!empty($package['length']) && !empty($package['width']) && !empty($package['height']))
-                            <div><span class="muted">Dimensions:</span> <span class="value">{{ $package['length'] }} ×
+                            <div><span class="muted">Dimensions:</span> <span class="value">{{ $package['length'] }}
+                                    ×
                                     {{ $package['width'] }} × {{ $package['height'] }} in</span></div>
                         @endif
                     </div>
@@ -538,7 +547,8 @@
             <div class="package-box" style="border: 1px solid var(--border); background-color: #fafafa;">
                 <b>Total Weight</b>
                 <div class="package-col">
-                    <div style="font-size: 14px;"><span class="value">{{ number_format($total_weight, 2) }} lbs</span></div>
+                    <div style="font-size: 14px;"><span class="value">{{ number_format($total_weight, 2) }}
+                            lbs</span></div>
                 </div>
             </div>
         @endif

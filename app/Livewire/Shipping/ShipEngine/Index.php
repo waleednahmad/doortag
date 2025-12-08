@@ -151,6 +151,7 @@ class Index extends Component
     public $certifyInvoiceAccuracy = false;
 
     public $packagingAmount = 0;
+    public $taxAmount = 0;
 
     public $doortag_price = 0;
 
@@ -187,6 +188,13 @@ class Index extends Component
         if ($name === 'shipToAddress.country_code') {
             $country = Country::where('value', $value)->first();
             $this->shipToAddressCountryFullName = $country ? $country->label : '';
+        }
+
+        // Update the taxAmount based on the packagingAmount and user's tax percentage
+        if ($name === 'packagingAmount') {
+            $user = Auth::user();
+            $taxPercentage = $user->tax_percentage ?? 0;
+            $this->taxAmount = round(($value * $taxPercentage) / 100, 2);
         }
     }
 
@@ -340,7 +348,7 @@ class Index extends Component
     public function calculateTotalWeight()
     {
         $this->total_weight = 0;
-        
+
         foreach ($this->packages as $package) {
             if (!empty($package['weight'])) {
                 $this->total_weight += ceil((float) $package['weight']);
@@ -1119,11 +1127,11 @@ class Index extends Component
             if (auth('customer')->check()) {
                 // For customers: use end_user_total (includes all margins) plus packaging
                 $shippingTotal = (float) str_replace(',', '', $this->end_user_total ?? 0);
-                $totalAmount = ($shippingTotal + ($this->packagingAmount ?? 0)) * 100;
+                $totalAmount = ($shippingTotal + ($this->packagingAmount ?? 0) + ($this->taxAmount ?? 0)) * 100;
             } else {
                 // For web users: use origin_total (base shipping cost) plus packaging
                 $shippingTotal = (float) str_replace(',', '', $this->origin_total ?? 0);
-                $totalAmount = ($shippingTotal + ($this->packagingAmount ?? 0)) * 100;
+                $totalAmount = ($shippingTotal + ($this->packagingAmount ?? 0) + ($this->taxAmount ?? 0)) * 100;
             }
 
             // Fallback to manual calculation if no totals are set
@@ -1132,7 +1140,7 @@ class Index extends Component
                 $insuranceAmount = (float) ($this->selectedRate['insurance_amount']['amount'] ?? 0);
                 $confirmationAmount = (float) ($this->selectedRate['confirmation_amount']['amount'] ?? 0);
                 $otherAmount = (float) ($this->selectedRate['other_amount']['amount'] ?? 0);
-                $totalAmount = ($shippingAmount + $insuranceAmount + $confirmationAmount + $otherAmount + ($this->packagingAmount ?? 0)) * 100;
+                $totalAmount = ($shippingAmount + $insuranceAmount + $confirmationAmount + $otherAmount + ($this->packagingAmount ?? 0) + ($this->taxAmount ?? 0)) * 100;
             }
 
 
@@ -1319,6 +1327,7 @@ class Index extends Component
                     'end_user_total' => $this->end_user_total ?? null,
                     // Store packaging information
                     'packaging_amount' => $this->packagingAmount ?? 0,
+                    'tax_amount' => $this->taxAmount ?? 0,
                     'total_with_packaging' => $totalWithPackaging,
                     // Store shipment weight information
                     'total_weight' => $this->total_weight,
@@ -1685,6 +1694,7 @@ class Index extends Component
                 'paymentNumber' => $shipment->stripe_payment_intent_id,
                 'stripe_amount_paid' => $shipment->stripe_amount_paid,
                 'packaging_amount' => $shipment->packaging_amount,
+                'tax_amount' => $shipment->tax_amount,
             ];
 
             $pdf = Pdf::loadView('pdfs.shipment-details', $data)

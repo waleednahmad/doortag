@@ -326,6 +326,7 @@ namespace App\Models {
      * @property string $password
      * @property \Illuminate\Support\Carbon|null $email_verified_at
      * @property boolean $can_modify_data
+     * @property float $tax_percentage
      * @property int $customer_margin
      * @property float $margin
      * @property boolean $address_residential_indicator
@@ -354,6 +355,7 @@ namespace App\Models {
      * @method static \Illuminate\Database\Eloquent\Builder<Customer>|Customer whereAddressResidentialIndicator($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Customer>|Customer whereMargin($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Customer>|Customer whereCustomerMargin($value)
+     * @method static \Illuminate\Database\Eloquent\Builder<Customer>|Customer whereTaxPercentage($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Customer>|Customer whereCanModifyData($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Customer>|Customer whereEmailVerifiedAt($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Customer>|Customer wherePassword($value)
@@ -665,6 +667,7 @@ namespace App\Models {
      *
      * @property float|null $total_with_packaging
      * @property float|null $total_weight
+     * @property float $tax_amount
      * @property float|null $packaging_amount
      * @property string|null $stripe_payment_status
      * @property decimal:2|null $stripe_amount_paid
@@ -709,6 +712,7 @@ namespace App\Models {
      * @method static \Illuminate\Database\Eloquent\Builder<Shipment>|Shipment whereStripeAmountPaid($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Shipment>|Shipment whereStripePaymentStatus($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Shipment>|Shipment wherePackagingAmount($value)
+     * @method static \Illuminate\Database\Eloquent\Builder<Shipment>|Shipment whereTaxAmount($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Shipment>|Shipment whereTotalWeight($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Shipment>|Shipment whereTotalWithPackaging($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Shipment>|Shipment newModelQuery()
@@ -1015,6 +1019,7 @@ namespace App\Models {
      * App\Models\User
      *
      * @property boolean $can_modify_data
+     * @property float $tax_percentage
      * @property boolean $address_residential_indicator
      * @property string|null $zipcode
      * @property string|null $state
@@ -1038,6 +1043,7 @@ namespace App\Models {
      * @method static \Illuminate\Database\Eloquent\Builder<User>|User whereZipcode($value)
      * @method static \Illuminate\Database\Eloquent\Builder<User>|User whereAddressResidentialIndicator($value)
      * @method static \Illuminate\Database\Eloquent\Builder<User>|User whereEmailVerifiedAt($value)
+     * @method static \Illuminate\Database\Eloquent\Builder<User>|User whereTaxPercentage($value)
      * @method static \Illuminate\Database\Eloquent\Builder<User>|User wherePassword($value)
      * @method static \Illuminate\Database\Eloquent\Builder<User>|User whereRememberToken($value)
      * @method static \Illuminate\Database\Eloquent\Builder<User>|User whereCanModifyData($value)
