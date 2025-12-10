@@ -486,7 +486,6 @@
                         })
                         ->values()
                         ->all();
-                    info(print_r($primaryRates, true));
                 @endphp
 
                 <x-card class="mt-4 sm:mt-6">

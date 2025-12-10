@@ -388,16 +388,21 @@
                     <div class="charge-row">
                         <div class="charge-label">Shipping</div>
                         <div class="charge-value">
-                            ${{ number_format(($stripe_amount_paid ?? 0) - ($packaging_amount ?? 0), 2) }}</div>
+                            ${{ number_format(($stripe_amount_paid ?? 0) - ($packaging_amount ?? 0), 2) - ($tax_amount ?? 0) }}
+                        </div>
                     </div>
                     <div class="charge-row">
                         <div class="charge-label">Packaging</div>
-                        <div class="charge-value">${{ number_format($packaging_amount ?? 0, 2) }}</div>
+                        <div class="charge-value">
+                            ${{ number_format($packaging_amount ?? 0, 2) }}
+                        </div>
                     </div>
                     @if ($tax_amount && $tax_amount > 0)
                         <div class="charge-row">
                             <div class="charge-label">Tax</div>
-                            <div class="charge-value">${{ number_format($tax_amount ?? 0, 2) }}</div>
+                            <div class="charge-value">
+                                ${{ number_format($tax_amount ?? 0, 2) }}
+                            </div>
                         </div>
                     @endif
 
