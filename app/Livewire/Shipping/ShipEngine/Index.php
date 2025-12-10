@@ -774,9 +774,14 @@ class Index extends Component
                     $rate['margin'] = number_format($marginMultiplier, 2);
                     $rate['customer_margin'] = number_format($custmoerMargin, 2);
                     $rate['customer_total'] = number_format($this->customer_total, 2);
-                    $rate['calculated_amount'] = number_format($this->end_user_total, 2);
+                    if ($authenticatedUser->is_admin) {
+                        $rate['calculated_amount'] = number_format($this->customer_total, 2);
+                    } else {
+                        $rate['calculated_amount'] = number_format($this->end_user_total, 2);
+                    }
                     return $rate;
                 }, $responseRates->toArray());
+
             } else { // WEB Guard
                 $formatedRates = array_map(function ($rate) use ($authenticatedUser) {
                     $shippingAmount = (float) $rate['shipping_amount']['amount'];
@@ -922,6 +927,12 @@ class Index extends Component
 
             // Set Data to stored in the shipments table
             $this->origin_total = number_format($originalTotal, 2);
+        }
+
+        // Clear customer_total and end_user_total for non-customer users
+        if (!($authenticatedUser instanceof Customer)) {
+            $this->customer_total = null;
+            $this->end_user_total = null;
         }
 
         // Store the doortag Price
@@ -1125,8 +1136,13 @@ class Index extends Component
             $totalAmount = 0;
 
             if (auth('customer')->check()) {
-                // For customers: use end_user_total (includes all margins) plus packaging
-                $shippingTotal = (float) str_replace(',', '', $this->end_user_total ?? 0);
+                $authenticatedCustomer = Auth::user();
+                // For admin customers: use customer_total, for regular customers: use end_user_total
+                if ($authenticatedCustomer->is_admin) {
+                    $shippingTotal = (float) str_replace(',', '', $this->customer_total ?? 0);
+                } else {
+                    $shippingTotal = (float) str_replace(',', '', $this->end_user_total ?? 0);
+                }
                 $totalAmount = ($shippingTotal + ($this->packagingAmount ?? 0) + ($this->taxAmount ?? 0)) * 100;
             } else {
                 // For web users: use origin_total (base shipping cost) plus packaging

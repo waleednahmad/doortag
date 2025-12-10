@@ -486,6 +486,7 @@
                         })
                         ->values()
                         ->all();
+                    info(print_r($primaryRates, true));
                 @endphp
 
                 <x-card class="mt-4 sm:mt-6">
@@ -509,6 +510,8 @@
                             <!-- Enhanced Sorting Section -->
                             <div
                                 class="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                                <!-- Sort Buttons -->
+
                                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                                     <!-- Sort Label -->
                                     <div class="flex items-center">
@@ -517,8 +520,7 @@
                                             <span class="font-medium">Sort by:</span>
                                         </div>
                                     </div>
-
-                                    <!-- Sort Buttons -->
+                                    {{-- Actual buttons --}}
                                     <div
                                         class="flex items-center justify-between gap-1 bg-white dark:bg-gray-700 rounded-lg p-1 shadow-sm border border-gray-200 dark:border-gray-600">
                                         <button wire:click="sortByPrice"
@@ -640,6 +642,7 @@
                                                         class=" object-contain w-full h-full" alt="FedEx" />
                                                 </div>
 
+                                                {{-- estimated delievery --}}
                                                 <div class="flex-1">
                                                     <h4
                                                         class="font-semibold text-gray-900 dark:text-white text-sm sm:text-base">
@@ -693,6 +696,7 @@
                                                                 ${{ $rate['calculated_amount'] }}
                                                             </div>
                                                         </div>
+                                                        {{-- saving badge --}}
                                                         @php
                                                             if (auth('web')->check()) {
                                                                 // for admin

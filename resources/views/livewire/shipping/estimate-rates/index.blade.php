@@ -559,13 +559,14 @@
                                                                     );
                                                             } else {
                                                                 // customer
+                                                                $rawDifference = $rate['original_total'] -
+                                                                        $rate['calculated_amount'];
                                                                 $difference = number_format(
-                                                                    $rate['original_total'] -
-                                                                        $rate['calculated_amount'],
+                                                                    $rawDifference,
                                                                     2,
                                                                 );
                                                                 $differencePercentage = number_format(
-                                                                    ($difference / $rate['original_total']) * 100,
+                                                                    ($rawDifference / $rate['original_total']) * 100,
                                                                     0,
                                                                 );
                                                             }
