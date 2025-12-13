@@ -221,6 +221,7 @@ class Index extends Component
 
             $response = $shipEngine->getEstimatedRates($shipmentData);
 
+
             if (isset($response['rate_response']) && $response['rate_response']['status'] == 'error') {
                 $this->dialog()->error('Error getting rates: ' . ($response['rate_response']['errors'][0]['message'] ?? 'Unknown error'))->send();
                 return;
@@ -260,8 +261,8 @@ class Index extends Component
                     $rate['original_total'] = number_format($originalTotal, 2);
                     $rate['margin'] = number_format($marginMultiplier, 2);
                     $rate['customer_margin'] = number_format($custmoerMargin, 2);
-                    $rate['customer_total'] = number_format($this->customer_total, 2);
-                    $rate['calculated_amount'] = number_format($this->end_user_total, 2);
+                    $rate['customer_total'] = number_format((float)$this->customer_total, 2);
+                    $rate['calculated_amount'] = number_format((float)$this->end_user_total, 2);
                     return $rate;
                 }, $responseRates->toArray());
             } else { // WEB Guard
@@ -340,26 +341,21 @@ class Index extends Component
             $carrier2Rate = $serviceRates->get($carrier2);
 
             if ($carrier1Rate && $carrier2Rate) {
-
-                // Convert to float
-                $price1 = (float) str_replace(',', '', $carrier1Rate['original_total']);
-                $price2 = (float) str_replace(',', '', $carrier2Rate['original_total']);
-
-                $rate['price_comparison']['carrier_1_price'] = $price1;
-                $rate['price_comparison']['carrier_2_price'] = $price2;
+                $rate['price_comparison']['carrier_1_price'] = $carrier1Rate['original_total'];
+                $rate['price_comparison']['carrier_2_price'] = $carrier2Rate['original_total'];
 
                 // Absolute difference
-                $difference = abs($price1 - $price2);
-                $rate['price_comparison']['price_difference'] = $difference;
+                $difference = abs($carrier1Rate['original_total'] - $carrier2Rate['original_total']);
+                $rate['price_comparison']['price_difference'] = number_format($difference, 2);
 
                 // Correct percentage based on highest price
-                $base = max($price1, $price2);
+                $base = max($carrier1Rate['original_total'], $carrier2Rate['original_total']);
                 $percentage = ($difference / $base) * 100;
                 $rate['price_comparison']['difference_percentage'] = round($percentage, 2);
 
                 // Determine which is cheaper
                 $rate['price_comparison']['is_cheaper'] =
-                    $price1 < $price2 ? 'carrier_1' : ($price2 < $price1 ? 'carrier_2' : 'equal');
+                    $carrier1Rate['original_total'] < $carrier2Rate['original_total'] ? 'carrier_1' : ($carrier2Rate['original_total'] < $carrier1Rate['original_total'] ? 'carrier_2' : 'equal');
             }
 
             return $rate;

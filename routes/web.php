@@ -135,6 +135,10 @@ Route::middleware(['auth:web,customer'])->group(function () {
     Route::get('/shipments', ShipmentsIndex::class)->name('shipments.index');
     Route::get('/shipments/receipt/{labelId}', [App\Http\Controllers\ShipmentController::class, 'showReceipt'])->name('shipments.receipt');
     Route::get('/rates', EstimateRatesIndex::class)->name('rates.index');
+
+    // NEW: Customer payment routes - automatic charging with saved cards
+    Route::post('/terminal/create-customer-payment', [App\Http\Controllers\TerminalController::class, 'createPaymentIntentWithCustomer'])->name('terminal.create-customer-payment');
+    Route::post('/terminal/charge-customer', [App\Http\Controllers\TerminalController::class, 'chargeCustomer'])->name('terminal.charge-customer');
 });
 
 require __DIR__ . '/auth.php';

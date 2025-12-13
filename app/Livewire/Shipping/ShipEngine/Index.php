@@ -773,15 +773,14 @@ class Index extends Component
                     $rate['original_total'] = number_format($originalTotal, 2);
                     $rate['margin'] = number_format($marginMultiplier, 2);
                     $rate['customer_margin'] = number_format($custmoerMargin, 2);
-                    $rate['customer_total'] = number_format($this->customer_total, 2);
+                    $rate['customer_total'] = number_format((float)$this->customer_total, 2);
                     if ($authenticatedUser->is_admin) {
-                        $rate['calculated_amount'] = number_format($this->customer_total, 2);
+                        $rate['calculated_amount'] = number_format((float)$this->customer_total, 2);
                     } else {
-                        $rate['calculated_amount'] = number_format($this->end_user_total, 2);
+                        $rate['calculated_amount'] = number_format((float)$this->end_user_total, 2);
                     }
                     return $rate;
                 }, $responseRates->toArray());
-
             } else { // WEB Guard
                 $formatedRates = array_map(function ($rate) use ($authenticatedUser) {
                     $shippingAmount = (float) $rate['shipping_amount']['amount'];
@@ -859,26 +858,21 @@ class Index extends Component
             $carrier2Rate = $serviceRates->get($carrier2);
 
             if ($carrier1Rate && $carrier2Rate) {
-
-                // Convert to float
-                $price1 = (float) str_replace(',', '', $carrier1Rate['original_total']);
-                $price2 = (float) str_replace(',', '', $carrier2Rate['original_total']);
-
-                $rate['price_comparison']['carrier_1_price'] = $price1;
-                $rate['price_comparison']['carrier_2_price'] = $price2;
+                $rate['price_comparison']['carrier_1_price'] = $carrier1Rate['original_total'];
+                $rate['price_comparison']['carrier_2_price'] = $carrier2Rate['original_total'];
 
                 // Absolute difference
-                $difference = abs($price1 - $price2);
-                $rate['price_comparison']['price_difference'] = $difference;
+                $difference = abs($carrier1Rate['original_total'] - $carrier2Rate['original_total']);
+                $rate['price_comparison']['price_difference'] = number_format($difference, 2);
 
                 // Correct percentage based on highest price
-                $base = max($price1, $price2);
+                $base = max($carrier1Rate['original_total'], $carrier2Rate['original_total']);
                 $percentage = ($difference / $base) * 100;
                 $rate['price_comparison']['difference_percentage'] = round($percentage, 2);
 
                 // Determine which is cheaper
                 $rate['price_comparison']['is_cheaper'] =
-                    $price1 < $price2 ? 'carrier_1' : ($price2 < $price1 ? 'carrier_2' : 'equal');
+                    $carrier1Rate['original_total'] < $carrier2Rate['original_total'] ? 'carrier_1' : ($carrier2Rate['original_total'] < $carrier1Rate['original_total'] ? 'carrier_2' : 'equal');
             }
 
             return $rate;
@@ -1070,11 +1064,90 @@ class Index extends Component
             return;
         }
 
-        // Close the shipment details modal and show payment modal
+        // Close the shipment details modal
         $this->showModal = false;
-        $this->showPaymentModal();
+
+        // NEW FLOW: Charge customer directly with saved card
+        $this->processCustomerPayment();
+
+        // OLD FLOW: Terminal payment (commented out but kept for reference)
+        // $this->showPaymentModal();
     }
 
+    /**
+     * NEW: Process payment using customer's saved card
+     */
+    public function processCustomerPayment()
+    {
+        try {
+            // Get authenticated customer
+            $customer = Auth::guard('customer')->user();
+
+            // If no customer or no stripe_customer_id, fall back to admin flow (web auth)
+            if (!$customer) {
+                $customer = Auth::guard('web')->user();
+            }
+
+            if (!$customer || !$customer->stripe_customer_id) {
+                $this->toast()->error('No payment method found. Please contact support to add a payment method to your account.')->send();
+                Log::error('Customer payment failed: No stripe_customer_id', ['user_id' => $customer->id ?? null]);
+                return;
+            }
+
+            Log::info('Processing customer payment - START', [
+                'customer_id' => $customer->id,
+                'stripe_customer_id' => $customer->stripe_customer_id,
+                'amount' => $this->selectedRate['calculated_amount']
+            ]);
+
+            // Prepare payment data
+            $paymentData = [
+                'amount' => (int)($this->selectedRate['calculated_amount'] * 100), // Convert to cents
+                'customer_id' => $customer->stripe_customer_id,
+                'description' => 'Shipping Label - ' . ($this->selectedRate['service_type'] ?? 'Unknown'),
+                'service_type' => $this->selectedRate['service_type'] ?? '',
+                'carrier' => $this->selectedRate['carrier_code'] ?? '',
+            ];
+
+            Log::info('Charging customer via Stripe', ['payment_data' => $paymentData]);
+
+            // Call the TerminalController directly
+            $terminalController = app(\App\Http\Controllers\TerminalController::class);
+            $request = request()->merge($paymentData);
+
+            $result = $terminalController->chargeCustomer($request);
+            $resultData = $result->getData(true);
+
+            Log::info('Payment result received', ['result' => $resultData]);
+
+            if (isset($resultData['success']) && $resultData['success'] && $resultData['status'] === 'succeeded') {
+                Log::info('Customer payment successful', [
+                    'payment_intent_id' => $resultData['payment_intent']['id'] ?? 'unknown',
+                    'amount' => $resultData['amount_paid'] ?? 0
+                ]);
+
+                // Payment successful, create the label
+                $this->createActualLabel($resultData['payment_intent']);
+
+                $this->toast()->success('Payment processed successfully!')->send();
+            } else {
+                $errorMsg = 'Payment failed with status: ' . ($resultData['status'] ?? 'unknown');
+                Log::error('Customer payment failed', ['response' => $resultData]);
+                $this->toast()->error($errorMsg)->send();
+            }
+        } catch (\Exception $e) {
+            Log::error('Customer payment exception', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            $this->toast()->error('Payment error: ' . $e->getMessage())->send();
+        }
+    }
+
+    // OLD FLOW: Terminal payment modal methods (commented out but kept for reference)
+    /*
     public function showPaymentModal()
     {
         // Reset payment state
@@ -1086,7 +1159,10 @@ class Index extends Component
         // Show payment modal
         $this->showPaymentModal = true;
     }
+    */
 
+    // OLD FLOW: Reset payment state (commented out)
+    /*
     public function resetPaymentState()
     {
         $this->paymentProcessing = false;
@@ -1096,7 +1172,10 @@ class Index extends Component
         $this->paymentError = null;
         $this->selectedReaderId = null;
     }
+    */
 
+    // OLD FLOW: Load terminal readers (commented out)
+    /*
     public function loadReaders()
     {
         try {
@@ -1120,7 +1199,10 @@ class Index extends Component
             $this->paymentError = 'Failed to load readers: ' . $e->getMessage();
         }
     }
+    */
 
+    // OLD FLOW: Process terminal payment (commented out)
+    /*
     public function processPayment()
     {
         if (!$this->selectedReaderId) {
@@ -1212,7 +1294,10 @@ class Index extends Component
             $this->dispatch('payment-failed');
         }
     }
+    */
 
+    // OLD FLOW: Poll payment status (commented out)
+    /*
     public function pollPaymentStatus()
     {
         // This will be called by JavaScript polling
@@ -1278,7 +1363,10 @@ class Index extends Component
             }
         }
     }
+    */
 
+    // OLD FLOW: Retry terminal payment (commented out)
+    /*
     public function retryPayment()
     {
         if ($this->paymentRetryCount >= $this->maxRetryAttempts) {
@@ -1294,6 +1382,7 @@ class Index extends Component
 
         $this->processPayment();
     }
+    */
 
     public function createActualLabel($paymentIntentData)
     {

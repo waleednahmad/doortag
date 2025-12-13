@@ -18,6 +18,7 @@ class Customer extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'stripe_customer_id',
         'phone',
         'address',
         'address2',

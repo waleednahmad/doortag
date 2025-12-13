@@ -41,6 +41,14 @@ return [
         'webhook_secret' => env('SHIPENGINE_WEBHOOK_SECRET'),
     ],
 
+    'stripe' => [
+        'secret' => env('STRIPE_SECRET'),
+        'test_secret' => env('STRIPE_TEST_SECRET'),
+        'publishable' => env('STRIPE_PUBLISHABLE_KEY'),
+        'test_publishable' => env('STRIPE_TEST_PUBLISHABLE_KEY'),
+        'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
+    ],
+
     'mailgun' => [
         'domain' => env('MAILGUN_DOMAIN'),
         'secret' => env('MAILGUN_SECRET'),

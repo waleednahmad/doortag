@@ -335,7 +335,9 @@ namespace App\Models {
      * @property string|null $city
      * @property string|null $address2
      * @property string|null $address
+     * @property bool $is_admin
      * @property string|null $phone
+     * @property string|null $stripe_customer_id
      * @property string $email
      * @property string $name
      * @property int $id
@@ -346,7 +348,9 @@ namespace App\Models {
      * @method static \Illuminate\Database\Eloquent\Builder<Customer>|Customer whereId($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Customer>|Customer whereName($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Customer>|Customer whereEmail($value)
+     * @method static \Illuminate\Database\Eloquent\Builder<Customer>|Customer whereStripeCustomerId($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Customer>|Customer wherePhone($value)
+     * @method static \Illuminate\Database\Eloquent\Builder<Customer>|Customer whereIsAdmin($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Customer>|Customer whereAddress($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Customer>|Customer whereAddress2($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Customer>|Customer whereCity($value)

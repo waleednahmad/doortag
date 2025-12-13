@@ -625,6 +625,10 @@
                     @if (!empty($primaryRates))
                         <div class="space-y-4">
                             @foreach ($primaryRates as $index => $rate)
+                            @php
+                                info(print_r($rate, true));
+                                info('--------------------------------------------------------------------------------------------');
+                            @endphp
                                 <div x-data="{ rateBreakdownOpen: false }"
                                     class="border rounded-lg overflow-hidden hover:shadow-md transition-all duration-300 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600">
                                     <!-- Main Quote Content - Clickable -->
@@ -680,13 +684,13 @@
                                                             @if (auth('customer')->check() && isset($rate['original_total']) && $rate['original_total'] > $rate['calculated_amount'])
                                                                 <div
                                                                     class="text-sm line-through text-gray-400 dark:text-gray-500">
-                                                                    ${{ number_format($rate['original_total'], 2) }}
+                                                                    ${{ number_format((float) $rate['original_total'], 2) }}
                                                                 </div>
                                                             @else
                                                                 @if (auth('web')->check() && isset($rate['price_comparison']['carrier_2_price']))
                                                                     <div
                                                                         class="text-sm line-through text-gray-400 dark:text-gray-500">
-                                                                        ${{ number_format($rate['price_comparison']['carrier_2_price'], 2) }}
+                                                                        ${{ number_format((float) $rate['price_comparison']['carrier_2_price'], 2) }}
                                                                     </div>
                                                                 @endif
                                                             @endif
@@ -700,13 +704,13 @@
                                                             if (auth('web')->check()) {
                                                                 // for admin
                                                                 $difference =
-                                                                    $rate['price_comparison']['carrier_2_price'] -
-                                                                    $rate['original_total'];
+                                                                    (float)$rate['price_comparison']['carrier_2_price'] -
+                                                                    (float)$rate['original_total'];
                                                                 $differencePercentage =
                                                                     100 -
                                                                     number_format(
-                                                                        ($rate['original_total'] /
-                                                                            $rate['price_comparison'][
+                                                                        ((float) $rate['original_total'] /
+                                                                            (float) $rate['price_comparison'][
                                                                                 'carrier_2_price'
                                                                             ]) *
                                                                             100,
@@ -715,12 +719,14 @@
                                                             } else {
                                                                 // customer
                                                                 $difference = number_format(
-                                                                    $rate['original_total'] -
-                                                                        $rate['calculated_amount'],
+                                                                    (float) $rate['original_total'] -
+                                                                        (float) $rate['calculated_amount'],
                                                                     2,
                                                                 );
                                                                 $differencePercentage = number_format(
-                                                                    ($difference / $rate['original_total']) * 100,
+                                                                    ((float) $difference /
+                                                                        (float) $rate['original_total']) *
+                                                                        100,
                                                                     0,
                                                                 );
                                                             }
@@ -1378,7 +1384,8 @@
                                 </div>
                             </x-modal>
 
-                            <!-- Payment Modal -->
+                            <!-- OLD FLOW: Payment Modal for Terminal Reader (commented out) -->
+                            {{-- 
                             <x-modal wire="showPaymentModal" size="4xl" persistent>
                                 <x-slot:title>
                                     💳 Payment for Shipping Label
@@ -1593,6 +1600,8 @@
                                     </x-button>
                                 </div>
                             </x-modal>
+                            --}}
+                            <!-- END OLD FLOW -->
 
                             <x-button wire:click="backToCreateRatesPage" color="gray" class="w-full sm:w-auto"
                                 loading="backToCreateRatesPage">
