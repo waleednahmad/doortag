@@ -249,8 +249,8 @@ class Index extends Component
                     $otherAmount = (float) ($rate['other_amount']['amount'] ?? 0);
                     $requestedComparisonAmount = (float) ($rate['requested_comparison_amount']['amount'] ?? 0);
                     $originalTotal = $shippingAmount + $insuranceAmount + $confirmationAmount + $otherAmount + $requestedComparisonAmount;
-                    $marginMultiplier = 1 - ($authenticatedUser->margin / 100);
-                    $custmoerMargin = 1 - ($authenticatedUser->customer_margin / 100);
+                    $marginMultiplier = 1 + ($authenticatedUser->margin / 100);
+                    $custmoerMargin = 1 + ($authenticatedUser->customer_margin / 100);
                     $newTotal = $originalTotal * $marginMultiplier * $custmoerMargin;
 
                     // Set Data to stored in the shipments table

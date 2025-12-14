@@ -760,8 +760,8 @@ class Index extends Component
                     $otherAmount = (float) ($rate['other_amount']['amount'] ?? 0);
                     $requestedComparisonAmount = (float) ($rate['requested_comparison_amount']['amount'] ?? 0);
                     $originalTotal = $shippingAmount + $insuranceAmount + $confirmationAmount + $otherAmount + $requestedComparisonAmount;
-                    $marginMultiplier = 1 - ($authenticatedUser->margin / 100);
-                    $custmoerMargin = 1 - ($authenticatedUser->customer_margin / 100);
+                    $marginMultiplier = 1 + ($authenticatedUser->margin / 100);
+                    $custmoerMargin = 1 + ($authenticatedUser->customer_margin / 100);
                     $newTotal = $originalTotal * $marginMultiplier * $custmoerMargin;
 
                     // Set Data to stored in the shipments table
@@ -914,8 +914,8 @@ class Index extends Component
 
         $authenticatedUser = Auth::user();
         if ($authenticatedUser instanceof Customer && $authenticatedUser->margin > 0) {
-            $marginMultiplier = 1 - ($authenticatedUser->margin / 100);
-            $custmoerMargin = 1 - ($authenticatedUser->customer_margin / 100);
+            $marginMultiplier = 1 + ($authenticatedUser->margin / 100);
+            $custmoerMargin = 1 + ($authenticatedUser->customer_margin / 100);
             $newTotal =  $originalTotal * $marginMultiplier * $custmoerMargin;
 
             // Set Data to stored in the shipments table
@@ -1109,7 +1109,6 @@ class Index extends Component
                 'service_type' => $this->selectedRate['service_type'] ?? '',
                 'carrier' => $this->selectedRate['carrier_code'] ?? '',
             ];
-
 
             // Call the TerminalController directly
             $terminalController = app(\App\Http\Controllers\TerminalController::class);
