@@ -323,13 +323,7 @@
 
                 @php
                     // Filter rates to show only primary carrier (se-4084605)
-                    if (auth('web')->check()) {
-                        // for admin
-                        $primaryCarrierId = 'se-4121981'; // Doortag
-                    } else {
-                        // customer
-                        $primaryCarrierId = 'se-4084605'; // Fedex
-                    }
+                    $primaryCarrierId = 'se-4121981';
 
                     $primaryRates = collect($rates)
                         ->filter(function ($rate) use ($primaryCarrierId) {
@@ -523,64 +517,23 @@
                                                     </div>
                                                     <div class="space-y-1">
                                                         <div class="flex items-center gap-4">
-                                                            @if (auth('customer')->check() && isset($rate['original_total']) && $rate['original_total'] > $rate['calculated_amount'])
-                                                                <div
-                                                                    class="text-sm line-through text-gray-400 dark:text-gray-500">
-                                                                    ${{ number_format($rate['original_total'], 2) }}
-                                                                </div>
-                                                            @else
-                                                                @if (auth('web')->check() && isset($rate['price_comparison']['carrier_2_price']))
+                                                            <div class="flex items-center gap-4">
+                                                                @if (isset($rate['price_comparison']) && $rate['price_comparison']['is_cheaper'] === 'carrier_1')
                                                                     <div
                                                                         class="text-sm line-through text-gray-400 dark:text-gray-500">
                                                                         ${{ number_format($rate['price_comparison']['carrier_2_price'], 2) }}
                                                                     </div>
                                                                 @endif
-                                                            @endif
-                                                            <div
-                                                                class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
-                                                                ${{ $rate['calculated_amount'] }}
+                                                                <div
+                                                                    class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
+                                                                    ${{ $rate['calculated_amount'] }}
+                                                                </div>
                                                             </div>
                                                         </div>
-                                                        @php
-                                                            if (auth('web')->check()) {
-                                                                // for admin
-                                                                $difference =
-                                                                    $rate['price_comparison']['carrier_2_price'] -
-                                                                    $rate['original_total'];
-                                                                $differencePercentage =
-                                                                    100 -
-                                                                    number_format(
-                                                                        ($rate['original_total'] /
-                                                                            $rate['price_comparison'][
-                                                                                'carrier_2_price'
-                                                                            ]) *
-                                                                            100,
-                                                                        0,
-                                                                    );
-                                                            } else {
-                                                                // customer
-                                                                $rawDifference = $rate['original_total'] -
-                                                                        $rate['calculated_amount'];
-                                                                $difference = number_format(
-                                                                    $rawDifference,
-                                                                    2,
-                                                                );
-                                                                $differencePercentage = number_format(
-                                                                    ($rawDifference / $rate['original_total']) * 100,
-                                                                    0,
-                                                                );
-                                                            }
-                                                        @endphp
-                                                        @if (auth('customer')->check() && isset($rate['original_total']) && $rate['original_total'] > $rate['calculated_amount'])
+                                                        @if (isset($rate['price_comparison']) && $rate['price_comparison']['is_cheaper'] === 'carrier_1')
                                                             <x-badge
-                                                                text="Save ${{ $difference }}  ({{ abs($differencePercentage) }}%)"
+                                                                text="Save ${{ number_format($rate['price_comparison']['price_difference'], 2) }}  ({{ ceil(abs($rate['price_comparison']['difference_percentage'])) }}% )"
                                                                 color="green" />
-                                                        @else
-                                                            @if (auth('web')->check() && isset($rate['price_comparison']['carrier_2_price']))
-                                                                <x-badge
-                                                                    text="Save ${{ number_format($difference, 2) }}  ({{ abs($differencePercentage) }}%)"
-                                                                    color="green" />
-                                                            @endif
                                                         @endif
                                                     </div>
                                                 </div>

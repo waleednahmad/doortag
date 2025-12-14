@@ -179,7 +179,6 @@ class Index extends Component
 
         $this->validate();
 
-
         try {
             $this->rates = [];
 
@@ -239,6 +238,8 @@ class Index extends Component
                 return $rate['service_code'] !== 'fedex_first_overnight';
             });
 
+
+
             $authenticatedUser = Auth::user();
             if ($authenticatedUser instanceof Customer && $authenticatedUser->margin > 0) {
                 $formatedRates = array_map(function ($rate) use ($authenticatedUser) {
@@ -250,11 +251,11 @@ class Index extends Component
                     $originalTotal = $shippingAmount + $insuranceAmount + $confirmationAmount + $otherAmount + $requestedComparisonAmount;
                     $marginMultiplier = 1 - ($authenticatedUser->margin / 100);
                     $custmoerMargin = 1 - ($authenticatedUser->customer_margin / 100);
-                    $newTotal = $originalTotal * $custmoerMargin;
+                    $newTotal = $originalTotal * $marginMultiplier * $custmoerMargin;
 
                     // Set Data to stored in the shipments table
                     $this->origin_total = number_format($originalTotal, 2); // Doortag 100
-                    $this->customer_total = number_format($newTotal * $marginMultiplier, 2); // apnabazar 120
+                    $this->customer_total = number_format($originalTotal * $marginMultiplier, 2); // apnabazar 120
                     $this->end_user_total = number_format($newTotal, 2);  // end user 140
 
                     // New data 
@@ -262,7 +263,12 @@ class Index extends Component
                     $rate['margin'] = number_format($marginMultiplier, 2);
                     $rate['customer_margin'] = number_format($custmoerMargin, 2);
                     $rate['customer_total'] = number_format((float)$this->customer_total, 2);
-                    $rate['calculated_amount'] = number_format((float)$this->end_user_total, 2);
+                    $rate['calculated_amount'] = number_format($newTotal, 2);
+                    // if ($authenticatedUser->is_admin) {
+                    //     $rate['calculated_amount'] = number_format((float)$this->customer_total, 2);
+                    // } else {
+                    //     $rate['calculated_amount'] = number_format((float)$this->end_user_total, 2);
+                    // }
                     return $rate;
                 }, $responseRates->toArray());
             } else { // WEB Guard
@@ -288,6 +294,8 @@ class Index extends Component
                 }, $responseRates->toArray());
             }
 
+
+            // Add price comparison between carriers
             $this->rates = $this->addPriceComparison($formatedRates);
 
             $this->sortRates(); // Apply default sorting
@@ -300,7 +308,6 @@ class Index extends Component
         }
     }
 
-
     /**
      * Add price comparison between carriers for the same service type
      * Groups rates by service type and compares prices between se-4121981 and se-4084605
@@ -311,7 +318,6 @@ class Index extends Component
     private function addPriceComparison($formattedRates)
     {
         $ratesCollection = collect($formattedRates);
-
         // Group by service type → then key by carrier_id
         $ratesByService = $ratesCollection
             ->groupBy('service_type')
@@ -322,9 +328,9 @@ class Index extends Component
             $serviceType = $rate['service_type'];
             $serviceRates = $ratesByService->get($serviceType, collect());
 
-            // Target carriers (updated: carrier 2 is now primary)
-            $carrier1 = 'se-4121981'; // Secondary (Door tag)
-            $carrier2 = 'se-4084605'; // Primary (FedEx) - NOW PRIMARY
+            // Target carriers
+            $carrier1 = 'se-4121981';
+            $carrier2 = 'se-4084605';
 
             // Default comparison structure
             $rate['price_comparison'] = [
@@ -341,27 +347,31 @@ class Index extends Component
             $carrier2Rate = $serviceRates->get($carrier2);
 
             if ($carrier1Rate && $carrier2Rate) {
-                $rate['price_comparison']['carrier_1_price'] = $carrier1Rate['original_total'];
-                $rate['price_comparison']['carrier_2_price'] = $carrier2Rate['original_total'];
+
+                // Convert to float
+                $price1 = (float) str_replace(',', '', $carrier1Rate['calculated_amount']);
+                $price2 = (float) str_replace(',', '', $carrier2Rate['calculated_amount']);
+
+                $rate['price_comparison']['carrier_1_price'] = $price1;
+                $rate['price_comparison']['carrier_2_price'] = $price2;
 
                 // Absolute difference
-                $difference = abs($carrier1Rate['original_total'] - $carrier2Rate['original_total']);
-                $rate['price_comparison']['price_difference'] = number_format($difference, 2);
+                $difference = abs($price1 - $price2);
+                $rate['price_comparison']['price_difference'] = $difference;
 
                 // Correct percentage based on highest price
-                $base = max($carrier1Rate['original_total'], $carrier2Rate['original_total']);
+                $base = max($price1, $price2);
                 $percentage = ($difference / $base) * 100;
                 $rate['price_comparison']['difference_percentage'] = round($percentage, 2);
 
                 // Determine which is cheaper
                 $rate['price_comparison']['is_cheaper'] =
-                    $carrier1Rate['original_total'] < $carrier2Rate['original_total'] ? 'carrier_1' : ($carrier2Rate['original_total'] < $carrier1Rate['original_total'] ? 'carrier_2' : 'equal');
+                    $price1 < $price2 ? 'carrier_1' : ($price2 < $price1 ? 'carrier_2' : 'equal');
             }
 
             return $rate;
         })->values()->all();
     }
-
 
     public function sortByPrice()
     {
