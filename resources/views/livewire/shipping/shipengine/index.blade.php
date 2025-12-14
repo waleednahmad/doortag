@@ -618,12 +618,6 @@
                     @if (!empty($primaryRates))
                         <div class="space-y-4">
                             @foreach ($primaryRates as $index => $rate)
-                                @php
-                                    info(print_r($rate, true));
-                                    info(
-                                        '--------------------------------------------------------------------------------------------',
-                                    );
-                                @endphp
                                 <div x-data="{ rateBreakdownOpen: false }"
                                     class="border rounded-lg overflow-hidden hover:shadow-md transition-all duration-300 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600">
                                     <!-- Main Quote Content - Clickable -->
