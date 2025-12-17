@@ -20,6 +20,7 @@ class Create extends Component
     public function mount(): void
     {
         $this->location = new Location();
+        $this->location->business_type = 'retail';
     }
 
     public function render(): View
