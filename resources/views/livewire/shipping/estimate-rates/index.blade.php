@@ -323,7 +323,7 @@
 
                 @php
                     // Filter rates to show only primary carrier (se-4084605)
-                    $primaryCarrierId = 'se-4121981';
+                    $primaryCarrierId = $this->selectedCarrier;
 
                     $primaryRates = collect($rates)
                         ->filter(function ($rate) use ($primaryCarrierId) {

@@ -471,7 +471,7 @@
                 {{-- Rates Section --}}
 
                 @php
-                    $primaryCarrierId = 'se-4121981';
+                    $primaryCarrierId = $this->selectedCarrier;
 
                     $primaryRates = collect($rates)
                         ->filter(function ($rate) use ($primaryCarrierId) {

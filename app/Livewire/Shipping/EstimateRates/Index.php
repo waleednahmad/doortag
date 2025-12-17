@@ -82,6 +82,8 @@ class Index extends Component
 
         // Set a default date for today date
         $this->shipDate = now()->format('m-d-Y');
+
+        $this->selectedCarrier = Auth::user()->location->carrier_id ?? 'se-4121981';
     }
 
     public function setDefaultSelectedPackage()
@@ -185,7 +187,7 @@ class Index extends Component
             $shipEngine = new ShipEngineService();
 
             $shipmentData = [
-                'carrier_ids' => ["se-4121981", "se-4084605"], // For fedex only
+                'carrier_ids' => [Auth::user()->location->carrier_id , "se-4084605"], // For fedex only
                 'from_country_code' => $this->shipFromAddress['country_code'],
                 'from_postal_code' => $this->shipFromAddress['postal_code'],
                 'to_country_code' => $this->shipToAddress['country_code'],
@@ -329,7 +331,7 @@ class Index extends Component
             $serviceRates = $ratesByService->get($serviceType, collect());
 
             // Target carriers
-            $carrier1 = 'se-4121981';
+            $carrier1 = Auth::user()->location->carrier_id ;
             $carrier2 = 'se-4084605';
 
             // Default comparison structure

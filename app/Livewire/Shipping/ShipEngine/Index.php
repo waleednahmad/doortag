@@ -293,6 +293,8 @@ class Index extends Component
 
         $country = Country::where('value', $this->shipToAddress['country_code'])->first();
         $this->shipToAddressCountryFullName = $country ? $country->label : '';
+
+        $this->selectedCarrier = Auth::user()->location->carrier_id ?? 'se-4121981';
     }
 
     public function initializePackages()
@@ -690,7 +692,7 @@ class Index extends Component
 
             $shipmentData = [
                 'rate_options' => [
-                    'carrier_ids' => ["se-4121981", "se-4084605"], // For fedex only
+                    'carrier_ids' => [Auth::user()->location->carrier_id, "se-4084605"], // For fedex only
                     'service_codes' => [],
                 ],
                 'shipment' => [
@@ -848,7 +850,7 @@ class Index extends Component
             $serviceRates = $ratesByService->get($serviceType, collect());
 
             // Target carriers
-            $carrier1 = 'se-4121981';
+            $carrier1 = Auth::user()->location->carrier_id;
             $carrier2 = 'se-4084605';
 
             // Default comparison structure

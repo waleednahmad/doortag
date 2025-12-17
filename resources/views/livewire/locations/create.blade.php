@@ -86,9 +86,9 @@
             </div> --}}
 
             <div class="grid grid-cols-3 gap-4">
-                {{-- <div>
+                <div>
                     <x-input label="{{ __('Carrier ID') }} *" wire:model="location.carrier_id" required />
-                </div> --}}
+                </div>
 
                 <div>
                     <x-toggle label="{{ __('Status') }} *" wire:model="location.status" />
