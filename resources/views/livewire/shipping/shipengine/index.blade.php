@@ -1321,7 +1321,7 @@
                                                             <div class="ml-3 flex-1">
                                                                 <div class="font-medium text-gray-900 dark:text-white">
                                                                     @if ($method['name'] == 'Customer Card' )
-                                                                            Card On File
+                                                                            Card on File
                                                                     @else
                                                                             {{ $method['name'] }}
                                                                     @endif

@@ -53,7 +53,9 @@ final class LocationsTable extends PowerGridComponent
             ->add('city')
             ->add('state')
             ->add('zipcode')
-            ->add('business_type')
+            ->add('business_type', function ($location) {
+                return ucfirst($location->business_type);
+            })
             ->add('margin')
             ->add('status', function ($location) {
                 if ($location->status) {
