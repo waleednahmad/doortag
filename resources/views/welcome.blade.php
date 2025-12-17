@@ -140,6 +140,13 @@
 
                     <div class="intro-content__notify">
                         <button type="button" class="btn--stroke btn--small"
+                            onclick="window.location.href='{{ route('register') }}'">
+                            Join Us
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                                <path d="M24 12l-9-9v7h-15v4h15v7z" />
+                            </svg>
+                        </button>
+                        <button type="button" class="btn--stroke btn--small"
                             onclick="window.location.href='{{ route('login') }}'">
                             Admin Login
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">

@@ -1,11 +1,13 @@
 <?php
 
 use App\Livewire\Shipments\Index as ShipmentsIndex;
+use App\Livewire\Locations\Index as LocationsIndex;
 use App\Livewire\Shipping\EstimateRates\Index as EstimateRatesIndex;
 use App\Livewire\Shipping\Index as ShippingIndex;
 use App\Livewire\Shipping\Fedex\Index as FedexShippingIndex;
 use App\Livewire\Shipping\ShipEngine\Index as ShipEngineShippingIndex;
 use App\Livewire\User\Profile;
+use App\Livewire\Auth\Register;
 use Illuminate\Support\Facades\Route;
 use App\Livewire\Users\Index;
 
@@ -14,11 +16,15 @@ Route::get('/', function () {
     return view('welcome');
 })->name('welcome');
 
+Route::get('/register', function () {
+    return view('register');
+})->name('register');
+
 Route::get('/test-email', function () {
     try {
         // Get the latest shipment to test with real data
         $shipment = \App\Models\Shipment::latest()->first();
-        
+
         if (!$shipment) {
             return 'No shipments found in the database. Please create a shipment first.';
         }
@@ -140,5 +146,14 @@ Route::middleware(['auth:web,customer'])->group(function () {
     Route::post('/terminal/create-customer-payment', [App\Http\Controllers\TerminalController::class, 'createPaymentIntentWithCustomer'])->name('terminal.create-customer-payment');
     Route::post('/terminal/charge-customer', [App\Http\Controllers\TerminalController::class, 'chargeCustomer'])->name('terminal.charge-customer');
 });
+
+Route::middleware(['auth:web'])->group(function () {
+    // Locations routes
+    Route::get('/locations', LocationsIndex::class)->name('locations.index');
+    
+    // Customers routes
+    Route::get('/customers', \App\Livewire\Customers\Index::class)->name('customers.index');
+});
+
 
 require __DIR__ . '/auth.php';

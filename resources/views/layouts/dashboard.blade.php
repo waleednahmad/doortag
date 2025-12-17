@@ -118,7 +118,7 @@
                                 <img src="{{ asset('assets/icons/menu-rates.png') }}" alt="Rates"
                                     class="w-full h-full object-contain" />
                             </div>
-                        
+
                             <span class="text-lg font-bold">Rates</span>
                         </a>
 
@@ -130,9 +130,36 @@
                                 <img src="/assets/icons/menu-reports.png" alt="Reports"
                                     class="w-full h-full object-contain" />
                             </div>
-                        
+
                             <span class="text-lg font-bold">Shipments</span>
                         </a>
+
+                        @auth('web')
+                            {{-- locations --}}
+                            <a href="{{ route('locations.index') }}" @class([
+                                'group h-[70px] flex items-center gap-4 px-4 rounded-md cursor-pointer transition hover:bg-white dark:hover:bg-gray-700 bg-transparent relative',
+                                'bg-white dark:bg-gray-900' => request()->routeIs('locations.index'),
+                            ])>
+                                <div class="w-[70px] h-[70px]">
+                                    <img src="/assets/icons/menu-locations.png" alt="Locations"
+                                        class="w-full h-full object-contain" />
+                                </div>
+
+                                <span class="text-lg font-bold">Locations</span>
+                            </a>
+                            {{-- customers --}}
+                            <a href="{{ route('customers.index') }}" @class([
+                                'group h-[70px] flex items-center gap-4 px-4 rounded-md cursor-pointer transition hover:bg-white dark:hover:bg-gray-700 bg-transparent relative',
+                                'bg-white dark:bg-gray-900' => request()->routeIs('customers.index'),
+                            ])>
+                                <div class="w-[70px] h-[60px]">
+                                    <img src="/assets/icons/menu-customers.png" alt="Customers"
+                                        class="w-full h-full object-contain" />
+                                </div>
+
+                                <span class="text-lg font-bold">Customers</span>
+                            </a>
+                        @endauth
 
                         <a href="{{ route('user.profile') }}" @class([
                             'group h-[70px] flex items-center gap-4 px-4 rounded-md cursor-pointer transition hover:bg-white dark:hover:bg-gray-700 bg-transparent relative',
@@ -142,7 +169,7 @@
                                 <img src="/assets/icons/menu-settings.png" alt="Settings"
                                     class="w-full h-full object-contain" />
                             </div>
-                        
+
                             <span class="text-lg font-bold">Settings</span>
                         </a>
 
@@ -166,7 +193,7 @@
                                 <img src="/assets/icons/menu-logout.png" alt="Logout"
                                     class="w-full h-full object-contain" />
                             </div>
-                        
+
                             <span class="text-lg font-bold">Logout</span>
                         </a>
                     </nav>

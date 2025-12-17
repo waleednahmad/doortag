@@ -16,10 +16,13 @@ class Customer extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
+        'location_id',
         'name',
         'email',
-        'stripe_customer_id',
         'phone',
+        'is_admin',
+        'can_modify_data',
+        'stripe_customer_id',
         'address',
         'address2',
         'city',
@@ -29,7 +32,6 @@ class Customer extends Authenticatable
         'customer_margin',
         'password',
         'address_residential_indicator',
-        'can_modify_data',
     ];
 
     /**
@@ -53,7 +55,6 @@ class Customer extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'address_residential_indicator' => 'boolean',
-            'can_modify_data' => 'boolean',
         ];
     }
 
@@ -64,5 +65,10 @@ class Customer extends Authenticatable
     public function shipments()
     {
         return $this->hasMany(Shipment::class, 'customer_id', 'id');
+    }
+
+    public function location()
+    {
+        return $this->belongsTo(Location::class, 'location_id');
     }
 }

@@ -59,4 +59,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Shipment::class, 'user_id', 'id');
     }
+
+    public function location()
+    {
+        return $this->belongsTo(Location::class, 'location_id', 'id');
+    }
 }

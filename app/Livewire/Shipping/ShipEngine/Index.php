@@ -155,6 +155,9 @@ class Index extends Component
 
     public $doortag_price = 0;
 
+    public $selectedPaymentMethod = null; // Selected payment method
+    public $availablePaymentMethods = []; // Active payment methods from location
+
 
 
     public function updated($name, $value)
@@ -193,8 +196,9 @@ class Index extends Component
         // Update the taxAmount based on the packagingAmount and user's tax percentage
         if ($name === 'packagingAmount') {
             $user = Auth::user();
-            $taxPercentage = $user->tax_percentage ?? 0;
+            $taxPercentage = $user->location->tax_percentage ?? 0;
             $this->taxAmount = round(($value * $taxPercentage) / 100, 2);
+            info("Updated taxAmount to {$this->taxAmount} based on packagingAmount {$value} and taxPercentage {$taxPercentage}");
         }
     }
 
@@ -282,6 +286,7 @@ class Index extends Component
         $this->loadCarrierPackaging();
         $this->setDefaultSelectedPackage();
         $this->initializePackages();
+        $this->loadAvailablePaymentMethods();
 
         // Set a default date for today date
         $this->shipDate = now()->format('Y-m-d');
@@ -419,19 +424,21 @@ class Index extends Component
                 'address_residential_indicator' => false
             ];
         } else {
+
+
             // If user cannot modify data, populate with their stored data (read-only)
             $this->shipFromAddress = [
                 'name' => '',
                 'company_name' => 'DoorTag',
                 'phone' => $authenticatedUser->phone,
                 'email' => $authenticatedUser->email,
-                'address_line1' => $authenticatedUser->address,
-                'address_line2' => $authenticatedUser->address2,
-                'city_locality' => $authenticatedUser->city,
-                'state_province' => $authenticatedUser->state,
-                'postal_code' => $authenticatedUser->zipcode,
+                'address_line1' => $authenticatedUser->location->address ?? '',
+                'address_line2' => $authenticatedUser->location->address2 ?? '',
+                'city_locality' => $authenticatedUser->location->city ?? '',
+                'state_province' => $authenticatedUser->location->state ?? '',
+                'postal_code' => $authenticatedUser->location->zipcode ?? '',
                 'country_code' => 'US',
-                'address_residential_indicator' => $authenticatedUser->address_residential_indicator
+                'address_residential_indicator' => $authenticatedUser->location->address_residential_indicator
             ];
         }
 
@@ -752,7 +759,7 @@ class Index extends Component
 
 
             $authenticatedUser = Auth::user();
-            if ($authenticatedUser instanceof Customer && $authenticatedUser->margin > 0) {
+            if ($authenticatedUser instanceof Customer && $authenticatedUser->location->margin > 0) {
                 $formatedRates = array_map(function ($rate) use ($authenticatedUser) {
                     $shippingAmount = (float) $rate['shipping_amount']['amount'];
                     $insuranceAmount = (float) ($rate['insurance_amount']['amount'] ?? 0);
@@ -760,26 +767,27 @@ class Index extends Component
                     $otherAmount = (float) ($rate['other_amount']['amount'] ?? 0);
                     $requestedComparisonAmount = (float) ($rate['requested_comparison_amount']['amount'] ?? 0);
                     $originalTotal = $shippingAmount + $insuranceAmount + $confirmationAmount + $otherAmount + $requestedComparisonAmount;
-                    $marginMultiplier = 1 + ($authenticatedUser->margin / 100);
-                    $custmoerMargin = 1 + ($authenticatedUser->customer_margin / 100);
-                    $newTotal = $originalTotal * $marginMultiplier * $custmoerMargin;
+                    $marginMultiplier = 1 + ($authenticatedUser->location->margin / 100); // 15
+                    $custmoerMargin = 1 + (($authenticatedUser->location->margin + $authenticatedUser->location->customer_margin) / 100); // 35
+                    $endUserTotal = $originalTotal * $custmoerMargin;
 
                     // Set Data to stored in the shipments table
                     $this->origin_total = number_format($originalTotal, 2); // Doortag 100
                     $this->customer_total = number_format($originalTotal * $marginMultiplier, 2); // apnabazar 120
-                    $this->end_user_total = number_format($newTotal, 2);  // end user 140
+                    $this->end_user_total = number_format($endUserTotal, 2);  // end user 140
+
 
                     // New data 
                     $rate['original_total'] = number_format($originalTotal, 2);
                     $rate['margin'] = number_format($marginMultiplier, 2);
                     $rate['customer_margin'] = number_format($custmoerMargin, 2);
                     $rate['customer_total'] = number_format((float)$this->customer_total, 2);
-                    $rate['calculated_amount'] = number_format($newTotal, 2);
-                    // if ($authenticatedUser->is_admin) {
-                    //     $rate['calculated_amount'] = number_format((float)$this->customer_total, 2);
-                    // } else {
-                    //     $rate['calculated_amount'] = number_format((float)$this->end_user_total, 2);
-                    // }
+                    // $rate['calculated_amount'] = number_format((float)$this->end_user_total, 2);
+                    if ($authenticatedUser->is_admin) {
+                        $rate['calculated_amount'] = number_format((float)$this->customer_total, 2);
+                    } else {
+                        $rate['calculated_amount'] = number_format((float)$this->end_user_total, 2);
+                    }
                     return $rate;
                 }, $responseRates->toArray());
             } else { // WEB Guard
@@ -913,9 +921,9 @@ class Index extends Component
         $originalTotal = $shippingAmount + $insuranceAmount + $confirmationAmount + $otherAmount + $requestedComparisonAmount;
 
         $authenticatedUser = Auth::user();
-        if ($authenticatedUser instanceof Customer && $authenticatedUser->margin > 0) {
-            $marginMultiplier = 1 + ($authenticatedUser->margin / 100);
-            $custmoerMargin = 1 + ($authenticatedUser->customer_margin / 100);
+        if ($authenticatedUser instanceof Customer && $authenticatedUser->location->margin > 0) {
+            $marginMultiplier = 1 + ($authenticatedUser->location->margin / 100);
+            $custmoerMargin = 1 + ($authenticatedUser->location->customer_margin / 100);
             $newTotal =  $originalTotal * $marginMultiplier * $custmoerMargin;
 
             // Set Data to stored in the shipments table
@@ -1051,6 +1059,41 @@ class Index extends Component
         }
     }
 
+    /**
+     * Load available active payment methods from authenticated user's location
+     */
+    public function loadAvailablePaymentMethods()
+    {
+        $authenticatedUser = Auth::user();
+
+        if ($authenticatedUser && $authenticatedUser->location) {
+            $this->availablePaymentMethods = $authenticatedUser->location
+                ->stripePaymentMethods()
+                ->where('is_active', true)
+                ->get()
+                ->map(function ($method) {
+                    return [
+                        'id' => $method->id,
+                        'name' => $method->payment_method_name,
+                        'payment_method_id' => $method->payment_method_id,
+                        'is_default' => $method->is_default,
+                        'stripe_customer_id' => $method->stripe_customer_id,
+                    ];
+                })
+                ->toArray();
+
+            // Set default payment method if one exists
+            $defaultMethod = collect($this->availablePaymentMethods)
+                ->firstWhere('is_default', true);
+
+            if ($defaultMethod) {
+                $this->selectedPaymentMethod = $defaultMethod['id'];
+            }
+        } else {
+            $this->availablePaymentMethods = [];
+        }
+    }
+
     public function createLabel()
     {
         // Validate signature and certifications
@@ -1058,10 +1101,12 @@ class Index extends Component
             'signature' => 'nullable|string',
             'certifyHazardousMaterials' => 'accepted',
             'certifyInvoiceAccuracy' => $this->shipToAddress['country_code'] != 'US' ? 'accepted' : 'nullable',
+            'selectedPaymentMethod' => 'required',
         ], [
             'signature.required' => 'Please provide a signature before creating the label.',
             'certifyHazardousMaterials.accepted' => 'You must certify that the shipment does not contain hazardous materials.',
             'certifyInvoiceAccuracy.accepted' => 'You must certify the accuracy of the invoice information.',
+            'selectedPaymentMethod.required' => 'Please select a payment method.',
         ]);
 
         if (!$this->selectedRate) {
@@ -1070,13 +1115,110 @@ class Index extends Component
         }
 
         // Close the shipment details modal
-        $this->showModal = false;
+        // $this->showModal = false;
 
-        // NEW FLOW: Charge customer directly with saved card
-        $this->processCustomerPayment();
+        // Get selected payment method details
+        $paymentMethod = collect($this->availablePaymentMethods)
+            ->firstWhere('id', $this->selectedPaymentMethod);
 
-        // OLD FLOW: Terminal payment (commented out but kept for reference)
-        // $this->showPaymentModal();
+        if (!$paymentMethod) {
+            $this->toast()->error('Invalid payment method selected.')->send();
+            return;
+        }
+
+        // Process based on payment method type
+        if ($paymentMethod['name'] === 'Customer Card') {
+            $this->processCustomerPayment();
+        } elseif ($paymentMethod['name'] === 'Terminal Reader') {
+            // Check if terminal_id exists and reader is online, then process payment directly
+            $terminalId = $paymentMethod['payment_method_id'];
+
+            if (!$terminalId) {
+                $this->toast()->error('No terminal reader configured for this location. Please contact support.')->send();
+                return;
+            }
+
+            try {
+                // Check if reader is online
+                $response = Http::get(url('/api/terminal/list-readers'));
+                $data = $response->json();
+
+                if (isset($data['error'])) {
+                    $this->toast()->error('Failed to connect to terminal: ' . $data['error'])->send();
+                    $this->showModal = true; // Reopen the modal
+                    return;
+                }
+
+                // Get readers from data array
+                $readers = $data['data'] ?? [];
+                $reader = collect($readers)->firstWhere('id', $terminalId);
+
+                if (!$reader) {
+                    $this->toast()->error('Terminal reader not found. Please contact support.')->send();
+                    $this->showModal = true; // Reopen the modal
+                    return;
+                }
+
+                if ($reader['status'] !== 'online') {
+                    $this->toast()->error('Terminal reader is offline. Please ensure it is powered on and connected.')->send();
+                    $this->showModal = true; // Reopen the modal
+                    return;
+                }
+
+                // Reader is online, set it and process payment directly
+                $this->selectedReaderId = $terminalId;
+                $this->processPayment();
+            } catch (\Exception $e) {
+                Log::error('Terminal payment error', ['error' => $e->getMessage()]);
+                $this->toast()->error('Failed to connect to terminal: ' . $e->getMessage())->send();
+                $this->showModal = true; // Reopen the modal
+            }
+        } else {
+            $this->toast()->error('Unknown payment method type.')->send();
+        }
+    }
+
+    /**
+     * Process payment using Terminal Reader
+     */
+    public function processTerminalPayment($terminalId)
+    {
+        if (!$terminalId) {
+            $this->toast()->error('No terminal reader configured for this location. Please contact support.')->send();
+            return;
+        }
+
+        try {
+            // Check if reader is online
+            $response = Http::get(url('/api/terminal/list-readers'));
+            $data = $response->json();
+
+            if (isset($data['error'])) {
+                $this->toast()->error('Failed to connect to terminal: ' . $data['error'])->send();
+                return;
+            }
+
+            // Get readers from data array
+            $readers = $data['data'] ?? [];
+            $reader = collect($readers)->firstWhere('id', $terminalId);
+
+            if (!$reader) {
+                $this->toast()->error('Terminal reader not found. Please contact support.')->send();
+                return;
+            }
+
+            if ($reader['status'] !== 'online') {
+                $this->toast()->error('Terminal reader is offline. Please ensure it is powered on and connected.')->send();
+                return;
+            }
+
+            // Reader is online, proceed with payment modal
+            $this->selectedReaderId = $terminalId;
+            $this->showPaymentModal();
+        } catch (\Exception $e) {
+            Log::error('Terminal payment error', ['error' => $e->getMessage()]);
+            $this->toast()->error('Failed to connect to terminal: ' . $e->getMessage())->send();
+        }
     }
 
     /**
@@ -1086,25 +1228,32 @@ class Index extends Component
     {
         try {
             // Get authenticated customer
-            $customer = Auth::guard('customer')->user();
+            $authenticatedUser = Auth::user();
 
             // If no customer or no stripe_customer_id, fall back to admin flow (web auth)
-            if (!$customer) {
-                $customer = Auth::guard('web')->user();
+            if (!$authenticatedUser) {
+                // toast failure
+                $this->toast()->error('No authenticated user found. Please log in as a customer to process payment.')->send();
+                Log::error('Customer payment failed: No authenticated user');
+                return;
             }
 
-            if (!$customer || !$customer->stripe_customer_id) {
+            // Get the selected payment method (Customer Card)
+            $paymentMethod = collect($this->availablePaymentMethods)
+                ->firstWhere('id', $this->selectedPaymentMethod);
+
+            if (!$paymentMethod || !isset($paymentMethod['payment_method_id']) || empty($paymentMethod['payment_method_id'])) {
                 $this->toast()->error('No payment method found. Please contact support to add a payment method to your account.')->send();
-                Log::error('Customer payment failed: No stripe_customer_id', ['user_id' => $customer->id ?? null]);
+                Log::error('Customer payment failed: No payment_method_id', ['user_id' => $authenticatedUser->id ?? null]);
                 return;
             }
 
             $totalAmount = ($this->selectedRate['calculated_amount'] + ($this->packagingAmount ?? 0) + ($this->taxAmount ?? 0)) * 100; // in cents
 
-            // Prepare payment data
+            // Prepare payment data - use payment_method_id as customer_id
             $paymentData = [
                 'amount' => (int) round($totalAmount),
-                'customer_id' => $customer->stripe_customer_id,
+                'customer_id' => $paymentMethod['payment_method_id'],
                 'description' => 'Shipping Label - ' . ($this->selectedRate['service_type'] ?? 'Unknown'),
                 'service_type' => $this->selectedRate['service_type'] ?? '',
                 'carrier' => $this->selectedRate['carrier_code'] ?? '',
@@ -1136,6 +1285,205 @@ class Index extends Component
             ]);
             $this->toast()->error('Payment error: ' . $e->getMessage())->send();
         }
+    }
+
+
+    public function showPaymentModal()
+    {
+        // Reset payment state
+        $this->resetPaymentState();
+
+        // Load available readers
+        $this->loadReaders();
+
+        // Show payment modal
+        $this->showPaymentModal = true;
+    }
+
+    public function resetPaymentState()
+    {
+        $this->paymentProcessing = false;
+        $this->paymentRetryCount = 0;
+        $this->paymentIntentId = null;
+        $this->paymentSuccessful = false;
+        $this->paymentError = null;
+        $this->selectedReaderId = null;
+    }
+
+    public function loadReaders()
+    {
+        try {
+            $response = Http::get(url('/api/terminal/list-readers'));
+            $data = $response->json();
+
+            if (isset($data['error'])) {
+                $this->paymentError = 'Failed to load readers: ' . $data['error'];
+            } else {
+                $this->availableReaders = $data['data'] ?? [];
+                info('Loaded readers: ' . print_r($this->availableReaders, true));
+
+                // Auto-select the first online reader if available
+                foreach ($this->availableReaders as $reader) {
+                    if ($reader['status'] === 'online') {
+                        $this->selectedReaderId = $reader['id'];
+                        break;
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            $this->paymentError = 'Failed to load readers: ' . $e->getMessage();
+        }
+    }
+
+    public function processPayment()
+    {
+        if (!$this->selectedReaderId) {
+            $this->toast()->error('Please select a reader first.')->send();
+            return;
+        }
+
+        $this->paymentProcessing = true;
+        $this->paymentError = null;
+
+        try {
+            // Calculate the correct amount based on user authentication type
+            $totalAmount = ($this->selectedRate['calculated_amount'] + ($this->packagingAmount ?? 0) + ($this->taxAmount ?? 0)) * 100; // in cents
+
+            // Create Payment Intent
+            $intentResponse = Http::post(url('/api/terminal/shipping/create-payment-intent'), [
+                'amount' => $totalAmount,
+                'description' => 'Shipping Label - ' . ($this->selectedRate['service_type'] ?? 'Unknown'),
+                'service_type' => $this->selectedRate['service_type'] ?? 'Unknown',
+                'carrier' => $this->selectedRate['carrier_friendly_name'] ?? 'Unknown',
+            ]);
+            // Check if HTTP request was successful
+            if (!$intentResponse->successful()) {
+                throw new \Exception('Failed to create payment intent. HTTP Status: ' . $intentResponse->status());
+            }
+
+            $intentData = $intentResponse->json();
+
+            if (isset($intentData['error'])) {
+                throw new \Exception($intentData['error']);
+            }
+
+            if (!isset($intentData['id'])) {
+                throw new \Exception('Payment intent ID not returned from server');
+            }
+
+            $this->paymentIntentId = $intentData['id'];
+
+            // Process payment on reader
+            $processResponse = Http::post(url('/api/terminal/shipping/process-payment'), [
+                'reader_id' => $this->selectedReaderId,
+                'payment_intent_id' => $this->paymentIntentId,
+            ]);
+
+            // Check if HTTP request was successful
+            if (!$processResponse->successful()) {
+                throw new \Exception('Failed to process payment. HTTP Status: ' . $processResponse->status());
+            }
+
+            $processData = $processResponse->json();
+
+            if (isset($processData['error'])) {
+                throw new \Exception($processData['error']);
+            }
+
+            // Start polling for payment completion
+            $this->dispatch('payment-processing-started');
+        } catch (\Exception $e) {
+            info('Payment processing error: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+            $this->paymentError = $e->getMessage();
+            $this->paymentProcessing = false;
+            $this->dispatch('payment-failed');
+        }
+    }
+
+
+    public function pollPaymentStatus()
+    {
+        // This will be called by JavaScript polling
+        try {
+            $verifyResponse = Http::post(url('/api/terminal/shipping/verify-payment'), [
+                'payment_intent_id' => $this->paymentIntentId,
+            ]);
+
+            $verifyData = $verifyResponse->json();
+
+            if (isset($verifyData['error'])) {
+                throw new \Exception($verifyData['error']);
+            }
+
+            if ($verifyData['success']) {
+                $this->paymentSuccessful = true;
+                $this->paymentProcessing = false;
+                $this->dispatch('payment-completed');
+
+                // Store payment details and create the actual label
+                $this->createActualLabel($verifyData['payment_intent']);
+            } else {
+                // Check the payment intent status to handle declined/cancelled cards
+                $paymentIntent = $verifyData['payment_intent'] ?? null;
+                $status = $verifyData['status'] ?? ($paymentIntent['status'] ?? 'unknown');
+
+                // Only treat these as failures if they're explicitly failed states
+                // requires_payment_method is normal when waiting for card presentation
+                if (in_array($status, ['canceled', 'payment_failed'])) {
+                    $this->paymentProcessing = false;
+
+                    switch ($status) {
+                        case 'canceled':
+                            $this->paymentError = 'Payment was cancelled. Please try again.';
+                            break;
+                        case 'payment_failed':
+                            $this->paymentError = 'Payment failed. Please try again.';
+                            break;
+                        default:
+                            $this->paymentError = 'Payment was not successful. Please try again.';
+                    }
+
+                    $this->dispatch('payment-failed');
+                }
+                // Special handling for requires_payment_method after card interaction
+                elseif ($status === 'requires_payment_method' && isset($paymentIntent['last_payment_error'])) {
+                    // Only fail if there was actually an error (card declined, etc.)
+                    $this->paymentProcessing = false;
+                    $errorCode = $paymentIntent['last_payment_error']['code'] ?? 'unknown';
+                    $errorMessage = $paymentIntent['last_payment_error']['message'] ?? 'Payment was declined.';
+
+                    $this->paymentError = "Card declined: {$errorMessage}";
+                    $this->dispatch('payment-failed');
+                }
+                // For statuses like 'processing', 'requires_capture', 'requires_payment_method' (without error), continue polling
+            }
+        } catch (\Exception $e) {
+            // Only fail on actual errors, not on expected processing states
+            if (strpos($e->getMessage(), 'processing') === false) {
+                $this->paymentError = $e->getMessage();
+                $this->paymentProcessing = false;
+                $this->dispatch('payment-failed');
+            }
+        }
+    }
+
+
+    public function retryPayment()
+    {
+        if ($this->paymentRetryCount >= $this->maxRetryAttempts) {
+            $this->paymentError = 'Maximum retry attempts reached. Please try again later.';
+            return;
+        }
+
+        $this->paymentRetryCount++;
+
+        // Reset error state and immediately show processing again
+        $this->paymentError = null;
+        $this->paymentProcessing = true;
+
+        $this->processPayment();
     }
 
 
@@ -1175,11 +1523,17 @@ class Index extends Component
                     $totalWithPackaging = (float) str_replace(',', '', $this->origin_total ?? 0) + ($this->packagingAmount ?? 0);
                 }
 
+                // the payment method must be the $paymentMethod['name']
+                $paymentMethod = collect($this->availablePaymentMethods)
+                    ->firstWhere('id', $this->selectedPaymentMethod);
+
+
                 $shipmentRecord = Shipment::create([
                     'label_id' => $response['label_id'] ?? null,
                     'user_id' => auth('web')->check() ? auth('web')->id() : null,
                     'customer_id' => auth('customer')->check() ? auth('customer')->id() : null,
                     'shipment_data' => json_encode($response),
+                    'location_id' => Auth::user()->location_id ?? null,
                     'request_data' => json_encode($this->lastRequestData),
                     'ship_from' => json_encode($response['ship_from'] ?? []),
                     'signature_path' =>  $signaturePath,
@@ -1200,6 +1554,7 @@ class Index extends Component
                     'carrier_delivery_days' => $this->selectedRate['carrier_delivery_days'] ?? null,
                     'estimated_delivery_date' => $this->selectedRate['estimated_delivery_date'] ?? null,
                     'door_tag_price' => $this->doortag_price ?? null,
+                    'payment_method' => $paymentMethod['name'] ?? 'Customer Card',
                 ]);
 
                 // Store the shipment record for downloadPDF to use
@@ -1251,6 +1606,7 @@ class Index extends Component
                 }
 
                 $this->dialog()->success($successMessage)->send();
+                $this->showModal = false;
             }
         } catch (\Exception $e) {
             $this->dialog()->error('Failed to create label after successful payment: ' . $e->getMessage())->send();

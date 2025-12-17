@@ -23,6 +23,7 @@
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.10.1",
         "livewire/livewire": "^3.0.0",
+        "power-components/livewire-powergrid": "^6.7",
         "railsware/mailtrap-php": "^3.9",
         "stripe/stripe-php": "^18.2",
         "symfony/http-client": "^7.4",

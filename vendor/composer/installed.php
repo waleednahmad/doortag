@@ -3,7 +3,7 @@
         'name' => 'tallstackui/starter-kit',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => '7e60c708c58fb28497b9a5cfbc8c6022a900e629',
+        'reference' => '56f0ff69e5277050f6046eb72c3f0b50ee06c3ff',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -988,6 +988,15 @@
             'aliases' => array(),
             'dev_requirement' => true,
         ),
+        'power-components/livewire-powergrid' => array(
+            'pretty_version' => 'v6.7.3',
+            'version' => '6.7.3.0',
+            'reference' => '8edcb4461eb87acf01beb0b54d3876be1f30189e',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../power-components/livewire-powergrid',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
         'psr/clock' => array(
             'pretty_version' => '1.0.0',
             'version' => '1.0.0.0',
@@ -1676,7 +1685,7 @@
         'tallstackui/starter-kit' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => '7e60c708c58fb28497b9a5cfbc8c6022a900e629',
+            'reference' => '56f0ff69e5277050f6046eb72c3f0b50ee06c3ff',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),

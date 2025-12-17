@@ -241,7 +241,7 @@ class Index extends Component
 
 
             $authenticatedUser = Auth::user();
-            if ($authenticatedUser instanceof Customer && $authenticatedUser->margin > 0) {
+            if ($authenticatedUser instanceof Customer && $authenticatedUser->location->margin > 0) {
                 $formatedRates = array_map(function ($rate) use ($authenticatedUser) {
                     $shippingAmount = (float) $rate['shipping_amount']['amount'];
                     $insuranceAmount = (float) ($rate['insurance_amount']['amount'] ?? 0);
@@ -249,8 +249,8 @@ class Index extends Component
                     $otherAmount = (float) ($rate['other_amount']['amount'] ?? 0);
                     $requestedComparisonAmount = (float) ($rate['requested_comparison_amount']['amount'] ?? 0);
                     $originalTotal = $shippingAmount + $insuranceAmount + $confirmationAmount + $otherAmount + $requestedComparisonAmount;
-                    $marginMultiplier = 1 + ($authenticatedUser->margin / 100);
-                    $custmoerMargin = 1 + ($authenticatedUser->customer_margin / 100);
+                    $marginMultiplier = 1 + ($authenticatedUser->location->margin / 100);
+                    $custmoerMargin = 1 + ($authenticatedUser->location->customer_margin / 100);
                     $newTotal = $originalTotal * $marginMultiplier * $custmoerMargin;
 
                     // Set Data to stored in the shipments table

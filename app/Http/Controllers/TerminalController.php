@@ -16,11 +16,6 @@ class TerminalController
     {
         $key = $testMode ? config('services.stripe.test_secret') : config('services.stripe.secret');
         $this->stripe = new StripeClient($key);
-
-        Log::info('TerminalController initialized', [
-            'mode' => $testMode ? 'test' : 'live',
-            'key_length' => strlen($key ?? '')
-        ]);
     }
 
     /**
@@ -378,13 +373,6 @@ class TerminalController
 
             $intent = $this->stripe->paymentIntents->retrieve($validated['payment_intent_id']);
 
-            // Log the actual status for debugging
-            Log::info('Payment Intent Status: ' . $intent->status, [
-                'payment_intent_id' => $intent->id,
-                'status' => $intent->status,
-                'amount' => $intent->amount,
-                'charges' => count($intent->charges->data ?? [])
-            ]);
 
             if ($intent->status === 'succeeded') {
                 return response()->json([
