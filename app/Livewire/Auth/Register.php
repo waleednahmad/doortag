@@ -27,7 +27,7 @@ class Register extends Component
     public $years_in_business = '';
     public $business_type = 'retail';
     public $notes = '';
-    
+
     // Password fields
     public $password = '';
     public $password_confirmation = '';
@@ -57,7 +57,7 @@ class Register extends Component
         $this->validate();
 
         DB::beginTransaction();
-        
+
         try {
             // Create Location
             $location = Location::create([
@@ -87,13 +87,28 @@ class Register extends Component
                 'is_admin' => true, // Default admin for this location
             ]);
 
+
+            $location->stripePaymentMethods()->createMany([
+                [
+                    'payment_method_name' => "Customer Card", //stripe_customer_id
+                    'payment_method_id' => null,
+                    'is_default' => false,
+                    'is_active' =>  false,
+                ],
+                [
+                    'payment_method_name' => "Terminal Reader", // stripe_terminal_id
+                    'payment_method_id' =>   null,
+                    'is_default' => false,
+                    'is_active' => false,
+                ],
+            ]);
+
             DB::commit();
 
             $this->toast()->success('Registration Successful!', 'Your account has been created. You can now login.')->send();
-            
+
             // Redirect to login page or customer dashboard after 2 seconds
             $this->redirect(route('login'));
-
         } catch (\Exception $e) {
             DB::rollBack();
             $this->toast()->error('Registration Failed', $e->getMessage())->send();
