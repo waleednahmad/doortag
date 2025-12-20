@@ -1445,22 +1445,6 @@
                                                         </div>
                                                     @endif
 
-                                                    @if ($paymentSuccessful)
-                                                        <div
-                                                            class="mt-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg p-4">
-                                                            <div class="flex items-center">
-                                                                <i class="fas fa-check-circle text-green-500 mr-3"></i>
-                                                                <div>
-                                                                    <h4
-                                                                        class="text-green-800 dark:text-green-100 font-medium">
-                                                                        Payment Successful!</h4>
-                                                                    <p
-                                                                        class="text-green-700 dark:text-green-200 text-sm">
-                                                                        Creating your shipping label now...</p>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    @endif
                                                 @endif
                                             </div>
                                         @else

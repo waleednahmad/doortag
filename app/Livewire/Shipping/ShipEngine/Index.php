@@ -1353,12 +1353,13 @@ class Index extends Component
             // Calculate the correct amount based on user authentication type
             $totalAmount = ($this->selectedRate['calculated_amount'] + ($this->packagingAmount ?? 0) + ($this->taxAmount ?? 0)) * 100; // in cents
 
-            // Create Payment Intent
+            // Create Payment Intent with manual capture (authorize but don't charge yet)
             $intentResponse = Http::post(url('/api/terminal/shipping/create-payment-intent'), [
                 'amount' => $totalAmount,
                 'description' => 'Shipping Label - ' . ($this->selectedRate['service_type'] ?? 'Unknown'),
                 'service_type' => $this->selectedRate['service_type'] ?? 'Unknown',
                 'carrier' => $this->selectedRate['carrier_friendly_name'] ?? 'Unknown',
+                'capture_method' => 'manual', // Authorize only, capture after label creation
             ]);
             // Check if HTTP request was successful
             if (!$intentResponse->successful()) {
@@ -1496,24 +1497,68 @@ class Index extends Component
 
     public function createActualLabel($paymentIntentData)
     {
+        $labelCreationFailed = false;
+        $errorMessage = '';
+        
         try {
             $this->loading = true;
             $shipEngine = new ShipEngineService();
 
+            // Try to create the label FIRST
             $response = $shipEngine->createLabel($this->selectedRate['rate_id']);
 
             // Check if the response contains API errors
             if (isset($response['status']) && $response['status'] === 'error') {
+                $labelCreationFailed = true;
+                
                 if (isset($response['api_errors']) && !empty($response['api_errors'])) {
                     $errorMessage = $response['api_errors'][0]['message'] ?? 'Unknown API error';
-                    $this->dialog()->error($errorMessage)->send();
+                    Log::error('ShipEngine API error while creating label', [
+                        'errors' => $response['api_errors'],
+                        'payment_intent_id' => $this->paymentIntentId,
+                        'payment_status' => $paymentIntentData['status'] ?? 'unknown'
+                    ]);
                 } else {
-                    $this->dialog()->error('An unknown error occurred while creating the label.')->send();
+                    $errorMessage = 'An unknown error occurred while creating the label.';
+                    Log::error('Unknown ShipEngine error while creating label', [
+                        'response' => $response,
+                        'payment_intent_id' => $this->paymentIntentId
+                    ]);
                 }
+                
+                // Handle payment refund/cancellation
+                $this->handleFailedLabelCreation($paymentIntentData, $errorMessage);
                 return;
             }
 
             if ($response['status'] == 'completed') {
+                // Label created successfully! Now capture the payment if it was a terminal payment
+                if ($this->paymentIntentId) {
+                    try {
+                        // Capture the authorized payment
+                        $captureResponse = Http::post(url('/api/terminal/shipping/capture-payment'), [
+                            'payment_intent_id' => $this->paymentIntentId,
+                        ]);
+                        
+                        $captureData = $captureResponse->json();
+                        
+                        if (!$captureResponse->successful() || isset($captureData['error'])) {
+                            Log::error('Failed to capture payment after successful label creation', [
+                                'payment_intent_id' => $this->paymentIntentId,
+                                'label_id' => $response['label_id'],
+                                'error' => $captureData['error'] ?? 'Unknown error'
+                            ]);
+                            // Note: Label is created but payment not captured - needs manual intervention
+                        }
+                    } catch (\Exception $e) {
+                        Log::error('Exception while capturing payment', [
+                            'payment_intent_id' => $this->paymentIntentId,
+                            'label_id' => $response['label_id'],
+                            'error' => $e->getMessage()
+                        ]);
+                    }
+                }
+                
                 // Save signature as PNG file
                 if ($this->signature) {
                     $signaturePath = "storage/" . $this->saveSignature($this->signature);
@@ -1619,12 +1664,108 @@ class Index extends Component
                 $this->resetData();
             }
         } catch (\Exception $e) {
-            $this->dialog()->error('Failed to create label after successful payment: ' . $e->getMessage())->send();
-            Log::info('Label creation error after payment: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString()
+            Log::error('Exception during label creation after payment', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'payment_intent_id' => $this->paymentIntentId,
+                'payment_status' => $paymentIntentData['status'] ?? 'unknown'
             ]);
+            
+            // Handle payment refund/cancellation
+            $this->handleFailedLabelCreation($paymentIntentData, $e->getMessage());
         } finally {
             $this->loading = false;
+        }
+    }
+
+    /**
+     * Handle failed label creation by refunding or canceling the payment
+     */
+    private function handleFailedLabelCreation($paymentIntentData, $errorMessage)
+    {
+        try {
+            $paymentStatus = $paymentIntentData['status'] ?? 'unknown';
+            $paymentIntentId = $this->paymentIntentId ?? $paymentIntentData['id'] ?? null;
+            
+            if (!$paymentIntentId) {
+                Log::error('Cannot refund/cancel payment - no payment intent ID available');
+                $this->dialog()->error('Label creation failed: ' . $errorMessage . ' Please contact support for refund.')->send();
+                return;
+            }
+            
+            // If payment was only authorized (requires_capture), cancel it
+            if ($paymentStatus === 'requires_capture') {
+                $cancelResponse = Http::post(url('/api/terminal/shipping/cancel-payment'), [
+                    'payment_intent_id' => $paymentIntentId,
+                ]);
+                
+                $cancelData = $cancelResponse->json();
+                
+                if ($cancelResponse->successful() && isset($cancelData['success']) && $cancelData['success']) {
+                    Log::info('Payment authorization canceled after label creation failure', [
+                        'payment_intent_id' => $paymentIntentId
+                    ]);
+                    $this->dialog()->warning(
+                        'Label creation failed: ' . $errorMessage . '<br><br>' .
+                        'Your payment authorization has been canceled. No charges were made.'
+                    )->send();
+                } else {
+                    Log::error('Failed to cancel payment authorization', [
+                        'payment_intent_id' => $paymentIntentId,
+                        'error' => $cancelData['error'] ?? 'Unknown error'
+                    ]);
+                    $this->dialog()->error(
+                        'Label creation failed: ' . $errorMessage . '<br><br>' .
+                        'Failed to cancel payment authorization. Please contact support immediately.'
+                    )->send();
+                }
+            }
+            // If payment was already captured/succeeded, refund it
+            elseif ($paymentStatus === 'succeeded') {
+                $refundResponse = Http::post(url('/api/terminal/shipping/refund-payment'), [
+                    'payment_intent_id' => $paymentIntentId,
+                ]);
+                
+                $refundData = $refundResponse->json();
+                
+                if ($refundResponse->successful() && isset($refundData['success']) && $refundData['success']) {
+                    Log::info('Payment refunded after label creation failure', [
+                        'payment_intent_id' => $paymentIntentId,
+                        'refund_id' => $refundData['refund']['id'] ?? 'unknown'
+                    ]);
+                    $this->dialog()->warning(
+                        'Label creation failed: ' . $errorMessage . '<br><br>' .
+                        'Your payment has been automatically refunded. Please try again.'
+                    )->send();
+                } else {
+                    Log::error('Failed to refund payment after label creation failure', [
+                        'payment_intent_id' => $paymentIntentId,
+                        'error' => $refundData['error'] ?? 'Unknown error'
+                    ]);
+                    $this->dialog()->error(
+                        'Label creation failed: ' . $errorMessage . '<br><br>' .
+                        'Payment was charged but refund failed. Please contact support immediately with payment ID: ' . $paymentIntentId
+                    )->send();
+                }
+            } else {
+                Log::warning('Unexpected payment status after label creation failure', [
+                    'payment_intent_id' => $paymentIntentId,
+                    'status' => $paymentStatus
+                ]);
+                $this->dialog()->error(
+                    'Label creation failed: ' . $errorMessage . '<br><br>' .
+                    'Payment status unclear. Please contact support with payment ID: ' . $paymentIntentId
+                )->send();
+            }
+        } catch (\Exception $e) {
+            Log::error('Exception while handling failed label creation', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'payment_intent_id' => $paymentIntentId ?? 'unknown'
+            ]);
+            $this->dialog()->error(
+                'Label creation failed and automatic refund failed. Please contact support immediately.'
+            )->send();
         }
     }
 
