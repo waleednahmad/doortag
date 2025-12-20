@@ -24,7 +24,7 @@ class Register extends Component
     public $state = '';
     public $zipcode = '';
     public $tax_id = '';
-    public $years_in_business = '';
+    public $years_in_business = 0;
     public $business_type = 'retail';
     public $notes = '';
 
@@ -45,7 +45,7 @@ class Register extends Component
             'state' => 'required|string|max:255',
             'zipcode' => 'required|string|max:255',
             'tax_id' => 'nullable|string|max:255',
-            'years_in_business' => 'nullable|integer|min:0',
+            'years_in_business' => 'nullable|integer',
             'business_type' => 'required|in:retail,wholesale',
             'notes' => 'nullable|string',
             'password' => 'required|string|min:8|confirmed',
