@@ -27,13 +27,13 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                     {{-- City --}}
                     <x-input label="City *" wire:model="shipToAddress.city_locality" required />
-                    <x-input label="Postal Code *" wire:model="shipToAddress.postal_code" required />
-
                     @if ($shipToAddress['country_code'] == 'US')
                         <x-input label="State *" wire:model="shipToAddress.state_province" maxlength="2" required />
                     @else
                         <x-input label="State" wire:model="shipToAddress.state_province" />
                     @endif
+                    <x-input label="Zip Code *" wire:model="shipToAddress.postal_code" required />
+
                     {{-- Zipcode --}}
                     {{-- Country --}}
                     <x-select.styled label="Country *" searchable wire:model.live="shipToAddress.country_code"

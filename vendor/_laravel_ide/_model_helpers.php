@@ -657,9 +657,9 @@ namespace App\Models {
      * @property bool $status
      * @property string|null $carrier_id
      * @property string|null $stripe_customer_id
-     * @property decimal:2 $tax_percentage
-     * @property decimal:2 $customer_margin
-     * @property decimal:2 $margin
+     * @property float $tax_percentage
+     * @property float $customer_margin
+     * @property float $margin
      * @property string|null $notes
      * @property mixed $business_type
      * @property integer|null $years_in_business
@@ -1330,7 +1330,7 @@ namespace App\Models {
      * @property float|null $packaging_amount
      * @property string|null $payment_method
      * @property string|null $stripe_payment_status
-     * @property decimal:2|null $stripe_amount_paid
+     * @property float|null $stripe_amount_paid
      * @property string|null $stripe_payment_intent_id
      * @property array|null $stripe_response
      * @property string|null $ship_from

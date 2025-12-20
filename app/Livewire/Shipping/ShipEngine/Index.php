@@ -1116,6 +1116,8 @@ class Index extends Component
             return;
         }
 
+        $this->paymentProcessing = true;
+
         // Close the shipment details modal
         // $this->showModal = false;
 
@@ -1422,6 +1424,8 @@ class Index extends Component
             if ($verifyData['success']) {
                 $this->paymentSuccessful = true;
                 $this->paymentProcessing = false;
+                $this->showModal = false;
+
                 $this->dispatch('payment-completed');
 
                 // Store payment details and create the actual label
@@ -1562,9 +1566,7 @@ class Index extends Component
                 // Store the shipment record for downloadPDF to use
                 $this->lastCreatedShipment = $shipmentRecord;
 
-                // Close payment modal and reset data
-                $this->showPaymentModal = false;
-                $this->resetData();
+
 
                 $successMessage = 'Payment successful! Label created successfully!';
                 $trackingNumber = '';
@@ -1606,12 +1608,21 @@ class Index extends Component
                 if (!empty($downloadButtons)) {
                     $successMessage .= $printReceiptButton . '<div class="flex items-center justify-between mt-3">' . $downloadButtons . '</div>';
                 }
-
                 $this->dialog()->success($successMessage)->send();
+
+
+                // Close payment modal and reset data
                 $this->showModal = false;
+                $this->showPaymentModal = false;
+                $this->paymentProcessing = false;
+                $this->dispatch('payment-completed');
+                $this->resetData();
             }
         } catch (\Exception $e) {
             $this->dialog()->error('Failed to create label after successful payment: ' . $e->getMessage())->send();
+            Log::info('Label creation error after payment: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
         } finally {
             $this->loading = false;
         }

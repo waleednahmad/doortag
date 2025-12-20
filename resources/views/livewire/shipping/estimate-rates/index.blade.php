@@ -42,10 +42,10 @@
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
 
                                             @if ($shipFromAddress['country_code'] == 'US')
-                                                <x-input label="Postal Code *" wire:model="shipFromAddress.postal_code"
+                                                <x-input label="Zip Code *" wire:model="shipFromAddress.postal_code"
                                                     required />
                                             @else
-                                                <x-input label="Postal Code" wire:model="shipFromAddress.postal_code" />
+                                                <x-input label="Zip Code" wire:model="shipFromAddress.postal_code" />
                                             @endif
                                             {{-- Country --}}
                                             <x-select.styled label="Country *" searchable disabled
@@ -71,10 +71,10 @@
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                                             {{-- City --}}
                                             @if ($shipToAddress['country_code'] == 'US')
-                                                <x-input label="Postal Code *" wire:model="shipToAddress.postal_code"
+                                                <x-input label="Zip Code *" wire:model="shipToAddress.postal_code"
                                                     required />
                                             @else
-                                                <x-input label="Postal Code" wire:model="shipToAddress.postal_code" />
+                                                <x-input label="Zip Code" wire:model="shipToAddress.postal_code" />
                                             @endif
                                             {{-- Zipcode --}}
                                             {{-- Country --}}

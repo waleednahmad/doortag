@@ -30,14 +30,14 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                         {{-- City --}}
                         <x-input label="City *" wire:model="shipFromAddress.city_locality" required />
-                        <x-input label="Postal Code *" wire:model="shipFromAddress.postal_code" required />
-
                         @if ($shipFromAddress['country_code'] == 'US')
                             <x-input label="State *" wire:model="shipFromAddress.state_province" maxlength="2"
                                 required />
                         @else
                             <x-input label="State" wire:model="shipFromAddress.state_province" />
                         @endif
+                        <x-input label="Zip Code *" wire:model="shipFromAddress.postal_code" required />
+
                         {{-- Country --}}
                         <x-select.styled label="Country *" searchable wire:model.live="shipFromAddress.country_code"
                             :options="$this->countries" placeholder="Select country" required />

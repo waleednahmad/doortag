@@ -4,7 +4,8 @@
         <div class="fixed inset-0 bg-gray-600/90 bg-opacity-50 overflow-y-auto h-full w-full z-50
         flex items-center justify-center
         "
-            wire:loading>
+            wire:loading
+            wire:target="getRates, createLabel, makePayment, selectPackagingForPackage, addPackage, removePackage, addCustomsItem, removeCustomsItem,shipToAddress.address_residential_indicator,shipToAddress.country_code, selectedPaymentMethod, certifyHazardousMaterials, certifyInvoiceAccuracy,selectRate">
             <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
                 <div class="mt-3 text-center">
                     <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
@@ -684,7 +685,7 @@
 
                                                         @if (isset($rate['price_comparison']) && $rate['price_comparison']['is_cheaper'] === 'carrier_1')
                                                             <x-badge
-                                                                text="Save ${{ number_format($rate['price_comparison']['price_difference'], 2) }}  ({{ ceil(abs($rate['price_comparison']['difference_percentage'])) }}% )"
+                                                                text="Save ${{ number_format($rate['price_comparison']['price_difference'], 2) }}  ({{ ceil(abs($rate['price_comparison']['difference_percentage'])) }}%)"
                                                                 color="green" />
                                                         @endif
                                                     </div>
@@ -725,7 +726,7 @@
                         {{-- Section for the $packagingAmount --}}
                         <div class="mt-6 pt-4 border-t border-gray-200 dark:border-gray-600 flex justify-between">
                             <div class="text-lg font-bold text-gray-900 dark:text-white">
-                                <x-number wire:model.blur="packagingAmount" label="Packaging Amount" step="0.1"
+                                <x-number wire:model.live="packagingAmount" label="Packaging Amount" step="0.1"
                                     min="0" required />
                             </div>
                         </div>
@@ -1064,10 +1065,10 @@
                                                                     ${{ number_format($end_user_total ?? 0, 2) }}
                                                                 </span>
                                                             @else --}}
-                                                                <span
-                                                                    class="text-lg font-bold text-indigo-700 dark:text-indigo-300">
-                                                                    ${{ $selectedRate['calculated_amount'] ?? 'N/A' }}
-                                                                </span>
+                                                            <span
+                                                                class="text-lg font-bold text-indigo-700 dark:text-indigo-300">
+                                                                ${{ $selectedRate['calculated_amount'] ?? 'N/A' }}
+                                                            </span>
                                                             {{-- @endauth --}}
                                                         </div>
                                                         <!-- Packaging Amount -->
@@ -1110,10 +1111,10 @@
                                                                     ${{ number_format($end_user_total + $taxAmount ?? 0, 2) + number_format($packagingAmount ?? 0, 2) }}
                                                                 </span>
                                                             @else --}}
-                                                                <span
-                                                                    class="text-lg font-bold text-indigo-700 dark:text-indigo-300">
-                                                                    ${{ number_format(($selectedRate['calculated_amount'] + $taxAmount ?? 0) + ($packagingAmount ?? 0), 2) }}
-                                                                </span>
+                                                            <span
+                                                                class="text-lg font-bold text-indigo-700 dark:text-indigo-300">
+                                                                ${{ number_format(($selectedRate['calculated_amount'] + $taxAmount ?? 0) + ($packagingAmount ?? 0), 2) }}
+                                                            </span>
                                                             {{-- @endauth --}}
                                                         </div>
                                                     </div>
@@ -1308,64 +1309,83 @@
                                         {{-- Payment Method Selection --}}
                                         @if (count($availablePaymentMethods) > 0)
                                             <div class="mt-6">
-                                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                                                <h3
+                                                    class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
                                                     <i class="fas fa-credit-card mr-2 text-gray-600"></i>
                                                     Select Payment Method
                                                 </h3>
                                                 <div class="space-y-3">
                                                     @foreach ($availablePaymentMethods as $method)
-                                                        <label class="flex items-center p-4 border-2 rounded-lg cursor-pointer transition-all
+                                                        <label
+                                                            class="flex items-center p-4 border-2 rounded-lg cursor-pointer transition-all
                                                             {{ $selectedPaymentMethod == $method['id'] ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-200 dark:border-gray-700 hover:border-blue-300' }}">
-                                                            <input type="radio" wire:model.live="selectedPaymentMethod" value="{{ $method['id'] }}" 
+                                                            <input type="radio"
+                                                                wire:model.live="selectedPaymentMethod"
+                                                                value="{{ $method['id'] }}"
                                                                 class="w-4 h-4 text-blue-600 focus:ring-blue-500">
                                                             <div class="ml-3 flex-1">
                                                                 <div class="font-medium text-gray-900 dark:text-white">
-                                                                    @if ($method['name'] == 'Customer Card' )
-                                                                            Card on File
+                                                                    @if ($method['name'] == 'Customer Card')
+                                                                        Card on File
                                                                     @else
-                                                                            {{ $method['name'] }}
+                                                                        {{ $method['name'] }}
                                                                     @endif
                                                                 </div>
                                                                 @if ($method['payment_method_id'])
-                                                                    <div class="text-sm text-gray-500 dark:text-gray-400">
-                                                                        ID: {{ Str::limit($method['payment_method_id'], 20) }}
+                                                                    <div
+                                                                        class="text-sm text-gray-500 dark:text-gray-400">
+                                                                        ID:
+                                                                        {{ Str::limit($method['payment_method_id'], 20) }}
                                                                     </div>
                                                                 @endif
                                                             </div>
                                                             @if ($method['name'] === 'Customer Card')
-                                                                <i class="fas fa-credit-card text-2xl text-blue-500"></i>
+                                                                <i
+                                                                    class="fas fa-credit-card text-2xl text-blue-500"></i>
                                                             @elseif ($method['name'] === 'Terminal Reader')
-                                                                <i class="fas fa-cash-register text-2xl text-green-500"></i>
+                                                                <i
+                                                                    class="fas fa-cash-register text-2xl text-green-500"></i>
                                                             @endif
                                                         </label>
                                                     @endforeach
                                                 </div>
                                                 @error('selectedPaymentMethod')
-                                                    <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                                                    <p class="mt-2 text-sm text-red-600 dark:text-red-400">
+                                                        {{ $message }}</p>
                                                 @enderror
 
                                                 {{-- Terminal Processing Status (shown when Terminal Reader is selected and payment is processing) --}}
-                                                @if ($selectedPaymentMethod && collect($availablePaymentMethods)->firstWhere('id', $selectedPaymentMethod)['name'] === 'Terminal Reader')
+                                                @if (
+                                                    $selectedPaymentMethod &&
+                                                        collect($availablePaymentMethods)->firstWhere('id', $selectedPaymentMethod)['name'] === 'Terminal Reader')
                                                     @if ($paymentProcessing)
-                                                        <div class="mt-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4">
+                                                        <div
+                                                            class="mt-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4">
                                                             <div class="flex items-center">
-                                                                <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-yellow-600 mr-3"></div>
+                                                                <div
+                                                                    class="animate-spin rounded-full h-5 w-5 border-b-2 border-yellow-600 mr-3">
+                                                                </div>
                                                                 <div>
-                                                                    <h4 class="text-yellow-800 dark:text-yellow-100 font-medium">
+                                                                    <h4
+                                                                        class="text-yellow-800 dark:text-yellow-100 font-medium">
                                                                         @if ($paymentRetryCount > 0)
-                                                                            Retrying Payment... (Attempt {{ $paymentRetryCount + 1 }})
+                                                                            Retrying Payment... (Attempt
+                                                                            {{ $paymentRetryCount + 1 }})
                                                                         @else
                                                                             Processing Payment on Terminal...
                                                                         @endif
                                                                     </h4>
                                                                     @if ($paymentRetryCount > 0)
-                                                                        <p class="text-yellow-600 dark:text-yellow-300 text-xs mt-1">
+                                                                        <p
+                                                                            class="text-yellow-600 dark:text-yellow-300 text-xs mt-1">
                                                                             Previous attempt failed - trying again now
                                                                         </p>
                                                                     @endif
                                                                     @if ($paymentIntentId)
-                                                                        <p class="text-yellow-600 dark:text-yellow-300 text-xs mt-1 font-mono">
-                                                                            Payment ID: {{ Str::limit($paymentIntentId, 20) }}
+                                                                        <p
+                                                                            class="text-yellow-600 dark:text-yellow-300 text-xs mt-1 font-mono">
+                                                                            Payment ID:
+                                                                            {{ Str::limit($paymentIntentId, 20) }}
                                                                         </p>
                                                                     @endif
                                                                 </div>
@@ -1374,34 +1394,50 @@
                                                     @endif
 
                                                     @if ($paymentError)
-                                                        <div class="mt-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg p-4">
+                                                        <div
+                                                            class="mt-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg p-4">
                                                             <div class="flex items-start">
-                                                                <i class="fas fa-exclamation-circle text-red-500 mt-1 mr-3"></i>
+                                                                <i
+                                                                    class="fas fa-exclamation-circle text-red-500 mt-1 mr-3"></i>
                                                                 <div class="flex-1">
-                                                                    <h4 class="text-red-800 dark:text-red-100 font-medium">Payment Failed</h4>
-                                                                    <p class="text-red-700 dark:text-red-200 text-sm">{{ $paymentError }}</p>
+                                                                    <h4
+                                                                        class="text-red-800 dark:text-red-100 font-medium">
+                                                                        Payment Failed</h4>
+                                                                    <p class="text-red-700 dark:text-red-200 text-sm">
+                                                                        {{ $paymentError }}</p>
                                                                     @if ($paymentRetryCount > 0)
-                                                                        <p class="text-red-600 dark:text-red-300 text-xs mt-1">
-                                                                            Attempt {{ $paymentRetryCount }} of {{ $maxRetryAttempts }}
+                                                                        <p
+                                                                            class="text-red-600 dark:text-red-300 text-xs mt-1">
+                                                                            Attempt {{ $paymentRetryCount }} of
+                                                                            {{ $maxRetryAttempts }}
                                                                         </p>
                                                                     @endif
                                                                     @if ($paymentRetryCount < $maxRetryAttempts)
-                                                                        <button wire:click="retryPayment" wire:loading="retryPayment"
-                                                                            wire:loading.class="cursor-wait" wire:loading.attr="disabled"
+                                                                        <button wire:click="retryPayment"
+                                                                            wire:loading="retryPayment"
+                                                                            wire:loading.class="cursor-wait"
+                                                                            wire:loading.attr="disabled"
                                                                             class="mt-3 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm font-medium transition-colors">
-                                                                            <span wire:loading wire:target="retryPayment">
-                                                                                <i class="fas fa-spinner animate-spin mr-1"></i>
+                                                                            <span wire:loading
+                                                                                wire:target="retryPayment">
+                                                                                <i
+                                                                                    class="fas fa-spinner animate-spin mr-1"></i>
                                                                                 Retrying...
                                                                             </span>
-                                                                            <span wire:loading.remove wire:target="retryPayment">
+                                                                            <span wire:loading.remove
+                                                                                wire:target="retryPayment">
                                                                                 <i class="fas fa-redo mr-1"></i>
-                                                                                Retry Payment ({{ $paymentRetryCount + 1 }}/{{ $maxRetryAttempts }})
+                                                                                Retry Payment
+                                                                                ({{ $paymentRetryCount + 1 }}/{{ $maxRetryAttempts }})
                                                                             </span>
                                                                         </button>
                                                                     @else
-                                                                        <div class="mt-3 p-2 bg-red-100 dark:bg-red-900/30 rounded text-xs text-red-800 dark:text-red-200">
-                                                                            <i class="fas fa-exclamation-triangle mr-1"></i>
-                                                                            Maximum retry attempts reached. Please close this modal and try again.
+                                                                        <div
+                                                                            class="mt-3 p-2 bg-red-100 dark:bg-red-900/30 rounded text-xs text-red-800 dark:text-red-200">
+                                                                            <i
+                                                                                class="fas fa-exclamation-triangle mr-1"></i>
+                                                                            Maximum retry attempts reached. Please close
+                                                                            this modal and try again.
                                                                         </div>
                                                                     @endif
                                                                 </div>
@@ -1410,12 +1446,17 @@
                                                     @endif
 
                                                     @if ($paymentSuccessful)
-                                                        <div class="mt-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg p-4">
+                                                        <div
+                                                            class="mt-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg p-4">
                                                             <div class="flex items-center">
                                                                 <i class="fas fa-check-circle text-green-500 mr-3"></i>
                                                                 <div>
-                                                                    <h4 class="text-green-800 dark:text-green-100 font-medium">Payment Successful!</h4>
-                                                                    <p class="text-green-700 dark:text-green-200 text-sm">Creating your shipping label now...</p>
+                                                                    <h4
+                                                                        class="text-green-800 dark:text-green-100 font-medium">
+                                                                        Payment Successful!</h4>
+                                                                    <p
+                                                                        class="text-green-700 dark:text-green-200 text-sm">
+                                                                        Creating your shipping label now...</p>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -1423,13 +1464,16 @@
                                                 @endif
                                             </div>
                                         @else
-                                            <div class="mt-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg">
+                                            <div
+                                                class="mt-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg">
                                                 <div class="flex items-center">
                                                     <i class="fas fa-exclamation-triangle text-red-500 mr-3"></i>
                                                     <div>
-                                                        <h4 class="text-red-800 dark:text-red-100 font-medium">No Payment Methods Available</h4>
+                                                        <h4 class="text-red-800 dark:text-red-100 font-medium">No
+                                                            Payment Methods Available</h4>
                                                         <p class="text-red-700 dark:text-red-200 text-sm">
-                                                            Please contact support to set up payment methods for your location.
+                                                            Please contact support to set up payment methods for your
+                                                            location.
                                                         </p>
                                                     </div>
                                                 </div>
@@ -1454,7 +1498,7 @@
                                 </div>
                                 <div class="mt-6 flex justify-end space-x-3">
                                     <x-button wire:click="createLabel" color="green" class="w-full sm:w-auto"
-                                        loading="createLabel">
+                                        loading="paymentProcessing" :disabled="$paymentProcessing || ! $this->certificationsCompleted || ! $signature">
                                         Proceed To Payment
                                     </x-button>
                                 </div>
@@ -1485,8 +1529,6 @@
                 </x-card>
             @endif
         </div>
-
-
     </div>
 
     <script>
