@@ -107,8 +107,7 @@ class Register extends Component
 
             $this->toast()->success('Registration Successful!', 'Your account has been created. You can now login.')->send();
 
-            // Redirect to login page or customer dashboard after 2 seconds
-            $this->redirect(route('login'));
+            return redirect()->route('login')->with('registeration-success', true);
         } catch (\Exception $e) {
             DB::rollBack();
             $this->toast()->error('Registration Failed', $e->getMessage())->send();

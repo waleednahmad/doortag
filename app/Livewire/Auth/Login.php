@@ -36,7 +36,19 @@ class Login extends Component
         if (Auth::guard('web')->attempt(['email' => $this->email, 'password' => $this->password], $this->remember)) {
             RateLimiter::clear($this->throttleKey());
             Session::regenerate();
-            
+
+            // check if the user status == 1 or not, if not logout the user and show error message
+            $user = Auth::guard('web')->user();
+            if ($user && $user->location->status != 1) {
+                Auth::guard('web')->logout();
+                throw ValidationException::withMessages([
+                    'email' => "Your account is not active yet. Please wait while we review your application.",
+                ]);
+
+                return;
+            }
+
+
             $this->redirect(route('shipping.shipengine.index'));
             return;
         }
@@ -45,6 +57,16 @@ class Login extends Component
         if (Auth::guard('customer')->attempt(['email' => $this->email, 'password' => $this->password], $this->remember)) {
             RateLimiter::clear($this->throttleKey());
             Session::regenerate();
+
+            // check if the user status == 1 or not, if not logout the user and show error message
+            $customer = Auth::guard('customer')->user();
+            if ($customer && $customer->location->status != 1) {
+                Auth::guard('customer')->logout();
+                throw ValidationException::withMessages([
+                    'email' => "Your account is not active yet. Please wait while we review your application.",
+                ]);
+                return;
+            }
 
             $this->redirect(route('shipping.shipengine.index'));
             return;
