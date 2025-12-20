@@ -197,7 +197,7 @@ class Index extends Component
         if ($name === 'packagingAmount') {
             $user = Auth::user();
             $taxPercentage = $user->location->tax_percentage ?? 0;
-            $this->taxAmount = (float)round((float)($value * (float)$taxPercentage) / 100, 2);
+            $this->taxAmount = (float)round(((float)$value * (float)$taxPercentage) / 100, 2);
             info("Updated taxAmount to {$this->taxAmount} based on packagingAmount {$value} and taxPercentage {$taxPercentage}");
         }
     }
