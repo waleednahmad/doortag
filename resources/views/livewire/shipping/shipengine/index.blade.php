@@ -1498,7 +1498,7 @@
                                 </div>
                                 <div class="mt-6 flex justify-end space-x-3">
                                     <x-button wire:click="createLabel" color="green" class="w-full sm:w-auto"
-                                        loading="paymentProcessing" :disabled="$paymentProcessing || ! $this->certificationsCompleted || ! $signature">
+                                        loading="paymentProcessing" :disabled="! $this->certificationsCompleted ||  $paymentProcessing">
                                         Proceed To Payment
                                     </x-button>
                                 </div>
