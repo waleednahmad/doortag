@@ -31,6 +31,8 @@ class Update extends Component
     public function load(Customer $customer): void
     {
         $this->customer = $customer;
+        $this->customer->is_admin = (bool)$this->customer->is_admin;
+        $this->customer->can_modify_data = (bool)$this->customer->can_modify_data;
 
         $this->modal = true;
     }
