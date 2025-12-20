@@ -77,10 +77,6 @@
                         step="0.01" min="0" required />
                 </div>
             </div>
-{{-- 
-            <div>
-                <x-input label="{{ __('Stripe Customer ID') }}" wire:model="location.stripe_customer_id" />
-            </div> --}}
 
             <div class="grid grid-cols-3 gap-4">
                 <div>

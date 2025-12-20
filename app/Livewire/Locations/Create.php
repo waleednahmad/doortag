@@ -47,7 +47,6 @@ class Create extends Component
             'location.margin' => ['required', 'numeric', 'min:0'],
             'location.customer_margin' => ['required', 'numeric', 'min:0'],
             'location.tax_percentage' => ['required', 'numeric', 'min:0'],
-            'location.stripe_customer_id' => ['nullable', 'string', 'max:255'],
             'location.carrier_id' => ['required', 'string', 'max:255'],
             'location.status' => ['required', 'boolean'],
             'location.address_residential_indicator' => ['nullable', 'boolean', 'max:255'],
